@@ -17,8 +17,9 @@
 #include "./Assets/ImageAsset.hpp"
 #include "./Assets/ShaderAsset.hpp"
 #include "./Assets/ModelAsset.hpp"
+#include "./Assets/JsonAsset.hpp"
+#include "./Assets/RendererSettingsAsset.hpp"
 
-#include "./Graphics/Renderer/RendererSettings.hpp"
 #include "./Graphics/Renderer/RendererCore.hpp"
 #include "./Graphics/Pipeline.hpp"
 #include "./Graphics/Buffers/VertexBuffer.hpp"

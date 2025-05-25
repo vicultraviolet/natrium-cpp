@@ -6,11 +6,11 @@
 #include "Natrium/Core/Logger.hpp"
 
 namespace Na {
-	Renderer::Renderer(RendererCore& renderer_core)
-	: m_Core(&renderer_core)
+	Renderer::Renderer(Window& window, AssetHandle<RendererSettings> settings)
+	: m_Core(window, settings)
 	{
-		m_Frames.resize(renderer_core.m_Settings.max_frames_in_flight);
-		m_ImageInFlightFences.resize(renderer_core.m_Images.size());
+		m_Frames.resize(m_Core.m_Settings->max_frames_in_flight());
+		m_ImageInFlightFences.resize(m_Core.m_Images.size());
 
 		this->_create_command_objects();
 		this->_create_sync_objects();
@@ -29,6 +29,8 @@ namespace Na {
 		}
 
 		logical_device.destroyCommandPool(m_GraphicsCmdPool);
+
+		m_Core.destroy();
 	}
 
 	bool Renderer::begin_frame(const glm::vec4& color)
@@ -40,10 +42,10 @@ namespace Na {
 
 		fd.valid = true;
 
-		if (m_Core->m_Width  != m_Core->m_Window->width() ||
-			m_Core->m_Height != m_Core->m_Window->height())
+		if (m_Core.m_Width  != m_Core.m_Window->width() ||
+			m_Core.m_Height != m_Core.m_Window->height())
 		{
-			m_Core->_recreate_swapchain();
+			m_Core._recreate_swapchain();
 			return fd.valid = false;
 		}
 
@@ -63,7 +65,7 @@ namespace Na {
 		);
 		
 		result = logical_device.acquireNextImageKHR(
-			m_Core->m_Swapchain,
+			m_Core.m_Swapchain,
 			UINT64_MAX, // timeout
 			fd.image_available_semaphore,
 			nullptr,
@@ -72,7 +74,7 @@ namespace Na {
 
 		if (result == vk::Result::eErrorOutOfDateKHR)
 		{
-			m_Core->_recreate_swapchain();
+			m_Core._recreate_swapchain();
 			return fd.valid = false;
 		} else
 		if (result != vk::Result::eSuccess && result != vk::Result::eSuboptimalKHR)
@@ -103,19 +105,19 @@ namespace Na {
 
 		vk::RenderPassBeginInfo render_pass_info;
 
-		render_pass_info.renderPass = m_Core->m_RenderPass;
-		render_pass_info.framebuffer = m_Core->m_Framebuffers[m_ImageIndex];
+		render_pass_info.renderPass = m_Core.m_RenderPass;
+		render_pass_info.framebuffer = m_Core.m_Framebuffers[m_ImageIndex];
 
 		render_pass_info.renderArea.offset = { { 0, 0 } };
-		render_pass_info.renderArea.extent = m_Core->m_Extent;
+		render_pass_info.renderArea.extent = m_Core.m_Extent;
 
 		render_pass_info.clearValueCount = (u32)clear_values.size();
 		render_pass_info.pClearValues = clear_values.data();
 
 		fd.cmd_buffer.beginRenderPass(render_pass_info, vk::SubpassContents::eInline);
 
-		fd.cmd_buffer.setViewport(0, 1, &m_Core->m_Viewport);
-		fd.cmd_buffer.setScissor(0, 1, &m_Core->m_Scissor);
+		fd.cmd_buffer.setViewport(0, 1, &m_Core.m_Viewport);
+		fd.cmd_buffer.setScissor(0, 1, &m_Core.m_Scissor);
 
 		return true;
 	}
@@ -160,7 +162,7 @@ namespace Na {
 		present_info.pWaitSemaphores = signal_semaphores;
 
 		present_info.swapchainCount = 1;
-		present_info.pSwapchains = &m_Core->m_Swapchain;
+		present_info.pSwapchains = &m_Core.m_Swapchain;
 		present_info.pImageIndices = &m_ImageIndex;
 
 		try
@@ -169,10 +171,10 @@ namespace Na {
 			switch (result)
 			{
 			case vk::Result::eSuboptimalKHR:
-				m_Core->_recreate_swapchain();
+				m_Core._recreate_swapchain();
 				break;
 			case vk::Result::eErrorOutOfDateKHR:
-				m_Core->_recreate_swapchain();
+				m_Core._recreate_swapchain();
 				break;
 			case vk::Result::eSuccess:
 				break;
@@ -183,7 +185,7 @@ namespace Na {
 		} catch (const vk::OutOfDateKHRError& err)
 		{
 			(void)err;
-			m_Core->_recreate_swapchain();
+			m_Core._recreate_swapchain();
 		}
 
 		m_FrameIndex = (m_FrameIndex + 1) % (u32)m_Frames.size();
@@ -289,7 +291,7 @@ namespace Na {
 		vk::Device logical_device = VkContext::GetLogicalDevice();
 
 		vk::CommandPoolCreateInfo graphics_pool_info;
-		graphics_pool_info.queueFamilyIndex = m_Core->m_QueueIndices.graphics;
+		graphics_pool_info.queueFamilyIndex = m_Core.m_QueueIndices.graphics;
 		graphics_pool_info.flags = vk::CommandPoolCreateFlagBits::eResetCommandBuffer;
 
 		m_GraphicsCmdPool = logical_device.createCommandPool(graphics_pool_info);
@@ -323,7 +325,7 @@ namespace Na {
 	}
 
 	Renderer::Renderer(Renderer&& other)
-	: m_Core(std::exchange(other.m_Core, nullptr)),
+	: m_Core(std::move(other.m_Core)),
 	m_GraphicsCmdPool(std::exchange(other.m_GraphicsCmdPool, nullptr)),
 	m_Frames(std::move(other.m_Frames)),
 	m_FrameIndex(other.m_FrameIndex),
@@ -334,7 +336,7 @@ namespace Na {
 	{
 		this->destroy();
 
-		m_Core = std::exchange(other.m_Core, nullptr);
+		m_Core = std::move(other.m_Core);
 		m_GraphicsCmdPool = std::exchange(other.m_GraphicsCmdPool, nullptr);
 		m_Frames = std::move(other.m_Frames);
 		m_FrameIndex = other.m_FrameIndex;

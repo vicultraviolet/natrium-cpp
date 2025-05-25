@@ -16,8 +16,12 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
 	if (Na::k_ValidationLayersEnabled)
 	{
 		if (severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT)
+		{
 			Na::g_Logger(Na::Error, data->pMessage);
-		else
+		#if defined(_MSC_VER)
+			__debugbreak();
+		#endif
+		} else
 		if (severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
 			Na::g_Logger(Na::Warn, data->pMessage);
 		else

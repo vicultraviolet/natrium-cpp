@@ -23,7 +23,7 @@ namespace Na {
 	class Renderer {
 	public:
 		Renderer(void) = default;
-		Renderer(RendererCore& renderer_core);
+		Renderer(Window& window, AssetHandle<RendererSettings> settings);
 
 		void destroy(void);
 		inline ~Renderer(void) { this->destroy(); }
@@ -39,10 +39,10 @@ namespace Na {
 
 		void set_descriptor_buffer(void* buffer, const void* data) const;
 
-		[[nodiscard]] inline const RendererSettings& settings(void) { return m_Core->settings(); }
+		[[nodiscard]] inline AssetHandle<RendererSettings> settings(void) { return m_Core.settings(); }
 
-		[[nodiscard]] inline RendererCore& core(void) { return *m_Core; }
-		[[nodiscard]] inline const RendererCore& core(void) const { return *m_Core; }
+		[[nodiscard]] inline RendererCore& core(void) { return m_Core; }
+		[[nodiscard]] inline const RendererCore& core(void) const { return m_Core; }
 
 		[[nodiscard]] inline FrameData& current_frame(void) { return m_Frames[m_FrameIndex]; }
 		[[nodiscard]] inline const FrameData& current_frame(void) const { return m_Frames[m_FrameIndex]; }
@@ -60,7 +60,7 @@ namespace Na {
 		void _create_command_objects(void);
 		void _create_sync_objects(void);
 	private:
-		RendererCore* m_Core = nullptr;
+		RendererCore m_Core;
 
 		vk::CommandPool m_GraphicsCmdPool;
 

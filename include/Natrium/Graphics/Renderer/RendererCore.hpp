@@ -5,17 +5,17 @@
 #include "Natrium/Graphics/DeviceImage.hpp"
 #include "Natrium/Graphics/Colors.hpp"
 
-#include "Natrium/Graphics/Renderer/RendererSettings.hpp"
+#include "Natrium/Assets/RendererSettingsAsset.hpp"
 
 namespace Na {
 	class RendererCore {
 	public:
 		RendererCore(void) = default;
-		RendererCore(Window& window, const RendererSettings& settings = RendererSettings::Default());
+		RendererCore(Window& window, AssetHandle<RendererSettings> settings);
 		void destroy(void);
 		inline ~RendererCore(void) { this->destroy(); }
 
-		[[nodiscard]] inline const RendererSettings& settings(void) const { return m_Settings; }
+		[[nodiscard]] inline AssetHandle<RendererSettings> settings(void) const { return m_Settings; }
 
 		[[nodiscard]] inline u32 width(void) const { return m_Width; }
 		[[nodiscard]] inline u32 height(void) const { return m_Height; }
@@ -83,7 +83,7 @@ namespace Na {
 		vk::RenderPass m_RenderPass;
 		ArrayVector<vk::Framebuffer> m_Framebuffers;
 
-		RendererSettings m_Settings{};
+		AssetHandle<RendererSettings> m_Settings;
 	};
 } // namespace Na
 

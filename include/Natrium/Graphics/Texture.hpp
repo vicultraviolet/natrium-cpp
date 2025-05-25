@@ -11,12 +11,12 @@ namespace Na {
 		const ShaderUniformType descriptor_type = ShaderUniformType::Texture;
 
 		Texture(void) = default;
-		Texture(AssetHandle<Image> img, const RendererSettings& renderer_settings)
+		Texture(AssetHandle<Image> img, AssetHandle<RendererSettings> renderer_settings)
 		: Texture(&img, 1, renderer_settings) {}
 
-		Texture(const AssetHandle<Image>* imgs, u32 count, const RendererSettings& renderer_settings);
+		Texture(const AssetHandle<Image>* imgs, u32 count, AssetHandle<RendererSettings> renderer_settings);
 
-		Texture(const std::initializer_list<AssetHandle<Image>>& imgs, const RendererSettings& renderer_settings)
+		Texture(const std::initializer_list<AssetHandle<Image>>& imgs, AssetHandle<RendererSettings> renderer_settings)
 		: Texture(imgs.begin(), (u32)imgs.size(), renderer_settings) {}
 
 		inline ~Texture(void) { this->destroy(); }

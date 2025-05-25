@@ -1,0 +1,38 @@
+#if !defined(NA_RENDERER_SETTINGS_ASSET_HPP)
+#define NA_RENDERER_SETTINGS_ASSET_HPP
+
+#include "Natrium/Assets/Asset.hpp"
+
+namespace Na {
+	class RendererSettingsAsset : public Asset {
+	public:
+		RendererSettingsAsset(const nlohmann::json& json) : m_Json(json) {}
+		~RendererSettingsAsset(void) override = default;
+
+		static AssetHandle<RendererSettingsAsset> Load(const std::filesystem::path& path);
+
+		void set_all(const RendererSettingsAsset& other);
+
+		void set_max_frames_in_flight(u32 max_frames_in_flight);
+		void set_anisotropy_enabled(bool enabled);
+		void set_max_anisotropy(float max_anisotropy);
+		void set_multisampling_enabled(bool enabled);
+
+		[[nodiscard]] u32 max_frames_in_flight(void) const;
+		[[nodiscard]] bool anisotropy_enabled(void) const;
+		[[nodiscard]] float max_anisotropy(void) const;
+		[[nodiscard]] bool multisampling_enabled(void) const;
+
+		[[nodiscard]] static float AnisotropyLimit(void);
+
+		[[nodiscard]] inline operator bool(void) const override { return m_Json; }
+	private:
+		void _update_file(void) const;
+	private:
+		nlohmann::json m_Json;
+		std::filesystem::path m_Path;
+	};
+	using RendererSettings = RendererSettingsAsset;
+} // namespace Na
+
+#endif // NA_RENDERER_SETTINGS_ASSET_HPP

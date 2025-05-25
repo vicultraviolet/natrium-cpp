@@ -10,7 +10,7 @@ namespace Na {
 	Texture::Texture(
 		const AssetHandle<Image>* imgs,
 		u32 count,
-		const RendererSettings& renderer_settings
+		AssetHandle<RendererSettings> renderer_settings
 	)
 	{
 		NA_ASSERT(imgs, "Failed to create TextureArray: imgs is null!");
@@ -68,8 +68,8 @@ namespace Na {
 		m_Sampler = Internal::CreateSampler(
 			vk::Filter::eLinear, // oversampling filter
 			vk::Filter::eLinear, // undersampling filter
-			renderer_settings.anisotropy_enabled,
-			renderer_settings.max_anisotropy
+			renderer_settings->anisotropy_enabled(),
+			renderer_settings->max_anisotropy()
 		);
 	}
 

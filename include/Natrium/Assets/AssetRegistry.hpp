@@ -3,30 +3,39 @@
 
 #include "Natrium/Assets/Asset.hpp"
 #include "Natrium/Assets/ShaderAsset.hpp"
+#include "Natrium/Assets/RendererSettingsAsset.hpp"
 #include "Natrium/Graphics/ShaderModule.hpp"
 
 namespace Na {
 	class AssetRegistry {
 	public:
-		AssetRegistry(const std::filesystem::path& asset_dir, const std::filesystem::path& shader_output_dir);
+		AssetRegistry(
+			const std::filesystem::path& engine_asset_dir = "assets/engine/",
+			const std::filesystem::path& shader_output_dir = "bin/shaders/"
+		);
 		inline ~AssetRegistry(void) { this->destroy(); }
 
 		void destroy(void);
 
-		inline void free_asset(const std::string_view& name) { m_Assets.erase(name); }
+		inline void free_asset(const std::string& asset) { m_Assets.erase(asset); }
 		inline void free_all(void) { m_Assets.clear(); }
 
 		template<LoadableAsset T>
-		inline AssetHandle<T> load_asset(const std::string_view& path)
+		inline AssetHandle<T> load_asset(const std::string& path)
 		{
 			auto it = m_Assets.find(path);
 			if (it != m_Assets.end())
 				return std::dynamic_pointer_cast<T>(it->second);
 
-			AssetHandle<T> asset = T::Load(m_AssetDir / path);
+			AssetHandle<T> asset = T::Load(path);
 			m_Assets[path] = asset;
 			return asset;
 		}
+
+		template<>
+		inline AssetHandle<RendererSettings> load_asset(const std::string& path) { return load_renderer_settings(path); }
+
+		AssetHandle<RendererSettings> load_renderer_settings(const std::string& path);
 
 		ShaderModule create_shader_module_from_src(
 			const std::string_view& src_path,
@@ -40,13 +49,9 @@ namespace Na {
 			ShaderStageBits stage,
 			const std::string_view& entry_point = "main"
 		) const;
-
-		[[nodiscard]] inline std::filesystem::path& asset_dir(void) { return m_AssetDir; }
-		[[nodiscard]] inline const std::filesystem::path& asset_dir(void) const { return m_AssetDir; }
-		inline void set_asset_dir(const std::filesystem::path& asset_dir) { m_AssetDir = asset_dir; }
 	private:
-		std::unordered_map<std::string_view, AssetHandle<>> m_Assets;
-		std::filesystem::path m_AssetDir;
+		std::unordered_map<std::string, AssetHandle<>> m_Assets;
+		std::filesystem::path m_EngineAssetDir;
 		std::filesystem::path m_ShaderOutputDir;
 	};
 } // namespace Na

@@ -44,7 +44,7 @@ namespace Na {
 		};
 	}
 
-	RendererCore::RendererCore(Window& window, const RendererSettings& settings)
+	RendererCore::RendererCore(Window& window, AssetHandle<RendererSettings> settings)
 	: m_Window(&window),
 	m_Settings(settings)
 	{
@@ -164,6 +164,9 @@ namespace Na {
 
 	void RendererCore::_create_color_buffer(void)
 	{
+		if (!m_Settings->multisampling_enabled())
+			return;
+
 		m_ColorImage = DeviceImage(
 			{ m_Width, m_Height, 1 },
 			1, // layer count
@@ -172,7 +175,7 @@ namespace Na {
 			vk::ImageTiling::eOptimal,
 			vk::ImageUsageFlagBits::eTransientAttachment | vk::ImageUsageFlagBits::eColorAttachment,
 			vk::SharingMode::eExclusive,
-			VkContext::GetMSAASamples(m_Settings.msaa_enabled),
+			VkContext::GetMSAASamples(m_Settings->multisampling_enabled()),
 			vk::MemoryPropertyFlagBits::eDeviceLocal
 		);
 		m_ColorImageView = CreateImageView(
@@ -199,7 +202,7 @@ namespace Na {
 			vk::ImageTiling::eOptimal,
 			vk::ImageUsageFlagBits::eDepthStencilAttachment,
 			vk::SharingMode::eExclusive,
-			VkContext::GetMSAASamples(m_Settings.msaa_enabled),
+			VkContext::GetMSAASamples(m_Settings->multisampling_enabled()),
 			vk::MemoryPropertyFlagBits::eDeviceLocal
 		);
 		m_DepthImageView = CreateImageView(
@@ -212,6 +215,8 @@ namespace Na {
 
 	void RendererCore::_create_render_pass(void)
 	{
+		bool msaa_enabled = m_Settings->multisampling_enabled();
+
 		std::array<vk::AttachmentDescription, 3> attachments{};
 		attachments.fill({});
 
@@ -232,29 +237,31 @@ namespace Na {
 		vk::SubpassDescription subpass;
 		vk::SubpassDependency dependency;
 
-		color_attachment.format         = m_SwapchainFormat.format;
-		color_attachment.samples        = VkContext::GetMSAASamples(m_Settings.msaa_enabled);
-		color_attachment.loadOp         = vk::AttachmentLoadOp::eClear;
-		color_attachment.storeOp        = vk::AttachmentStoreOp::eStore;
-		color_attachment.stencilLoadOp  = vk::AttachmentLoadOp::eDontCare;
-		color_attachment.stencilStoreOp = vk::AttachmentStoreOp::eDontCare;
-		color_attachment.initialLayout  = vk::ImageLayout::eUndefined;
-		color_attachment.finalLayout    = vk::ImageLayout::eColorAttachmentOptimal;
-
-		color_attachment_ref.attachment = 0;
-		color_attachment_ref.layout     = vk::ImageLayout::eColorAttachmentOptimal;
-
-		depth_attachment.format         = depth_format;
-		depth_attachment.samples        = VkContext::GetMSAASamples(m_Settings.msaa_enabled);
-		depth_attachment.loadOp         = vk::AttachmentLoadOp::eClear;
-		depth_attachment.storeOp        = vk::AttachmentStoreOp::eDontCare;
-		depth_attachment.stencilLoadOp  = vk::AttachmentLoadOp::eDontCare;
-		depth_attachment.stencilStoreOp = vk::AttachmentStoreOp::eDontCare;
-		depth_attachment.initialLayout  = vk::ImageLayout::eUndefined;
-		depth_attachment.finalLayout    = vk::ImageLayout::eDepthStencilAttachmentOptimal;
-
-		depth_attachment_ref.attachment = 1;
-		depth_attachment_ref.layout     = vk::ImageLayout::eDepthStencilAttachmentOptimal;
+		color_attachment.format                 = m_SwapchainFormat.format;
+		color_attachment.samples                = VkContext::GetMSAASamples(msaa_enabled);
+		color_attachment.loadOp                 = vk::AttachmentLoadOp::eClear;
+		color_attachment.storeOp                = vk::AttachmentStoreOp::eStore;
+		color_attachment.stencilLoadOp          = vk::AttachmentLoadOp::eDontCare;
+		color_attachment.stencilStoreOp         = vk::AttachmentStoreOp::eDontCare;
+		color_attachment.initialLayout          = vk::ImageLayout::eUndefined;
+		color_attachment.finalLayout            = m_Settings->multisampling_enabled() ?
+			                                      vk::ImageLayout::eColorAttachmentOptimal :
+			                                      vk::ImageLayout::ePresentSrcKHR;
+										        
+		color_attachment_ref.attachment         = 0;
+		color_attachment_ref.layout             = vk::ImageLayout::eColorAttachmentOptimal;
+										        
+		depth_attachment.format                 = depth_format;
+		depth_attachment.samples                = VkContext::GetMSAASamples(msaa_enabled);
+		depth_attachment.loadOp                 = vk::AttachmentLoadOp::eClear;
+		depth_attachment.storeOp                = vk::AttachmentStoreOp::eDontCare;
+		depth_attachment.stencilLoadOp          = vk::AttachmentLoadOp::eDontCare;
+		depth_attachment.stencilStoreOp         = vk::AttachmentStoreOp::eDontCare;
+		depth_attachment.initialLayout          = vk::ImageLayout::eUndefined;
+		depth_attachment.finalLayout            = vk::ImageLayout::eDepthStencilAttachmentOptimal;
+										        
+		depth_attachment_ref.attachment         = 1;
+		depth_attachment_ref.layout             = vk::ImageLayout::eDepthStencilAttachmentOptimal;
 
 		color_attachment_resolve.format         = m_SwapchainFormat.format;
 		color_attachment_resolve.samples        = vk::SampleCountFlagBits::e1;
@@ -264,15 +271,16 @@ namespace Na {
 		color_attachment_resolve.stencilStoreOp = vk::AttachmentStoreOp::eDontCare;
 		color_attachment_resolve.initialLayout  = vk::ImageLayout::eUndefined;
 		color_attachment_resolve.finalLayout    = vk::ImageLayout::ePresentSrcKHR;
-			
-		color_attachment_resolve_ref.attachment = 2;
-		color_attachment_resolve_ref.layout = vk::ImageLayout::eColorAttachmentOptimal;;
+
+		color_attachment_resolve_ref.attachment = msaa_enabled ? 2 : VK_ATTACHMENT_UNUSED;
+		color_attachment_resolve_ref.layout     = vk::ImageLayout::eColorAttachmentOptimal;
 
 		subpass.pipelineBindPoint       = vk::PipelineBindPoint::eGraphics;
 
 		subpass.colorAttachmentCount    = 1;
 		subpass.pColorAttachments       = &color_attachment_ref;
 		subpass.pDepthStencilAttachment = &depth_attachment_ref;
+
 		subpass.pResolveAttachments     = &color_attachment_resolve_ref;
 
 		dependency.srcSubpass           = VK_SUBPASS_EXTERNAL;
@@ -292,7 +300,7 @@ namespace Na {
 
 		vk::RenderPassCreateInfo create_info;
 
-		create_info.attachmentCount = (u32)attachments.size();
+		create_info.attachmentCount = (u32)attachments.size() - !m_Settings->multisampling_enabled();
 		create_info.pAttachments = attachments.data();
 
 		create_info.subpassCount = 1;
@@ -306,20 +314,22 @@ namespace Na {
 
 	void RendererCore::_create_framebuffers(void)
 	{
+		bool msaa_enabled = m_Settings->multisampling_enabled();
+
 		m_Framebuffers.resize(m_ImageViews.size());
 		for (u64 i = 0; i < m_ImageViews.size(); i++)
 		{
 			std::array<vk::ImageView, 3> attachments = {
-				m_ColorImageView,
+				msaa_enabled ? m_ColorImageView : m_ImageViews[i],
 				m_DepthImageView,
-				m_ImageViews[i],
+				msaa_enabled ? m_ImageViews[i] : nullptr,
 			};
 
 			vk::FramebufferCreateInfo create_info;
 
 			create_info.renderPass = m_RenderPass;
 
-			create_info.attachmentCount = (u32)attachments.size();
+			create_info.attachmentCount = (u32)attachments.size() - !msaa_enabled;
 			create_info.pAttachments = attachments.data();
 
 			create_info.width = m_Width;
@@ -405,7 +415,7 @@ namespace Na {
 
 	m_Framebuffers(std::move(other.m_Framebuffers)),
 
-	m_Settings(other.m_Settings)
+	m_Settings(std::move(other.m_Settings))
 	{}
 
 	RendererCore& RendererCore::operator=(RendererCore&& other)

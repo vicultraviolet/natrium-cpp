@@ -139,7 +139,7 @@ namespace Na {
 			)
 				m_DynamicOffsetCount++;
 		}
-		m_DynamicOffsets.reallocate(u64(m_DynamicOffsetCount * renderer_core.settings().max_frames_in_flight));
+		m_DynamicOffsets.reallocate(u64(m_DynamicOffsetCount * renderer_core.settings()->max_frames_in_flight()));
 		m_DynamicOffsets.resize(m_DynamicOffsets.capacity());
 
 		Na::ArrayVector<vk::DynamicState> dynamic_states = {
@@ -159,7 +159,7 @@ namespace Na {
 		auto viewport_info = viewportInfo();
 		auto input_assembly_info = inputAssemblyInfo();
 		auto rasterization_info = rasterizationInfo();
-		auto multisample_info = multisampleInfo(renderer_core.settings().msaa_enabled);
+		auto multisample_info = multisampleInfo(renderer_core.settings()->multisampling_enabled());
 		auto color_blend_attachment = colorBlendAttachment(false);
 		auto color_blend_info = colorBlendInfo(color_blend_attachment);
 		auto depth_stencil_info = depthStencilInfo();

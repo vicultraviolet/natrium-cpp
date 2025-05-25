@@ -41,6 +41,8 @@
 #include <fmt/format.h>
 #include <fmt/chrono.h>
 
+#include <nlohmann/json.hpp>
+
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #define GLM_ENABLE_EXPERIMENTAL
 

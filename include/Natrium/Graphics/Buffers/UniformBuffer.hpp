@@ -10,7 +10,7 @@ namespace Na {
 		const ShaderUniformType descriptor_type = ShaderUniformType::UniformBuffer;
 
 		UniformBuffer(void) = default;
-		UniformBuffer(u64 size, const RendererSettings& renderer_settings);
+		UniformBuffer(u64 size, AssetHandle<RendererSettings> renderer_settings);
 		void destroy(void);
 		inline ~UniformBuffer(void) { this->destroy(); }
 

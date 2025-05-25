@@ -11,6 +11,7 @@ include "dependencies/stb-Premake.lua"
 include "dependencies/tinyobjloader-Premake.lua"
 include "dependencies/GLFW-Premake.lua"
 IncludeDirectories["glm"] = "dependencies/glm/"
+IncludeDirectories["nlohmann_json"] = "dependencies/nlohmann_json/include/"
 
 project "Natrium"
     location "./"
@@ -35,6 +36,7 @@ project "Natrium"
         "%{IncludeDirectories.fmt}",
 		"%{IncludeDirectories.stb}",
         "%{IncludeDirectories.glm}",
+        "%{IncludeDirectories.nlohmann_json}",
 		"%{IncludeDirectories.tiny_obj_loader}",
         "%{IncludeDirectories.glfw}",
         "include/",

@@ -6,7 +6,7 @@
 #include "Internal.hpp"
 
 namespace Na {
-	UniformBuffer::UniformBuffer(u64 size, const RendererSettings& renderer_settings)
+	UniformBuffer::UniformBuffer(u64 size, AssetHandle<RendererSettings> renderer_settings)
 	: m_PerFrameSize(size)
 	{
 		static VkDeviceSize x_Alignment = VkContext::GetPhysicalDevice().getProperties().limits.minUniformBufferOffsetAlignment;
@@ -14,7 +14,7 @@ namespace Na {
 		m_AlignedSize = (size + x_Alignment - 1) & ~(x_Alignment - 1);
 
 		m_Buffer = DeviceBuffer(
-			m_AlignedSize * renderer_settings.max_frames_in_flight,
+			m_AlignedSize * renderer_settings->max_frames_in_flight(),
 			vk::BufferUsageFlagBits::eUniformBuffer,
 			vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent
 		);
