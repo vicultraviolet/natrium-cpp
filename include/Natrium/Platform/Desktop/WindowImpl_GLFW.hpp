@@ -25,8 +25,15 @@ namespace Na {
 		WindowImpl_GLFW& operator=(WindowImpl_GLFW&& other);
 
 		void focus(void);
+		void unfocus(void);
 		[[nodiscard]] inline bool focused(void) const { return m_Focus; }
 
+		void capture_mouse(void);
+		void release_mouse(void);
+		[[nodiscard]] inline bool mouse_captured(void) const { return m_MouseCaptured; }
+
+		void minimize(void);
+		void restore(void);
 		[[nodiscard]] inline bool minimized(void) const { return m_Minimized; }
 
 		[[nodiscard]] inline u32 width(void) const { return m_Width; }
@@ -48,6 +55,7 @@ namespace Na {
 		};
 		bool m_Focus = true;
 		bool m_Minimized = false;
+		bool m_MouseCaptured = false;
 	};
 
 	using Window = WindowImpl_GLFW;

@@ -97,11 +97,39 @@ namespace Na {
 		m_Focus = true;
 	}
 
+	void Window::unfocus(void)
+	{
+		glfwFocusWindow(nullptr);
+		m_Focus = false;
+	}
+
+	void Window::capture_mouse(void)
+	{
+		glfwSetInputMode(m_Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+		m_MouseCaptured = true;
+	}
+
+	void Window::release_mouse(void)
+	{
+		glfwSetInputMode(m_Window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+		m_MouseCaptured = false;
+	}
+
+	void Window::minimize(void)
+	{
+		glfwIconifyWindow(m_Window);
+		m_Minimized = true;
+	}
+
+	void Window::restore(void)
+	{
+		glfwRestoreWindow(m_Window);
+		m_Minimized = false;
+	}
+
 	void Window::set_size(u32 width, u32 height)
 	{
-		glfwSetWindowSize(m_Window, width, height);
-		m_Width = width;
-		m_Height = height;
+		glfwSetWindowSize(m_Window, m_Width = width, m_Height = height);
 	}
 
 	void Window::set_title(const char* title)
