@@ -32,7 +32,6 @@ namespace Na {
 			return asset;
 		}
 
-		template<>
 		inline AssetHandle<RendererSettings> load_asset(const std::string& path) { return load_renderer_settings(path); }
 
 		AssetHandle<RendererSettings> load_renderer_settings(const std::string& path);
