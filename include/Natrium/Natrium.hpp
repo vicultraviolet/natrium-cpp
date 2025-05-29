@@ -29,6 +29,8 @@
 #include "./Graphics/Texture.hpp"
 #include "./Graphics/Renderer/Renderer.hpp"
 
+#include "./Math/CameraData.hpp"
+
 // entry point
 #include "./Main.hpp"
 
