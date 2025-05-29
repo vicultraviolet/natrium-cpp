@@ -1,8 +1,8 @@
 #include "Pch.hpp"
-#include "Natrium/Math/CameraData.hpp"
+#include "Natrium/Math/Camera3dData.hpp"
 
 namespace Na {
-	CameraData::CameraData(const glm::vec3& pos, const glm::vec3& eye, float fov, glm::vec2 sensitivity)
+	Camera3dData::Camera3dData(const glm::vec3& pos, const glm::vec3& eye, float fov, glm::vec2 sensitivity)
 	: m_Position(pos), m_Eye(eye), m_Fov(fov), m_Sensitivity(sensitivity)
 	{
 		glm::vec3 dir = glm::normalize(eye - pos);
@@ -10,7 +10,7 @@ namespace Na {
 		m_Rotation.y = glm::degrees(asin(dir.y));
 	}
 
-	void CameraData::move(const glm::vec3& amount)
+	void Camera3dData::move(const glm::vec3& amount)
 	{
 		glm::vec3 forward = glm::normalize(m_Eye - m_Position);
 		glm::vec3 right = glm::normalize(glm::cross(forward, glm::vec3(0.0f, 1.0f, 0.0f)));
@@ -22,7 +22,7 @@ namespace Na {
 		m_Eye += move;
 	}
 
-	void CameraData::rotate(glm::vec2 offset)
+	void Camera3dData::rotate(glm::vec2 offset)
 	{
 		offset *= m_Sensitivity;
 		m_Rotation += offset;
@@ -41,7 +41,7 @@ namespace Na {
 		m_Eye = m_Position + glm::normalize(direction);
 	}
 
-	void CameraData::rotate_with_mouse(glm::vec2 mouse_pos)
+	void Camera3dData::rotate_with_mouse(glm::vec2 mouse_pos)
 	{
 		if (m_FirstMouse)
 		{
@@ -54,23 +54,23 @@ namespace Na {
 		m_LastMousePosition = mouse_pos;
 	}
 
-	void CameraData::on_mouse_capture(glm::vec2 mouse_pos)
+	void Camera3dData::on_mouse_capture(glm::vec2 mouse_pos)
 	{
 		m_LastMousePosition = mouse_pos;
 		m_FirstMouse = false;
 	}
 
-	void CameraData::on_mouse_release(void)
+	void Camera3dData::on_mouse_release(void)
 	{
 		m_FirstMouse = true;
 	}
 
-	glm::mat4 CameraData::calculate_view(void) const
+	glm::mat4 Camera3dData::calculate_view(void) const
 	{
 		return glm::lookAt(m_Position, m_Eye, glm::vec3(0.0f, 1.0f, 0.0f));
 	}
 
-	glm::mat4 CameraData::calculate_projection(float aspect_ratio, float near_clip, float far_clip) const
+	glm::mat4 Camera3dData::calculate_projection(float aspect_ratio, float near_clip, float far_clip) const
 	{
 		return glm::perspectiveZO(glm::radians(m_Fov), aspect_ratio, near_clip, far_clip);
 	}

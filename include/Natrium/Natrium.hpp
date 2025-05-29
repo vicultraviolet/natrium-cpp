@@ -29,7 +29,7 @@
 #include "./Graphics/Texture.hpp"
 #include "./Graphics/Renderer/Renderer.hpp"
 
-#include "./Math/CameraData.hpp"
+#include "./Math/Camera3dData.hpp"
 
 // entry point
 #include "./Main.hpp"
