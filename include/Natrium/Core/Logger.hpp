@@ -2,34 +2,54 @@
 #define NA_LOGGER_HPP
 
 #include "Natrium/Core.hpp"
-
-#define NA_COLOR_RSET  "\x1B[0m"         // reset color
-#define NA_COLOR_FRED  "\x1B[31m"        // red
-#define NA_COLOR_BRED  "\x1B[0m\033[41m" // red background
-#define NA_COLOR_FGRN  "\x1B[32m"        // green 
-#define NA_COLOR_FYEL  "\x1B[33m"        // yellow
-#define NA_COLOR_FBLU  "\x1B[34m"        // blue
-#define NA_COLOR_FMAG  "\x1B[35m"        // magenta
-#define NA_COLOR_FCYN  "\x1B[36m"        // cyan
-#define NA_COLOR_FWHT  "\x1B[37m"        // white
-
-#define NA_FONT_BOLD "\x1B[1m"           // bold
-#define NA_FONT_UNDL "\x1B[4m"           // underline
+#include "Natrium/Core/ANSI_EscapeCodes.hpp"
 
 namespace Na {
 	enum LogLevel : u8 {
 		None = 0,
-		Trace, Info, Warn, Error, Fatal
+		Trace, Debug, Info, Notice, Warn, Error, Fatal,
+		Last = Fatal
 	};
-	inline std::string_view LogLevelStr(LogLevel level)
+	constexpr std::array<std::string_view, LogLevel::Last + 1> k_LogLevelNames = {
+		"[None]", "[Trace]", "[Debug]", "[Info]", "[Notice]", "[Warn]", "[Error]", "[Fatal]"
+	};
+
+	inline std::string_view LogLevelEscapeCodes(LogLevel level)
 	{
 		switch (level)
 		{
-		case Trace: return NA_FONT_BOLD;
-		case Info:  return NA_FONT_BOLD NA_COLOR_FGRN;
-		case Warn:  return NA_FONT_BOLD NA_COLOR_FYEL;
-		case Error: return NA_FONT_BOLD NA_COLOR_FRED;
-		case Fatal: return NA_FONT_BOLD NA_COLOR_BRED;
+		case Trace:
+			return Na::ANSI_EscapeCodes::k_Bold;
+		case Debug:
+			return NA_CONCAT_STR_VIEW(
+				Na::ANSI_EscapeCodes::k_Bold,
+				Na::ANSI_EscapeCodes::Foreground::k_Green
+			);
+		case Info:
+			return NA_CONCAT_STR_VIEW(
+				Na::ANSI_EscapeCodes::k_Bold,
+				Na::ANSI_EscapeCodes::Foreground::k_Blue
+			);
+		case Notice:
+			return NA_CONCAT_STR_VIEW(
+				Na::ANSI_EscapeCodes::k_Bold,
+				Na::ANSI_EscapeCodes::Foreground::k_Magenta
+			);
+		case Warn: 
+			return NA_CONCAT_STR_VIEW(
+				Na::ANSI_EscapeCodes::k_Bold,
+				Na::ANSI_EscapeCodes::Foreground::k_Yellow
+			);
+		case Error:
+			return NA_CONCAT_STR_VIEW(
+				Na::ANSI_EscapeCodes::k_Bold,
+				Na::ANSI_EscapeCodes::Foreground::k_Red
+			);
+		case Fatal:
+			return NA_CONCAT_STR_VIEW(
+				Na::ANSI_EscapeCodes::k_Bold,
+				Na::ANSI_EscapeCodes::Background::k_Red
+			);
 		}
 		return "";
 	}
@@ -49,12 +69,13 @@ namespace Na {
 			if (!t_Enabled)
 				return;
 
-			*stream << NA_FORMAT(
-				"{}[{:%H:%M:%S}][{}]{}: {}\n",
-				LogLevelStr(level),
+			*this->stream << NA_FORMAT(
+				"{}[{:%H:%M:%S}]{}[{}]:{} {}\n",
+				LogLevelEscapeCodes(level),
 				std::chrono::round<std::chrono::seconds>(std::chrono::system_clock::now()),
-				name,
-				NA_COLOR_RSET,
+				k_LogLevelNames[level],
+				this->name,
+				Na::ANSI_EscapeCodes::k_Reset,
 				msg
 			);
 		}
@@ -65,12 +86,13 @@ namespace Na {
 			if (!t_Enabled)
 				return;
 
-			*stream << NA_FORMAT(
-				"{}[{:%H:%M:%S}][{}]{}: {}\n",
-				LogLevelStr(level),
+			*this->stream << NA_FORMAT(
+				"{}[{:%H:%M:%S}]{}[{}]:{} {}\n",
+				LogLevelEscapeCodes(level),
 				std::chrono::round<std::chrono::seconds>(std::chrono::system_clock::now()),
-				name,
-				NA_COLOR_RSET,
+				k_LogLevelNames[level],
+				this->name,
+				Na::ANSI_EscapeCodes::k_Reset,
 				NA_FORMAT(str, std::forward<t_Args>(__args)...)
 			);
 		}
@@ -80,16 +102,16 @@ namespace Na {
 			if (!t_Enabled)
 				return;
 
-			*stream << NA_FORMAT(
+			*this->stream << NA_FORMAT(
 				"{}[{:%Y-%m-%d %H:%M:%S}][{}]{}\n",
-				LogLevelStr(level),
+				LogLevelEscapeCodes(level),
 				std::chrono::round<std::chrono::seconds>(std::chrono::system_clock::now()),
 			#if __cpp_lib_chrono >= 201907L
 				std::chrono::current_zone()->name(),
 			#else
 				"",
 			#endif
-				NA_COLOR_RSET
+				Na::ANSI_EscapeCodes::k_Reset
 			);
 		}
 
