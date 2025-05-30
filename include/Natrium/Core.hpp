@@ -66,6 +66,8 @@ using namespace std::literals::chrono_literals;
 using namespace std::literals::string_literals;
 using namespace std::literals::string_view_literals;
 
+#define NA_CONCAT_STR_VIEW(sv1, sv2) StringViewCat<sv1, sv2>::data
+
 namespace Na {
     using Byte = unsigned char;
 
@@ -102,6 +104,24 @@ namespace Na {
 #else
     constexpr bool k_WindowedApp = false;
 #endif
+
+    template<const std::string_view& t_Str1 = "", const std::string_view& t_Str2 = "">
+    class StringViewCat {
+    private:
+        static constexpr auto _GetArray(void)
+        {
+            std::array<char, t_Str1.size() + t_Str2.size()> array;
+            for (u64 i = 0; i < t_Str1.size(); i++)
+                array[i] = t_Str1[i];
+            for (u64 i = 0; i < t_Str2.size(); i++)
+                array[i + t_Str1.size()] = t_Str2[i];
+
+            return array;
+        }
+        constexpr static std::array<char, t_Str1.size() + t_Str2.size()> s_Array = _GetArray();
+    public:
+        constexpr static std::string_view data{ s_Array.data(), s_Array.size() };
+    };
 
     [[nodiscard]] inline i32 Round32(float num) { return (i32)floor(num + 0.5f); }
     [[nodiscard]] inline i64 Round64(double num) { return (i64)floor(num + 0.5); }
