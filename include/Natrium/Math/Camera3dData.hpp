@@ -38,8 +38,8 @@ namespace Na {
 		const glm::mat4& proj_matrix(void);
 		const CameraMatrices& matrices(void);
 
-		inline const glm::mat4& view_matrix(void) const { return m_ViewMatrix; }
-		inline const glm::mat4& proj_matrix(void) const { return m_ProjectionMatrix; }
+		inline const glm::mat4& view_matrix(void) const { return m_Matrices.view; }
+		inline const glm::mat4& proj_matrix(void) const { return m_Matrices.proj; }
 		inline const CameraMatrices& matrices(void) const { return m_Matrices; }
 
 		inline void set_pos(const glm::vec3& pos) { m_Position = pos; m_ViewMatrixDirty = true; }
@@ -80,13 +80,7 @@ namespace Na {
 		glm::vec2 m_LastMousePosition{ 0.0f };
 		bool m_FirstMouse = true;
 
-		union {
-			struct {
-				glm::mat4 m_ViewMatrix;
-				glm::mat4 m_ProjectionMatrix;
-			};
-			CameraMatrices m_Matrices;
-		};
+		CameraMatrices m_Matrices;
 
 		bool m_ViewMatrixDirty = true;
 		bool m_ProjectionMatrixDirty = true;

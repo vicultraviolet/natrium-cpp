@@ -87,32 +87,32 @@ namespace Na {
 	{
 		if (m_ViewMatrixDirty)
 		{
-			m_ViewMatrix = glm::lookAt(m_Position, m_Eye, glm::vec3(0.0f, 1.0f, 0.0f));
+			m_Matrices.view = glm::lookAt(m_Position, m_Eye, glm::vec3(0.0f, 1.0f, 0.0f));
 			m_ViewMatrixDirty = false;
 		}
-		return m_ViewMatrix;
+		return m_Matrices.view;
 	}
 
 	const glm::mat4& Camera3dData::proj_matrix(void)
 	{
 		if (m_ProjectionMatrixDirty)
 		{
-			m_ProjectionMatrix = glm::perspectiveZO(glm::radians(m_Fov), m_AspectRatio, m_NearClip, m_FarClip);
+			m_Matrices.proj = glm::perspectiveZO(glm::radians(m_Fov), m_AspectRatio, m_NearClip, m_FarClip);
 			m_ProjectionMatrixDirty = false;
 		}
-		return m_ProjectionMatrix;
+		return m_Matrices.proj;
 	}
 
 	const CameraMatrices& Camera3dData::matrices(void)
 	{
 		if (m_ViewMatrixDirty)
 		{
-			m_ViewMatrix = glm::lookAt(m_Position, m_Eye, glm::vec3(0.0f, 1.0f, 0.0f));
+			m_Matrices.view = glm::lookAt(m_Position, m_Eye, glm::vec3(0.0f, 1.0f, 0.0f));
 			m_ViewMatrixDirty = false;
 		}
 		if (m_ProjectionMatrixDirty)
 		{
-			m_ProjectionMatrix = glm::perspectiveZO(glm::radians(m_Fov), m_AspectRatio, m_NearClip, m_FarClip);
+			m_Matrices.proj = glm::perspectiveZO(glm::radians(m_Fov), m_AspectRatio, m_NearClip, m_FarClip);
 			m_ProjectionMatrixDirty = false;
 		}
 		return m_Matrices;
