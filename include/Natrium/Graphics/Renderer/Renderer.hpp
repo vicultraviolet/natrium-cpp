@@ -38,6 +38,8 @@ namespace Na {
 		void draw_indexed(const VertexBuffer& vertex_buffer, const IndexBuffer& index_buffer, u32 instance_count = 1);
 
 		void set_descriptor_buffer(void* buffer, const void* data) const;
+		template<typename T>
+		inline void set_descriptor_buffer(const T& buffer, const void* data) const { this->set_descriptor_buffer((void*)&buffer, data); }
 
 		[[nodiscard]] inline AssetHandle<RendererSettings> settings(void) { return m_Core.settings(); }
 
