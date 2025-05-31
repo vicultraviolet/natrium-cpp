@@ -40,7 +40,7 @@ namespace Na {
 
 		inline const glm::mat4& view_matrix(void) const { return m_ViewMatrix; }
 		inline const glm::mat4& proj_matrix(void) const { return m_ProjectionMatrix; }
-		inline const CameraMatrices& matrices(void) const { return m_CameraMatrices; }
+		inline const CameraMatrices& matrices(void) const { return m_Matrices; }
 
 		inline void set_pos(const glm::vec3& pos) { m_Position = pos; m_ViewMatrixDirty = true; }
 		inline void set_eye(const glm::vec3& eye) { m_Position = eye; m_ViewMatrixDirty = true; }
@@ -85,7 +85,7 @@ namespace Na {
 				glm::mat4 m_ViewMatrix;
 				glm::mat4 m_ProjectionMatrix;
 			};
-			CameraMatrices m_CameraMatrices;
+			CameraMatrices m_Matrices;
 		};
 
 		bool m_ViewMatrixDirty = true;

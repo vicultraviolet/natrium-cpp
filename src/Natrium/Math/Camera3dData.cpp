@@ -115,6 +115,6 @@ namespace Na {
 			m_ProjectionMatrix = glm::perspectiveZO(glm::radians(m_Fov), m_AspectRatio, m_NearClip, m_FarClip);
 			m_ProjectionMatrixDirty = false;
 		}
-		return m_CameraMatrices;
+		return m_Matrices;
 	}
 } // namespace Na	
