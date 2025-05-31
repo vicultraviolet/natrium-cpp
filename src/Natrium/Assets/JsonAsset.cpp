@@ -18,5 +18,7 @@ namespace Na {
 		AssetHandle<JsonAsset> asset = std::make_shared<JsonAsset>(nlohmann::json::parse(file));
 
 		file.close();
+
+		return asset;
 	}
 } // namespace Na

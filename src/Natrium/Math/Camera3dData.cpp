@@ -2,8 +2,22 @@
 #include "Natrium/Math/Camera3dData.hpp"
 
 namespace Na {
-	Camera3dData::Camera3dData(const glm::vec3& pos, const glm::vec3& eye, float fov, glm::vec2 sensitivity)
-	: m_Position(pos), m_Eye(eye), m_Fov(fov), m_Sensitivity(sensitivity)
+	Camera3dData::Camera3dData(
+		const glm::vec3& pos,
+		const glm::vec3& eye,
+		float fov,
+		float aspect_ratio,
+		float near_clip,
+		float far_clip,
+		glm::vec2 sensitivity
+	)
+	: m_Position(pos),
+	m_Eye(eye),
+	m_Fov(fov),
+	m_AspectRatio(aspect_ratio),
+	m_NearClip(near_clip),
+	m_FarClip(far_clip),
+	m_Sensitivity(sensitivity)
 	{
 		glm::vec3 dir = glm::normalize(eye - pos);
 		m_Rotation.x = glm::degrees(atan2(dir.z, dir.x));
@@ -20,6 +34,8 @@ namespace Na {
 
 		m_Position += move;
 		m_Eye += move;
+
+		m_ViewMatrixDirty = true;
 	}
 
 	void Camera3dData::rotate(glm::vec2 offset)
@@ -39,6 +55,8 @@ namespace Na {
 			sin(glm::radians(m_Rotation.x)) * cos(glm::radians(m_Rotation.y))
 		);
 		m_Eye = m_Position + glm::normalize(direction);
+
+		m_ViewMatrixDirty = true;
 	}
 
 	void Camera3dData::rotate_with_mouse(glm::vec2 mouse_pos)
@@ -65,13 +83,38 @@ namespace Na {
 		m_FirstMouse = true;
 	}
 
-	glm::mat4 Camera3dData::calculate_view(void) const
+	const glm::mat4& Camera3dData::view_matrix(void)
 	{
-		return glm::lookAt(m_Position, m_Eye, glm::vec3(0.0f, 1.0f, 0.0f));
+		if (m_ViewMatrixDirty)
+		{
+			m_ViewMatrix = glm::lookAt(m_Position, m_Eye, glm::vec3(0.0f, 1.0f, 0.0f));
+			m_ViewMatrixDirty = false;
+		}
+		return m_ViewMatrix;
 	}
 
-	glm::mat4 Camera3dData::calculate_projection(float aspect_ratio, float near_clip, float far_clip) const
+	const glm::mat4& Camera3dData::proj_matrix(void)
 	{
-		return glm::perspectiveZO(glm::radians(m_Fov), aspect_ratio, near_clip, far_clip);
+		if (m_ProjectionMatrixDirty)
+		{
+			m_ProjectionMatrix = glm::perspectiveZO(glm::radians(m_Fov), m_AspectRatio, m_NearClip, m_FarClip);
+			m_ProjectionMatrixDirty = false;
+		}
+		return m_ProjectionMatrix;
+	}
+
+	const CameraMatrices& Camera3dData::matrices(void)
+	{
+		if (m_ViewMatrixDirty)
+		{
+			m_ViewMatrix = glm::lookAt(m_Position, m_Eye, glm::vec3(0.0f, 1.0f, 0.0f));
+			m_ViewMatrixDirty = false;
+		}
+		if (m_ProjectionMatrixDirty)
+		{
+			m_ProjectionMatrix = glm::perspectiveZO(glm::radians(m_Fov), m_AspectRatio, m_NearClip, m_FarClip);
+			m_ProjectionMatrixDirty = false;
+		}
+		return m_CameraMatrices;
 	}
 } // namespace Na	
