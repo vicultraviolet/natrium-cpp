@@ -27,17 +27,8 @@ namespace Na {
 
 		template<typename... t_Args>
 		UniqueRef(t_Args&&... __args)
-		: m_Ptr(tmalloc<T>())
-		{
-			try
-			{
-				new(m_Ptr) T(std::forward<t_Args>(__args)...);
-			} catch (const std::exception& e)
-			{
-				free(m_Ptr);
-				throw e;
-			}
-		}
+		: m_Ptr(new T(std::forward<t_Args>(__args)...))
+		{}
 
 		UniqueRef(UniqueRef&& other)
 		: m_Ptr(std::exchange(other.m_Ptr, nullptr))
@@ -46,10 +37,7 @@ namespace Na {
 		UniqueRef& operator=(UniqueRef&& other)
 		{
 			this->destroy();
-
-			if (other)
-				m_Ptr = std::exchange(other.m_Ptr, nullptr);
-
+			m_Ptr = std::exchange(other.m_Ptr, nullptr);
 			return *this;
 		}
 
@@ -63,9 +51,7 @@ namespace Na {
 			if (!m_Ptr)
 				return;
 
-			m_Ptr->~T();
-			free(m_Ptr);
-
+			delete m_Ptr;
 			m_Ptr = nullptr;
 		}
 
@@ -78,6 +64,9 @@ namespace Na {
 			m_Ptr = nullptr;
 			return temp;
 		}
+
+		template<typename U, std::enable_if_t<std::is_base_of_v<U, T>, int> = 0>
+		[[nodiscard]] inline operator UniqueRef<U>(void)&& { return UniqueRef<U>(this->release()); }
 
 		[[nodiscard]] inline T* ptr(void) { return m_Ptr; }
 		[[nodiscard]] inline const T* ptr(void) const { return m_Ptr; }
@@ -130,9 +119,15 @@ namespace Na {
 
 		template<typename... t_Args>
 		RefControlBlock(t_Args&&... __args)
-		: ptr(new T(std::forward<t_Args>(__args)...)), strong_count(1), weak_count(0)
+		: ptr(new T(std::forward<t_Args>(__args)...)), strong_count(0), weak_count(0)
 		{}
 		~RefControlBlock(void) { delete ptr; }
+
+		void inc_strong_count(void) { this->strong_count.fetch_add(1, std::memory_order_relaxed); }
+		void dec_strong_count(void) { this->strong_count.fetch_sub(1, std::memory_order_relaxed); }
+
+		void inc_weak_count(void) { this->weak_count.fetch_add(1, std::memory_order_relaxed); }
+		void dec_weak_count(void) { this->weak_count.fetch_sub(1, std::memory_order_relaxed); }
 	};
 
 	template<typename T>
@@ -153,7 +148,11 @@ namespace Na {
 			return *this;
 		}
 
-		explicit Ref(ControlBlock* cb) : m_ControlBlock(cb) {}
+		explicit Ref(ControlBlock* cb) : m_ControlBlock(cb)
+		{
+			if (m_ControlBlock)
+				m_ControlBlock->inc_strong_count();
+		}
 
 		template<typename... t_Args>
 		static Ref Make(t_Args&&... __args)
@@ -162,11 +161,8 @@ namespace Na {
 		}
 
 		Ref(const Ref& other)
-		: m_ControlBlock(other.m_ControlBlock)
-		{
-			if (m_ControlBlock)
-				m_ControlBlock->strong_count++;
-		}
+		: Ref(other.m_ControlBlock)
+		{}
 
 		Ref& operator=(const Ref& other)
 		{
@@ -177,7 +173,7 @@ namespace Na {
 			if (other)
 			{
 				m_ControlBlock = other.m_ControlBlock;
-				m_ControlBlock->strong_count++;
+				m_ControlBlock->inc_strong_count();
 			}
 
 			return *this;
@@ -208,7 +204,7 @@ namespace Na {
 			if (!m_ControlBlock)
 				return;
 
-			m_ControlBlock->strong_count--;
+			m_ControlBlock->dec_strong_count();
 			if (!m_ControlBlock->strong_count)
 			{
 				delete m_ControlBlock->ptr;
@@ -220,11 +216,17 @@ namespace Na {
 			m_ControlBlock = nullptr;
 		}
 
+		template<typename U, std::enable_if_t<std::is_base_of_v<U, T>, int> = 0>
+		[[nodiscard]] operator Ref<U>(void) const
+		{
+			return Ref<U>((typename Ref<U>::ControlBlock*)this->m_ControlBlock);
+		}
+
+		[[nodiscard]] inline u64 strong_count(void) const { return m_ControlBlock->strong_count.load(); }
+		[[nodiscard]] inline u64 weak_count(void) const { return m_ControlBlock->weak_count.load(); }
+
 		[[nodiscard]] inline T* ptr(void) { return m_ControlBlock->ptr; }
 		[[nodiscard]] inline const T* ptr(void) const { return m_ControlBlock->ptr; }
-
-		[[nodiscard]] inline std::atomic<u64> strong_count(void) const { return m_ControlBlock->strong_count; }
-		[[nodiscard]] inline std::atomic<u64> weak_count(void) const { return m_ControlBlock->weak_count; }
 
 		[[nodiscard]] inline T& operator*(void) { return *m_ControlBlock->ptr; }
 		[[nodiscard]] inline const T& operator*(void) const { return *m_ControlBlock->ptr; }
@@ -235,6 +237,7 @@ namespace Na {
 		[[nodiscard]] inline auto operator<=>(const Ref& other) const { return m_ControlBlock->ptr <=> other.m_ControlBlock->ptr; }
 		[[nodiscard]] inline auto operator==(const Ref& other) const { return m_ControlBlock->ptr == other.m_ControlBlock->ptr; }
 
+		[[nodiscard]] inline bool expired(void) const { return !m_ControlBlock || !m_ControlBlock->strong_count.load(); }
 		[[nodiscard]] inline operator bool(void) const { return m_ControlBlock; }
 	private:
 		friend class WeakRef<T>;
@@ -286,12 +289,15 @@ namespace Na {
 			return *this;
 		}
 
-		WeakRef(const WeakRef& other)
-		: m_ControlBlock(other.m_ControlBlock)
+		explicit WeakRef(ControlBlock* cb) : m_ControlBlock(cb)
 		{
 			if (m_ControlBlock)
-				m_ControlBlock->weak_count++;
+				m_ControlBlock->inc_weak_count();
 		}
+
+		WeakRef(const WeakRef& other)
+		: WeakRef(other.m_ControlBlock)
+		{}
 
 		WeakRef& operator=(const WeakRef& other)
 		{
@@ -302,7 +308,7 @@ namespace Na {
 			if (other)
 			{
 				m_ControlBlock = other.m_ControlBlock;
-				m_ControlBlock->weak_count++;
+				m_ControlBlock->inc_weak_count();
 			}
 			return *this;
 		}
@@ -319,15 +325,13 @@ namespace Na {
 			this->release();
 			if (other)
 				m_ControlBlock = std::exchange(other.m_ControlBlock, nullptr);
+
 			return *this;
 		}
 
 		WeakRef(const Ref<T>& ref)
-		: m_ControlBlock(ref.m_ControlBlock)
-		{
-			if (m_ControlBlock)
-				m_ControlBlock->weak_count++;
-		}
+		: WeakRef(ref.m_ControlBlock)
+		{}
 
 		WeakRef& operator=(const Ref<T>& ref)
 		{
@@ -335,9 +339,8 @@ namespace Na {
 				return *this;
 
 			this->release();
-
-			if (m_ControlBlock = ref.m_ControlBlock)
-				m_ControlBlock->weak_count++;
+			if ((m_ControlBlock = ref.m_ControlBlock))
+				m_ControlBlock->inc_weak_count();
 
 			return *this;
 		}
@@ -347,23 +350,28 @@ namespace Na {
 			if (!m_ControlBlock)
 				return;
 
-			m_ControlBlock->weak_count--;
+			m_ControlBlock->dec_weak_count();
 			if (!m_ControlBlock->weak_count && !m_ControlBlock->strong_count)
 				delete m_ControlBlock;
 
 			m_ControlBlock = nullptr;
 		}
 
-		[[nodiscard]] inline bool expired(void) const { return !m_ControlBlock || !m_ControlBlock->strong_count; }
-
-		Ref<T> lock(void) const
+		[[nodiscard]] Ref<T> lock(void) const
 		{
-			if (this->expired())
-				return nullptr;
-			
-			m_ControlBlock->strong_count++;
-			return Ref<T>(m_ControlBlock);
+			return m_ControlBlock->strong_count.load() ? Ref<T>(m_ControlBlock) : nullptr;
 		}
+
+		template<typename U, std::enable_if_t<std::is_base_of_v<U, T>, int> = 0>
+		[[nodiscard]] operator WeakRef<U>(void) const
+		{
+			return WeakRef<U>((typename WeakRef<U>::ControlBlock*)this->m_ControlBlock);
+		}
+
+		[[nodiscard]] inline bool expired(void) const { return !m_ControlBlock || !m_ControlBlock->strong_count.load(); }
+
+		[[nodiscard]] inline u64 strong_count(void) const { return m_ControlBlock->strong_count.load(); }
+		[[nodiscard]] inline u64 weak_count(void) const { return m_ControlBlock->weak_count.load(); }
 
 		[[nodiscard]] inline operator bool(void) const { return m_ControlBlock;  }
 	private:
