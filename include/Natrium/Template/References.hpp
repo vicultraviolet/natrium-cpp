@@ -93,8 +93,34 @@ namespace Na {
 
 		[[nodiscard]] inline operator bool(void) const { return m_Ptr; }
 	private:
+		template<typename To, typename From>
+		friend UniqueRef<To> static_pointer_cast(UniqueRef<From>&& from);
+
+		template<typename To, typename From>
+		friend UniqueRef<To> dynamic_pointer_cast(UniqueRef<From>&& from);
+
 		T* m_Ptr = nullptr;
 	};
+
+	template<typename To, typename From>
+	UniqueRef<To> static_pointer_cast(UniqueRef<From>&& from)
+	{
+		using FromPtr = decltype(from.ptr());
+		To* casted = (To*)const_cast<std::remove_const_t<std::remove_pointer_t<FromPtr>>*>(from.ptr());
+		from.release();
+		return UniqueRef<To>(casted);
+	}
+
+	template<typename To, typename From>
+	UniqueRef<To> dynamic_pointer_cast(UniqueRef<From>&& from)
+	{
+		using FromPtr = decltype(from.ptr());
+		To* casted = dynamic_cast<To*>(const_cast<std::remove_const_t<std::remove_pointer_t<FromPtr>>*>(from.ptr()));
+		if (!casted)
+			return nullptr;
+		from.release();
+		return UniqueRef<To>(casted);
+	}
 
 	template<typename T>
 	struct RefControlBlock {
@@ -213,8 +239,37 @@ namespace Na {
 	private:
 		friend class WeakRef<T>;
 
+		template<typename To, typename From>
+		friend Ref<To> static_pointer_cast(const Ref<From>& from);
+
+		template<typename To, typename From>
+		friend Ref<To> dynamic_pointer_cast(const Ref<From>& from);
+
 		ControlBlock* m_ControlBlock;
 	};
+
+	template<typename To, typename From>
+	Ref<To> static_pointer_cast(const Ref<From>& from)
+	{
+		if (!from)
+			return nullptr;
+
+		return Ref<To>((RefControlBlock<To>*)from.m_ControlBlock);
+	}
+
+	template<typename To, typename From>
+	Ref<To> dynamic_pointer_cast(const Ref<From>& from)
+	{
+		if (!from)
+			return nullptr;
+
+		using FromPtr = decltype(from.ptr());
+
+		To* casted_ptr = dynamic_cast<To*>(const_cast<std::remove_const_t<std::remove_pointer_t<FromPtr>>*>(from.ptr()));
+		if (!casted_ptr)
+			return nullptr;
+		return Ref<To>((RefControlBlock<To>*)from.m_ControlBlock);
+	}
 
 	template<typename T>
 	class WeakRef {
@@ -312,20 +367,22 @@ namespace Na {
 
 		[[nodiscard]] inline operator bool(void) const { return m_ControlBlock;  }
 	private:
+		template<typename To, typename From>
+		friend WeakRef<To> static_pointer_cast(const WeakRef<From>& from);
+
+		template<typename To, typename From>
+		friend WeakRef<To> dynamic_pointer_cast(const WeakRef<From>& from);
+
 		ControlBlock* m_ControlBlock;
 	};
 
 	template<typename To, typename From>
-	Ref<To> dynamic_pointer_cast(const Ref<From>& from)
+	WeakRef<To> static_pointer_cast(const WeakRef<From>& from)
 	{
 		if (!from)
 			return nullptr;
 
-		To* casted_ptr = dynamic_cast<To*>(from.ptr());
-		if (!casted_ptr)
-			return nullptr;
-
-		return Ref<To>((RefControlBlock<To>*)from.m_ControlBlock);
+		return WeakRef<To>((RefControlBlock<To>*)from.m_ControlBlock);
 	}
 
 	template<typename To, typename From>
@@ -338,7 +395,9 @@ namespace Na {
 		if (!locked)
 			return nullptr;
 
-		To* casted_ptr = dynamic_cast<To*>(locked.ptr());
+		using FromPtr = decltype(locked.ptr());
+
+		To* casted_ptr = dynamic_cast<To*>(const_cast<std::remove_const_t<std::remove_pointer_t<FromPtr>>*>(locked.ptr()));
 		if (!casted_ptr)
 			return nullptr;
 
