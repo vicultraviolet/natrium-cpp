@@ -314,6 +314,36 @@ namespace Na {
 	private:
 		ControlBlock* m_ControlBlock;
 	};
+
+	template<typename To, typename From>
+	Ref<To> dynamic_pointer_cast(const Ref<From>& from)
+	{
+		if (!from)
+			return nullptr;
+
+		To* casted_ptr = dynamic_cast<To*>(from.ptr());
+		if (!casted_ptr)
+			return nullptr;
+
+		return Ref<To>((RefControlBlock<To>*)from.m_ControlBlock);
+	}
+
+	template<typename To, typename From>
+	WeakRef<To> dynamic_pointer_cast(const WeakRef<From>& from)
+	{
+		if (!from)
+			return nullptr;
+
+		Ref<From> locked = from.lock();
+		if (!locked)
+			return nullptr;
+
+		To* casted_ptr = dynamic_cast<To*>(locked.ptr());
+		if (!casted_ptr)
+			return nullptr;
+
+		return WeakRef<To>((RefControlBlock<To>*)from.m_ControlBlock);
+	}
 } // namespace Na
 
 #endif // NA_REF_HPP
