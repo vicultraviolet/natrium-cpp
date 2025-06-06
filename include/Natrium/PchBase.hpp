@@ -20,6 +20,7 @@
 #include <filesystem>
 #include <chrono>
 #include <thread>
+#include <atomic>
 #include <limits>
 #include <concepts>
 
@@ -58,5 +59,6 @@
 #include "./Template/ArrayList.hpp"
 #include "./Template/ArrayVector.hpp"
 #include "./Template/DoubleList.hpp"
+#include "./Template/References.hpp"
 
 #endif // NA_PCH_BASE_HPP
