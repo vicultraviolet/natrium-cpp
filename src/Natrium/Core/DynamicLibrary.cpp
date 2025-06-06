@@ -21,7 +21,7 @@ namespace Na {
 
 		m_Name = name;
 
-		g_Logger.fmt(Trace, "Loading library {}", name);
+		g_Logger.printf(Trace, "Loading library {}", name);
 		std::filesystem::path dir = Context::GetExecDir();
 	#if defined(NA_PLATFORM_WINDOWS)
 		dir = (dir / name).replace_extension(".dll");
@@ -39,7 +39,7 @@ namespace Na {
 		if (!m_Handle)
 			return;
 
-		g_Logger.fmt(Trace, "Unloading library {}", m_Name);
+		g_Logger.printf(Trace, "Unloading library {}", m_Name);
 	#if defined(NA_PLATFORM_WINDOWS)
 		FreeLibrary((HMODULE)m_Handle);
 	#elif defined(NA_PLATFORM_LINUX)

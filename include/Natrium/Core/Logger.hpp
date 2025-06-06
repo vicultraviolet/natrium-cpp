@@ -55,22 +55,55 @@ namespace Na {
 	}
 
 #if !defined(NA_CONFIG_DIST)
-	template<typename t_Stream = std::ostream, bool t_Enabled = true>
+	template<bool t_Enabled = true>
 #else
-	template<typename t_Stream = std::ostream, bool t_Enabled = false>
+	template<bool t_Enabled = false>
 #endif 
 	class Logger {
 	public:
 		std::string_view name;
-		t_Stream* stream;
-	public:
-		inline void log(LogLevel level, const std::string_view& msg)
+
+		template<typename t_Stream>
+		void print_raw_to(t_Stream& stream, const std::string_view& msg) const
 		{
 			if (!t_Enabled)
 				return;
+			stream << msg;
+		}
 
-			*this->stream << NA_FORMAT(
-				"{}[{:%H:%M:%S}]{}[{}]:{} {}\n",
+		void print_raw(const std::string_view& msg) const
+		{
+			if (!t_Enabled)
+				return;
+			this->print_raw_to(std::cout, msg);
+		}
+
+		template<typename t_Stream, typename... t_Args>
+		void printf_raw_to(
+			t_Stream& stream,
+			fmt::format_string<t_Args...> str,
+			t_Args&&... __args
+		) const
+		{
+			if (!t_Enabled)
+				return;
+			stream << NA_FORMAT(str, std::forward<t_Args>(__args)...);
+		}
+
+		template<typename... t_Args>
+		void printf_raw(fmt::format_string<t_Args...> str, t_Args&&... __args) const
+		{
+			if (!t_Enabled)
+				return;
+			this->printf_raw_to(std::cout, str, std::forward<t_Args>(__args)...);
+		}
+
+		template<typename t_Stream>
+		void print_to(t_Stream& stream, LogLevel level, const std::string_view& msg) const
+		{
+			if (!t_Enabled)
+				return;
+			this->printf_raw_to(stream, "{}[{:%H:%M:%S}]{}[{}]:{} {}\n",
 				LogLevelEscapeCodes(level),
 				std::chrono::round<std::chrono::seconds>(std::chrono::system_clock::now()),
 				k_LogLevelNames[level],
@@ -80,30 +113,40 @@ namespace Na {
 			);
 		}
 
-		template<typename... t_Args>
-		inline void fmt(LogLevel level, fmt::format_string<t_Args...> str, t_Args&&... __args)
+		void print(LogLevel level, const std::string_view& msg) const
 		{
 			if (!t_Enabled)
 				return;
-
-			*this->stream << NA_FORMAT(
-				"{}[{:%H:%M:%S}]{}[{}]:{} {}\n",
-				LogLevelEscapeCodes(level),
-				std::chrono::round<std::chrono::seconds>(std::chrono::system_clock::now()),
-				k_LogLevelNames[level],
-				this->name,
-				Na::ANSI_EscapeCodes::k_Reset,
-				NA_FORMAT(str, std::forward<t_Args>(__args)...)
-			);
+			this->print_to(std::cout, level, msg);
 		}
 
-		inline void header(LogLevel level = LogLevel::Info)
+		template<typename t_Stream, typename... t_Args>
+		void printf_to(
+			t_Stream& stream,
+			LogLevel level,
+			fmt::format_string<t_Args...> str,
+			t_Args&&... __args
+		) const
 		{
 			if (!t_Enabled)
 				return;
+			this->print_to(stream, level, NA_FORMAT(str, std::forward<t_Args>(__args)...));
+		}
 
-			*this->stream << NA_FORMAT(
-				"{}[{:%Y-%m-%d %H:%M:%S}][{}]{}\n",
+		template<typename... t_Args>
+		void printf(LogLevel level, fmt::format_string<t_Args...> str, t_Args&&... __args) const
+		{
+			if (!t_Enabled)
+				return;
+			this->printf_to(std::cout, level, str, std::forward<t_Args>(__args)...);
+		}
+
+		template<typename t_Stream>
+		void print_header_to(t_Stream& stream, LogLevel level = Info) const
+		{
+			if (!t_Enabled)
+				return;
+			this->printf_raw_to(stream, "{}[{:%Y-%m-%d %H:%M:%S}][{}]{}\n",
 				LogLevelEscapeCodes(level),
 				std::chrono::round<std::chrono::seconds>(std::chrono::system_clock::now()),
 			#if __cpp_lib_chrono >= 201907L
@@ -115,25 +158,16 @@ namespace Na {
 			);
 		}
 
-		inline void new_line(void)
+		void print_header(LogLevel level = Info) const
 		{
 			if (!t_Enabled)
 				return;
-
-			*stream << '\n';
+			this->print_header_to(std::cout, level);
 		}
 
-		inline void operator()(LogLevel level, const std::string_view& msg)
-		{
-			if (!t_Enabled)
-				return;
-
-			this->log(level, msg);
-		}
-
-		[[nodiscard]] inline constexpr bool enabled(void) { return t_Enabled; }
+		[[nodiscard]] inline constexpr bool enabled(void) const { return t_Enabled; }
 	};
-	inline Logger<> g_Logger{"Natrium", &std::clog};
+	inline Logger<> g_Logger{"Natrium"};
 } // namespace Na
 
 #endif // NA_LOGGER_HPP

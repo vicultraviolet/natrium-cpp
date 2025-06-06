@@ -51,12 +51,12 @@ namespace Na {
 	{
 		Context context(getExecPath(), "Pre-Alpha");
 
-		g_Logger.header();
-		g_Logger.fmt(Info, "Initializing Natrium version {}", context.m_Version);
+		g_Logger.print_header();
+		g_Logger.printf(Info, "Initializing Natrium version {}", context.m_Version);
 
 		glfwSetErrorCallback([](int error, const char* description)
 		{
-			g_Logger.fmt(Error, "GLFW Error#{}: {}", error, description);
+			g_Logger.printf(Error, "GLFW Error#{}: {}", error, description);
 			throw std::runtime_error(NA_FORMAT("GLFW Error #{}", error));
 		});
 		int result = glfwInit();
@@ -71,7 +71,7 @@ namespace Na {
 
 	void Context::Shutdown(void)
 	{
-		g_Logger(Info, "Shutting down Natrium, Goodbye!");
+		g_Logger.print(Info, "Shutting down Natrium, Goodbye!");
 
 		VkContext::Shutdown();
 		glfwTerminate();

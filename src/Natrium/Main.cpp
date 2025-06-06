@@ -17,7 +17,7 @@ int main(int argc, char* argv[])
 		return Na::Main(argc, argv);
 	} catch (const std::exception& e)
 	{
-		Na::g_Logger.fmt(Na::Fatal, "Unhandled exception reached main! {}", e.what());
+		Na::g_Logger.printf(Na::Fatal, "Unhandled exception reached main! {}", e.what());
 		return -1;
 	}
 	return 0;

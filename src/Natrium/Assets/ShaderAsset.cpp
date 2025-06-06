@@ -71,16 +71,16 @@ namespace Na {
 			{
 				if (spv.GetNumWarnings())
 				{
-					g_Logger.fmt(
+					g_Logger.printf(
 						Na::Warn,
 						"Compiled {} with {} warnings!",
 							m_Name,
 							spv.GetNumWarnings()
 					);
-					g_Logger.log(Na::Warn, spv.GetErrorMessage());
+					g_Logger.print(Na::Warn, spv.GetErrorMessage());
 				} else
 				{
-					g_Logger.fmt(
+					g_Logger.printf(
 						Info,
 						"Compiled {} with 0 warnings!",
 							m_Name
@@ -88,14 +88,14 @@ namespace Na {
 				}
 			} else
 			{
-				g_Logger.fmt(
+				g_Logger.printf(
 					Na::Error,
 					"Failed to compile {} with {} errors and {} warnings!",
 						m_Name,
 						spv.GetNumErrors(),
 						spv.GetNumWarnings()
 				);
-				g_Logger.log(Na::Error, spv.GetErrorMessage());
+				g_Logger.print(Na::Error, spv.GetErrorMessage());
 				throw std::runtime_error("Failed to compile shader!");
 			}
 		}

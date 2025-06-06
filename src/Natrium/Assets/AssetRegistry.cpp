@@ -40,7 +40,7 @@ namespace Na {
 
 		if (!std::filesystem::exists(path))
 		{
-			g_Logger.fmt(Info, "{} doesn't exist, creating using default values!", path);
+			g_Logger.printf(Info, "{} doesn't exist, creating using default values!", path);
 
 			std::filesystem::path default_settings_path = m_EngineAssetDir / "default_renderer_settings.json";
 

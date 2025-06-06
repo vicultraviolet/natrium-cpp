@@ -17,18 +17,18 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
 	{
 		if (severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT)
 		{
-			Na::g_Logger(Na::Error, data->pMessage);
+			Na::g_Logger.print(Na::Error, data->pMessage);
 		#if defined(_MSC_VER)
 			__debugbreak();
 		#endif
 		} else
 		if (severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
-			Na::g_Logger(Na::Warn, data->pMessage);
+			Na::g_Logger.print(Na::Warn, data->pMessage);
 		else
 		if (severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT)
-			Na::g_Logger(Na::Info, data->pMessage);
+			Na::g_Logger.print(Na::Info, data->pMessage);
 		else
-			Na::g_Logger(Na::Trace, data->pMessage);
+			Na::g_Logger.print(Na::Trace, data->pMessage);
 	}
 
 	return VK_FALSE;
@@ -322,7 +322,7 @@ namespace Na {
 		VkContext context;
 		s_Context = &context;
 
-		g_Logger(Info, "Initializing vulkan!");
+		g_Logger.print(Info, "Initializing Vulkan!");
 
 		context.m_Instance = createInstance();
 		context.m_DebugMessenger = createDebugMessenger(context.m_Instance);
