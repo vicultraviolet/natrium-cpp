@@ -13,10 +13,10 @@ namespace Na {
 	};
 
 	template<typename t_Asset = Asset>
-	using AssetHandle = std::shared_ptr<t_Asset>;
+	using AssetHandle = Ref<t_Asset>;
 
 	template<typename t_Asset = Asset>
-	using WeakAssetHandle = std::weak_ptr<t_Asset>;
+	using WeakAssetHandle = WeakRef<t_Asset>;
 
 	template<typename T>
 	concept DerivedAsset = std::is_base_of<Asset, T>::value && !std::is_same<Asset, T>::value;

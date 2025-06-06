@@ -18,7 +18,7 @@ namespace Na {
 		ShaderString(const std::string_view& data, const std::string_view& name) : m_Data(data), m_Name(name) {};
 		ShaderString(const std::filesystem::path& path);
 
-		static AssetHandle<ShaderString> Load(const std::filesystem::path& path) { return std::make_shared<ShaderString>(path);  }
+		static AssetHandle<ShaderString> Load(const std::filesystem::path& path) { return Ref<ShaderString>::Make(path);  }
 
 		[[nodiscard]] ArrayVector<u32> compile(const std::string_view& entry_point = "main") const;
 

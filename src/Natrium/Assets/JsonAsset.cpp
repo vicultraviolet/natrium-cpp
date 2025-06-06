@@ -15,7 +15,7 @@ namespace Na {
 		std::ifstream file(path);
 		NA_ASSERT(file, "Failed to Load JsonAsset: Error in loading {}", path.C_STR());
 
-		AssetHandle<JsonAsset> asset = std::make_shared<JsonAsset>(nlohmann::json::parse(file));
+		AssetHandle<JsonAsset> asset = Ref<JsonAsset>::Make(nlohmann::json::parse(file));
 
 		file.close();
 

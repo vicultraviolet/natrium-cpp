@@ -105,6 +105,6 @@ namespace Na {
 
 	AssetHandle<ShaderBinary> ShaderBinary::Load(const std::filesystem::path& path)
 	{
-		return std::make_shared<ShaderBinary>(LoadSpv(path));
+		return Ref<ShaderBinary>::Make(LoadSpv(path));
 	}
 } // namespace Na

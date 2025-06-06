@@ -14,7 +14,7 @@
 namespace Na {
 	AssetHandle<ImageAsset> ImageAsset::Load(const std::filesystem::path& path)
 	{
-		AssetHandle<ImageAsset> img_asset = std::make_shared<ImageAsset>();
+		AssetHandle<ImageAsset> img_asset = Ref<ImageAsset>::Make();
 
 		int channels;
 		img_asset->m_Data = (void*)stbi_load(

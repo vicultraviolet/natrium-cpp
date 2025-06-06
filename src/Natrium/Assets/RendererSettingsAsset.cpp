@@ -17,7 +17,7 @@ namespace Na {
 		std::ifstream file(path);
 		NA_ASSERT(file, "Failed to Load RendererSettingsAsset: Error in loading {}!", path.C_STR());
 
-		AssetHandle<RendererSettingsAsset> asset = std::make_shared<RendererSettingsAsset>(nlohmann::json::parse(file));
+		AssetHandle<RendererSettingsAsset> asset = Ref<RendererSettingsAsset>::Make(nlohmann::json::parse(file));
 
 		asset->m_Path = path;
 

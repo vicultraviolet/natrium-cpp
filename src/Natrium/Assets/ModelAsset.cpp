@@ -59,7 +59,7 @@ namespace Na {
 
 	AssetHandle<ModelAsset> ModelAsset::Load(const std::filesystem::path& path)
 	{
-        AssetHandle<ModelAsset> asset = std::make_shared<ModelAsset>();
+        AssetHandle<ModelAsset> asset = Ref<ModelAsset>::Make();
 
         if (path.extension() == ".obj")
             loadObj(path, asset->m_Vertices, asset->m_Indices);
