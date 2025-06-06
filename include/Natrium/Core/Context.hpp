@@ -2,7 +2,6 @@
 #define NA_CONTEXT_HPP
 
 #include "Natrium/Core.hpp"
-#include "Natrium/Core/Logger.hpp"
 #include "Natrium/Core/Event.hpp"
 #include "Natrium/Graphics/VkContext.hpp"
 

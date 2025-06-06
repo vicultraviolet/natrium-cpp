@@ -1,7 +1,6 @@
 #include "Pch.hpp"
 #include "Natrium/Assets/ShaderAsset.hpp"
 
-#include "Natrium/Core/Logger.hpp"
 #include "Natrium/Graphics/VkContext.hpp"
 
 #include <shaderc/shaderc.hpp>

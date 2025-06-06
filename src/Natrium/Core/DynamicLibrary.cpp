@@ -2,7 +2,6 @@
 #include "Natrium/Core/DynamicLibrary.hpp"
 
 #include "Natrium/Core/Context.hpp"
-#include "Natrium/Core/Logger.hpp"
 
 #if defined(NA_PLATFORM_WINDOWS)
 #include <Windows.h>

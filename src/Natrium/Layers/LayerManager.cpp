@@ -57,7 +57,7 @@ namespace Na {
 		for (u64 i = 0; i < m_Layers.size(); i++)
 		{
 			m_Layers[i]->on_detach();
-			m_Layers[i].~shared_ptr();
+			m_Layers[i].~Ref();
 		}
 		m_Layers.resize(0);
 	}

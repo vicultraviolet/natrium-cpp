@@ -28,7 +28,7 @@ namespace Na {
 				return dynamic_pointer_cast<T>(it->second);
 
 			AssetHandle<T> asset = T::Load(path);
-			m_Assets[path] = static_pointer_cast<Asset>(asset);
+			m_Assets[path] = asset;
 			return asset;
 		}
 

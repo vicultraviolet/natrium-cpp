@@ -1,8 +1,6 @@
 #include "Pch.hpp"
 #include "Natrium/Graphics/VkContext.hpp"
 
-#include "Natrium/Core/Logger.hpp"
-
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 

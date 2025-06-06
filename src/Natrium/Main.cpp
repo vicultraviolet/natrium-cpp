@@ -2,8 +2,6 @@
 #include "Natrium/Main.hpp"
 #undef main
 
-#include "Natrium/Core/Logger.hpp"
-
 #if defined(NA_WINDOWED_APP)
 #include <Windows.h>
 #endif // NA_WINDOWED_APP

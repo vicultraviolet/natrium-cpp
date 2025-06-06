@@ -61,4 +61,7 @@
 #include "./Template/DoubleList.hpp"
 #include "./Template/References.hpp"
 
+// for convenience
+#include "Natrium/Core/Logger.hpp"
+
 #endif // NA_PCH_BASE_HPP

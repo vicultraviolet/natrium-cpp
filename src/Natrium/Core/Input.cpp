@@ -1,8 +1,6 @@
 #include "Pch.hpp"
 #include "Natrium/Core/Input.hpp"
 
-#include "Natrium/Core/Logger.hpp"
-
 #if defined(NA_PLATFORM_LINUX) || defined(NA_PLATFORM_WINDOWS)
 
 #include <GLFW/glfw3.h>

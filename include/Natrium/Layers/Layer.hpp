@@ -25,16 +25,16 @@ namespace Na {
 	};
 
 	template<typename t_Layer = Layer>
-	using LayerHandle = std::shared_ptr<t_Layer>;
+	using LayerHandle = Ref<t_Layer>;
 
 	template<typename t_Layer = Layer>
-	using WeakLayerHandle = std::weak_ptr<t_Layer>;
+	using WeakLayerHandle = WeakRef<t_Layer>;
 
 	template<typename T>
 	concept DerivedLayer = std::is_base_of<Layer, T>::value && !std::is_same<Layer, T>::value;
 
 	template<DerivedLayer T, typename... t_Args>
-	inline LayerHandle<T> CreateLayer(t_Args&&... __args) { return std::make_shared<T>(std::forward<t_Args>(__args)...); }
+	inline LayerHandle<T> CreateLayer(t_Args&&... __args) { return Ref<T>::Make(std::forward<t_Args>(__args)...); }
 } // namespace Na
 
 #endif // NA_LAYER_HPP

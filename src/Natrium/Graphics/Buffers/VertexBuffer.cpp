@@ -3,8 +3,6 @@
 
 #include "Natrium/Graphics/VkContext.hpp"
 
-#include "Natrium/Core/Logger.hpp"
-
 namespace Na {
 	VertexBuffer::VertexBuffer(u64 size, const void* data)
 	: m_Buffer(

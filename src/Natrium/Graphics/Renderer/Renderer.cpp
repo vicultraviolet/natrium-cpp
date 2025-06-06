@@ -3,7 +3,6 @@
 
 #include "Natrium/Graphics/VkContext.hpp"
 #include "Natrium/Graphics/Pipeline.hpp"
-#include "Natrium/Core/Logger.hpp"
 
 namespace Na {
 	Renderer::Renderer(Window& window, AssetHandle<RendererSettings> settings)

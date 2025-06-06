@@ -1,8 +1,6 @@
 #include "Pch.hpp"
 #include "Natrium/Assets/AssetRegistry.hpp"
 
-#include "Natrium/Core/Logger.hpp"
-
 #if defined(NA_PLATFORM_WINDOWS)
 #define C_STR string().c_str
 #elif defined(NA_PLATFORM_LINUX)
@@ -65,7 +63,7 @@ namespace Na {
 		}
 
 		AssetHandle<RendererSettings> asset = RendererSettings::Load(path);
-		m_Assets[path] = static_pointer_cast<Asset>(asset);
+		m_Assets[path] = asset;
 		return asset;
 	}
 

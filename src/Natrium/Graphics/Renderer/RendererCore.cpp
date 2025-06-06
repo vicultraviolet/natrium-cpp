@@ -1,8 +1,6 @@
 #include "Pch.hpp"
 #include "Natrium/Graphics/Renderer/RendererCore.hpp"
 
-#include "Natrium/Core/Logger.hpp"
-
 #include "Natrium/Graphics/VkContext.hpp"
 #include "Natrium/Graphics/Pipeline.hpp"
 
