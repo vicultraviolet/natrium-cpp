@@ -16,7 +16,7 @@ namespace Na {
 		NA_VERIFY(!Application::s_Application, "Failed to create Application: Cannot create more than one Application instance!");
 		Application::s_Application = this;
 
-		m_Context = Context::Initialize();
+		m_Context = Context(initialize);
 
 		m_AssetRegistry = AssetRegistry(engine_asset_dir, shader_output_dir);
 
@@ -29,7 +29,7 @@ namespace Na {
 
 	void Application::destroy(void)
 	{
-		Na::VkContext::WaitForRemainingDeviceTasks();
+		Na::VkContext::Get().wait_for_device();
 
 		m_LayerManager.detach_all();
 
@@ -39,7 +39,7 @@ namespace Na {
 		m_LayerManager.destroy();
 		m_AssetRegistry.destroy();
 
-		m_Context.Shutdown();
+		m_Context.destroy();
 
 		s_Application = nullptr;
 	}

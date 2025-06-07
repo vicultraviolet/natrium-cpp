@@ -26,7 +26,7 @@ namespace Na {
 		descriptor_write.pImageInfo = image_info;
 		descriptor_write.pTexelBufferView = texel_buffer_view;
 
-		VkContext::GetLogicalDevice().updateDescriptorSets(
+		VkContext::Get().logical_device().updateDescriptorSets(
 			1, &descriptor_write,
 			0, nullptr // descriptor copy
 		);
@@ -63,6 +63,6 @@ namespace Na {
 		create_info.minLod = 0.0f;
 		create_info.maxLod = 0.0f;
 
-		return VkContext::GetLogicalDevice().createSampler(create_info);
+		return VkContext::Get().logical_device().createSampler(create_info);
 	}
 } // namespace Na

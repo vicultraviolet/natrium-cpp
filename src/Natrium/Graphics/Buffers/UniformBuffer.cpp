@@ -9,7 +9,7 @@ namespace Na {
 	UniformBuffer::UniformBuffer(u64 size, AssetHandle<RendererSettings> renderer_settings)
 	: m_PerFrameSize(size)
 	{
-		static VkDeviceSize x_Alignment = VkContext::GetPhysicalDevice().getProperties().limits.minUniformBufferOffsetAlignment;
+		static VkDeviceSize x_Alignment = VkContext::Get().physical_device().getProperties().limits.minUniformBufferOffsetAlignment;
 
 		m_AlignedSize = (size + x_Alignment - 1) & ~(x_Alignment - 1);
 
@@ -19,7 +19,7 @@ namespace Na {
 			vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent
 		);
 
-		m_Mapped = VkContext::GetLogicalDevice().mapMemory(m_Buffer.memory, 0, size);
+		m_Mapped = VkContext::Get().logical_device().mapMemory(m_Buffer.memory, 0, size);
 	}
 
 	void UniformBuffer::destroy(void)

@@ -9,7 +9,7 @@ namespace Na {
 		ShaderStageBits stage,
 		const std::string_view& entry_point
 	)
-	: m_Module(VkContext::GetLogicalDevice()
+	: m_Module(VkContext::Get().logical_device()
 			   .createShaderModule(vk::ShaderModuleCreateInfo(
 				   {},
 				   binary.size(),
@@ -21,7 +21,7 @@ namespace Na {
 
 	ShaderModule::~ShaderModule(void)
 	{
-		VkContext::GetLogicalDevice().destroyShaderModule(m_Module);
+		VkContext::Get().logical_device().destroyShaderModule(m_Module);
 	}
 
 	ShaderModule::ShaderModule(ShaderModule&& other)
@@ -32,7 +32,7 @@ namespace Na {
 
 	ShaderModule& ShaderModule::operator=(ShaderModule&& other)
 	{
-		VkContext::GetLogicalDevice().destroyShaderModule(m_Module);
+		VkContext::Get().logical_device().destroyShaderModule(m_Module);
 		m_Module = std::exchange(other.m_Module, nullptr);
 		m_Stage = std::move(other.m_Stage);
 		m_EntryPoint = std::move(other.m_EntryPoint);

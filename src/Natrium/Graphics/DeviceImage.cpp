@@ -13,7 +13,7 @@ namespace Na {
 	{
 		for (vk::Format format : candidates)
 		{
-			vk::FormatProperties properties = VkContext::GetPhysicalDevice().getFormatProperties(format);
+			vk::FormatProperties properties = VkContext::Get().physical_device().getFormatProperties(format);
 
 			if (tiling == vk::ImageTiling::eLinear && (properties.linearTilingFeatures & features) == features)
 				return format;
@@ -48,7 +48,7 @@ namespace Na {
 	{
 		NA_ASSERT(layer_count > 0, "Failed to create DeviceImage: Invalid layer count!");
 
-		vk::Device logical_device = VkContext::GetLogicalDevice();
+		vk::Device logical_device = VkContext::Get().logical_device();
 
 		vk::ImageCreateInfo create_info;
 
@@ -90,7 +90,7 @@ namespace Na {
 
 	void DeviceImage::destroy(void)
 	{
-		vk::Device logical_device = VkContext::GetLogicalDevice();
+		vk::Device logical_device = VkContext::Get().logical_device();
 
 		if (this->img)
 			logical_device.destroyImage(this->img);
@@ -103,7 +103,7 @@ namespace Na {
 
 	void DeviceImage::transition_layout(vk::ImageLayout old_layout, vk::ImageLayout new_layout)
 	{
-		vk::Device logical_device = VkContext::GetLogicalDevice();
+		vk::Device logical_device = VkContext::Get().logical_device();
 
 		vk::ImageMemoryBarrier barrier;
 
@@ -141,7 +141,7 @@ namespace Na {
 			throw std::runtime_error("Unsupported image layout transition!");
 		}
 
-		vk::CommandBuffer cmd_buffer = VkContext::BeginSingleTimeCommands();
+		vk::CommandBuffer cmd_buffer = VkContext::Get().begin_single_time_cmds();
 
 		cmd_buffer.pipelineBarrier(
 			execute_stage,
@@ -152,7 +152,7 @@ namespace Na {
 			1, &barrier // image memory barriers
 		);
 
-		VkContext::EndSingleTimeCommands(cmd_buffer);
+		VkContext::Get().end_single_time_cmds(cmd_buffer);
 	}
 
 	void DeviceImage::copy_from_buffer(vk::Buffer buffer, u32 starting_layer, u32 layer_count)
@@ -170,7 +170,7 @@ namespace Na {
 		region.imageOffset = {{ 0, 0, 0 }};
 		region.imageExtent = this->extent;
 
-		vk::CommandBuffer cmd_buffer = VkContext::BeginSingleTimeCommands();
+		vk::CommandBuffer cmd_buffer = VkContext::Get().begin_single_time_cmds();
 
 		cmd_buffer.copyBufferToImage(
 			buffer,
@@ -179,7 +179,7 @@ namespace Na {
 			1, &region
 		);
 
-		VkContext::EndSingleTimeCommands(cmd_buffer);
+		VkContext::Get().end_single_time_cmds(cmd_buffer);
 	}
 
 	void DeviceImage::copy_all_from_buffer(vk::Buffer buffer, u32 starting_layer)
@@ -197,7 +197,7 @@ namespace Na {
 			regions[i].imageExtent = vk::Extent3D(this->width, this->height, 1);
 		}
 
-		vk::CommandBuffer cmd_buffer = VkContext::BeginSingleTimeCommands();
+		vk::CommandBuffer cmd_buffer = VkContext::Get().begin_single_time_cmds();
 
 		cmd_buffer.copyBufferToImage(
 			buffer, // src
@@ -206,13 +206,13 @@ namespace Na {
 			(u32)regions.size(), regions.ptr()
 		);
 
-		VkContext::EndSingleTimeCommands(cmd_buffer);
+		VkContext::Get().end_single_time_cmds(cmd_buffer);
 	}
 
 	/*
 	void DeviceImage::copy_all_from_buffer(vk::Buffer buffer, u32 element_size, u32 starting_layer)
 	{
-		vk::CommandBuffer cmd_buffer = VkContext::BeginSingleTimeCommands();
+		vk::CommandBuffer cmd_buffer = VkContext::Get().begin_single_time_cmds();
 
 		for (u32 i = 0; i < this->layer_count - starting_layer; i++)
 		{
@@ -237,13 +237,13 @@ namespace Na {
 			);
 		}
 
-		VkContext::EndSingleTimeCommands(cmd_buffer);
+		VkContext::Get().end_single_time_cmds(cmd_buffer);
 	}
 	*/
 
 	void DeviceImage::copy_from_buffers(const vk::Buffer* buffers, u32 buffer_count, u32 starting_layer)
 	{
-		vk::CommandBuffer cmd_buffer = VkContext::BeginSingleTimeCommands();
+		vk::CommandBuffer cmd_buffer = VkContext::Get().begin_single_time_cmds();
 
 		vk::BufferImageCopy region;
 		region.bufferOffset = 0;
@@ -270,7 +270,7 @@ namespace Na {
 			);
 		}
 
-		VkContext::EndSingleTimeCommands(cmd_buffer);
+		VkContext::Get().end_single_time_cmds(cmd_buffer);
 	}
 
 	DeviceImage::DeviceImage(DeviceImage&& other)
@@ -329,6 +329,6 @@ namespace Na {
 		create_info.subresourceRange.baseArrayLayer = 0;
 		create_info.subresourceRange.layerCount = layer_count;
 
-		return VkContext::GetLogicalDevice().createImageView(create_info);
+		return VkContext::Get().logical_device().createImageView(create_info);
 	}
 } // namespace Na

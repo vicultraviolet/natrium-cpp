@@ -21,7 +21,7 @@ namespace Na {
 		m_Name = name;
 
 		g_Logger.printf(Trace, "Loading library {}", name);
-		std::filesystem::path dir = Context::GetExecDir();
+		std::filesystem::path dir = Context::Get().exec_dir();
 	#if defined(NA_PLATFORM_WINDOWS)
 		dir = (dir / name).replace_extension(".dll");
 		m_Handle = LoadLibraryW(dir.c_str());

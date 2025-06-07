@@ -21,13 +21,42 @@ namespace Na {
 	#endif // NA_PLATFORM
 	}
 
-	Context::Context(const std::filesystem::path& exec_path, const std::string_view& version)
-	: m_ExecPath(exec_path),
-	m_ExecDir(exec_path.parent_path()),
-	m_ExecName(exec_path.filename()),
-	m_Version(version)
+	Context::Context(initialize_t)
+	: m_ExecPath(getExecPath()),
+	m_ExecDir(m_ExecPath.parent_path()),
+	m_ExecName(m_ExecPath.filename()),
+	m_Version("Pre-Alpha")
 	{
+		NA_VERIFY(!Context::s_Context, "Failed to create Context: Cannot create more than one Context!");
+		Context::s_Context = this;
 
+		g_Logger.print_header();
+		g_Logger.printf(Info, "Initializing Natrium version {}", m_Version);
+
+		glfwSetErrorCallback([](int error, const char* description)
+		{
+			g_Logger.printf(Error, "GLFW Error#{}: {}", error, description);
+			throw std::runtime_error(NA_FORMAT("GLFW Error #{}", error));
+		});
+		int result = glfwInit();
+		NA_ASSERT(result, "Failed to initialize glfw!");
+		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+
+		m_VkContext = VkContext(initialize);
+	}
+
+	void Context::destroy(void)
+	{
+		if (!m_Valid)
+			return;
+		m_Valid = false;
+
+		g_Logger.print(Info, "Shutting down Natrium, Goodbye!");
+
+		m_VkContext.destroy();
+		glfwTerminate();
+
+		s_Context = nullptr;
 	}
 
 	Context::Context(Context&& other)
@@ -36,7 +65,8 @@ namespace Na {
 	m_ExecName(std::move(other.m_ExecName)),
 	m_Version(std::move(other.m_Version)),
 	m_EventQueue(std::move(other.m_EventQueue)),
-	m_VkContext(std::move(other.m_VkContext))
+	m_VkContext(std::move(other.m_VkContext)),
+	m_Valid(std::exchange(other.m_Valid, false))
 	{
 		Context::s_Context = this;
 	}
@@ -49,40 +79,9 @@ namespace Na {
 		m_Version = std::move(other.m_Version);
 		m_EventQueue = std::move(other.m_EventQueue);
 		m_VkContext = std::move(other.m_VkContext);
+		m_Valid = std::exchange(other.m_Valid, false);
 
 		Context::s_Context = this;
 		return *this;
-	}
-
-	Context Context::Initialize(void)
-	{
-		Context context(getExecPath(), "Pre-Alpha");
-
-		g_Logger.print_header();
-		g_Logger.printf(Info, "Initializing Natrium version {}", context.m_Version);
-
-		glfwSetErrorCallback([](int error, const char* description)
-		{
-			g_Logger.printf(Error, "GLFW Error#{}: {}", error, description);
-			throw std::runtime_error(NA_FORMAT("GLFW Error #{}", error));
-		});
-		int result = glfwInit();
-		NA_ASSERT(result, "Failed to initialize glfw!");
-		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-
-		context.m_VkContext = VkContext::Initialize();
-
-		s_Context = &context;
-		return context;
-	}
-
-	void Context::Shutdown(void)
-	{
-		g_Logger.print(Info, "Shutting down Natrium, Goodbye!");
-
-		VkContext::Shutdown();
-		glfwTerminate();
-
-		s_Context = nullptr;
 	}
 } // namespace Na

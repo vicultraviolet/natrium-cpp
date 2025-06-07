@@ -20,32 +20,33 @@ namespace Na {
 	public:
 		VkContext(void) = default;
 
+		VkContext(initialize_t);
+		inline ~VkContext(void) { this->destroy(); }
+
+		void destroy(void);
+
 		VkContext(const VkContext& other) = delete;
 		VkContext& operator=(const VkContext& other) = delete;
 
 		VkContext(VkContext&& other);
 		VkContext& operator=(VkContext&& other);
 
-		static VkContext Initialize(void);
-		static void Shutdown(void);
+		inline void wait_for_device(void) { m_LogicalDevice.waitIdle(); }
 
-		static inline void WaitForRemainingDeviceTasks(void) { s_Context->m_LogicalDevice.waitIdle(); }
+		[[nodiscard]] vk::CommandBuffer begin_single_time_cmds(void);
+		void end_single_time_cmds(vk::CommandBuffer cmd_buffer);
 
-		static vk::CommandBuffer BeginSingleTimeCommands(void);
-		static void EndSingleTimeCommands(vk::CommandBuffer cmd_buffer);
+		[[nodiscard]] static inline bool Exists(void) { return VkContext::s_Context; }
+		[[nodiscard]] static inline VkContext& Get(void) { return *VkContext::s_Context;  }
 
-		[[nodiscard]] static inline bool Exists(void) { return VkContext::s_Context;  }
+		[[nodiscard]] inline vk::Instance               instance(void)        const { return m_Instance; }
+		[[nodiscard]] inline vk::DebugUtilsMessengerEXT debug_messenger(void) const { return m_DebugMessenger; }
+		[[nodiscard]] inline vk::PhysicalDevice         physical_device(void) const { return m_PhysicalDevice; }
+		[[nodiscard]] inline vk::Device                 logical_device(void)  const { return m_LogicalDevice; }
 
-		[[nodiscard]] static inline vk::Instance               GetInstance(void)       { return s_Context->m_Instance; }
-		[[nodiscard]] static inline vk::DebugUtilsMessengerEXT GetDebugMessenger(void) { return s_Context->m_DebugMessenger; }
-		[[nodiscard]] static inline vk::PhysicalDevice         GetPhysicalDevice(void) { return s_Context->m_PhysicalDevice; }
-		[[nodiscard]] static inline vk::Device                 GetLogicalDevice(void)  { return s_Context->m_LogicalDevice; }
+		[[nodiscard]] inline vk::Queue                  graphics_queue(void)  const { return m_GraphicsQueue; }
 
-		[[nodiscard]] static inline vk::Queue                  GetGraphicsQueue(void)  { return s_Context->m_GraphicsQueue; }
-
-
-		[[nodiscard]] static inline vk::SampleCountFlagBits    GetMSAASamples(bool enabled = true) { return enabled ? s_Context->m_MSAASamples : vk::SampleCountFlagBits::e1; }
-
+		[[nodiscard]] inline vk::SampleCountFlagBits    msaa_samples(bool enabled = true) const { return enabled ? m_MSAASamples : vk::SampleCountFlagBits::e1; }
 	private:
 		vk::Instance               m_Instance;
 		vk::DebugUtilsMessengerEXT m_DebugMessenger;
@@ -58,6 +59,8 @@ namespace Na {
 
 
 		vk::SampleCountFlagBits    m_MSAASamples = vk::SampleCountFlagBits::e1;
+
+		bool m_Valid = true;
 
 		static inline VkContext* s_Context = nullptr;
 	};

@@ -72,7 +72,7 @@ namespace Na {
 		create_info.bindingCount = (u32)bindings.size();
 		create_info.pBindings = bindings.ptr();
 
-		return VkContext::GetLogicalDevice().createDescriptorSetLayout(create_info);
+		return VkContext::Get().logical_device().createDescriptorSetLayout(create_info);
 	}
 
 	static vk::DescriptorPool createDescriptorPool(const ShaderUniformLayout& descriptor_layout)
@@ -90,7 +90,7 @@ namespace Na {
 		create_info.pPoolSizes = pool_sizes.ptr();
 		create_info.maxSets = 1; // 1 * uniform.count
 
-		return VkContext::GetLogicalDevice().createDescriptorPool(create_info);
+		return VkContext::Get().logical_device().createDescriptorPool(create_info);
 	}
 
 	static vk::DescriptorSet createDescriptorSet(vk::DescriptorSetLayout& layout, vk::DescriptorPool pool)
@@ -102,7 +102,7 @@ namespace Na {
 		alloc_info.descriptorSetCount = 1;
 		alloc_info.pSetLayouts = &layout;
 
-		vk::Result result = VkContext::GetLogicalDevice().allocateDescriptorSets(&alloc_info, &descriptor_set);
+		vk::Result result = VkContext::Get().logical_device().allocateDescriptorSets(&alloc_info, &descriptor_set);
 		if (result != vk::Result::eSuccess)
 			throw std::runtime_error("Failed to allocate descriptor set!");
 
@@ -117,7 +117,7 @@ namespace Na {
 		alloc_info.pSetLayouts = layouts;
 
 		Na::ArrayVector<vk::DescriptorSet> descriptor_sets(count);
-		vk::Result result = VkContext::GetLogicalDevice().allocateDescriptorSets(&alloc_info, descriptor_sets.ptr());
+		vk::Result result = VkContext::Get().logical_device().allocateDescriptorSets(&alloc_info, descriptor_sets.ptr());
 		if (result != vk::Result::eSuccess)
 			throw std::runtime_error("Failed to allocate descriptor sets!");
 		return descriptor_sets;
@@ -177,7 +177,7 @@ namespace Na {
 			i++;
 		}
 
-		m_Layout = VkContext::GetLogicalDevice().createPipelineLayout(
+		m_Layout = VkContext::Get().logical_device().createPipelineLayout(
 			vk::PipelineLayoutCreateInfo(
 				{}, // flags
 				(bool)m_DescriptorLayout, uniform_data_layout.size() ? &m_DescriptorLayout : nullptr,
@@ -202,7 +202,7 @@ namespace Na {
 		create_info.pColorBlendState = &color_blend_info;
 		create_info.pDepthStencilState = &depth_stencil_info;
 
-		m_Pipeline = VkContext::GetLogicalDevice().createGraphicsPipeline(nullptr, create_info).value;
+		m_Pipeline = VkContext::Get().logical_device().createGraphicsPipeline(nullptr, create_info).value;
 
 		if (uniform_data_layout.size())
 		{
@@ -213,7 +213,7 @@ namespace Na {
 
 	void GraphicsPipeline::destroy(void)
 	{
-		vk::Device logical_device = VkContext::GetLogicalDevice();
+		vk::Device logical_device = VkContext::Get().logical_device();
 
 		logical_device.destroyDescriptorPool(m_DescriptorPool);
 		logical_device.destroyPipeline(m_Pipeline);

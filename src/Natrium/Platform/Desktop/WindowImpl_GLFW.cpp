@@ -13,7 +13,7 @@ namespace Na {
 
 	EventQueue& PollEvents(void)
 	{
-		Context::GetEventQueue().resize(0);
+		Context::Get().event_queue().resize(0);
 		glfwPollEvents();
 
 		for (Joystick jid = Joysticks::k_1; jid <= Joysticks::k_Last; jid++)
@@ -31,7 +31,7 @@ namespace Na {
 							continue;
 
 						if (current_state.buttons[button] == InputActions::k_Press)
-							Context::GetEventQueue().emplace(Event{.gamepad_button_pressed = {
+							Context::Get().event_queue().emplace(Event{.gamepad_button_pressed = {
 								EventType::GamepadButtonPressed,
 								false,
 								nullptr,
@@ -39,7 +39,7 @@ namespace Na {
 								button
 						    }});
 						else
-							Context::GetEventQueue().emplace(Event{.gamepad_button_released = {
+							Context::Get().event_queue().emplace(Event{.gamepad_button_released = {
 								EventType::GamepadButtonReleased,
 								false,
 								nullptr,
@@ -53,7 +53,7 @@ namespace Na {
 						if (current_state.axes[axis] == previous_state.axes[axis])
 							continue;
 
-						Context::GetEventQueue().emplace(Event{.gamepad_axis_moved = {
+						Context::Get().event_queue().emplace(Event{.gamepad_axis_moved = {
 							EventType::GamepadAxisMoved,
 							false,
 							nullptr,
@@ -68,7 +68,7 @@ namespace Na {
 			}
 		}
 
-		return Context::GetEventQueue();
+		return Context::Get().event_queue();
 	}
 
 	Window::WindowImpl_GLFW(u32 width, u32 height, const std::string_view& title)
@@ -172,7 +172,7 @@ namespace Na {
 			switch (action)
 			{
 			case InputActions::k_Press:
-				Context::GetEventQueue().emplace(Event{.key_pressed = {
+				Context::Get().event_queue().emplace(Event{.key_pressed = {
 					EventType::KeyPressed,
 					false,
 					__window,
@@ -182,7 +182,7 @@ namespace Na {
 				}});
 				break;
 			case InputActions::k_Repeat:
-				Context::GetEventQueue().emplace(Event{.key_pressed = {
+				Context::Get().event_queue().emplace(Event{.key_pressed = {
 					EventType::KeyPressed,
 					false,
 					__window,
@@ -192,7 +192,7 @@ namespace Na {
 				}});
 				break;
 			case InputActions::k_Release:
-				Context::GetEventQueue().emplace(Event{.key_released = {
+				Context::Get().event_queue().emplace(Event{.key_released = {
 					EventType::KeyReleased,
 					false,
 					__window,
@@ -207,7 +207,7 @@ namespace Na {
 			Window* __window = (Window*)glfwGetWindowUserPointer(window);
 			__window->m_Width = width;
 			__window->m_Height = height;
-			Context::GetEventQueue().emplace(Event{.window_resized = {
+			Context::Get().event_queue().emplace(Event{.window_resized = {
 				EventType::WindowResized,
 				false,
 				__window,
@@ -217,7 +217,7 @@ namespace Na {
 		glfwSetWindowCloseCallback(_window, [](GLFWwindow* window)
 		{
 			Window* __window = (Window*)glfwGetWindowUserPointer(window);
-			Context::GetEventQueue().emplace(Event{.window_closed = {
+			Context::Get().event_queue().emplace(Event{.window_closed = {
 				EventType::WindowClosed,
 				false,
 				__window
@@ -228,13 +228,13 @@ namespace Na {
 			Window* __window = (Window*)glfwGetWindowUserPointer(window);
 			__window->m_Focus = focus;
 			if (focus)
-				Context::GetEventQueue().emplace(Event{.window_focused = {
+				Context::Get().event_queue().emplace(Event{.window_focused = {
 					EventType::WindowFocused,
 					false,
 					__window
 				}});
 			else
-				Context::GetEventQueue().emplace(Event{.window_lost_focus = {
+				Context::Get().event_queue().emplace(Event{.window_lost_focus = {
 					EventType::WindowLostFocus,
 					false,
 					__window
@@ -245,14 +245,14 @@ namespace Na {
 			Window* __window = (Window*)glfwGetWindowUserPointer(window);
 			__window->m_Minimized = iconified;
 			if (iconified)
-				Context::GetEventQueue().emplace(Event{.window_minimized = {
+				Context::Get().event_queue().emplace(Event{.window_minimized = {
 					EventType::WindowMinimized,
 					false,
 					__window
 				}});
 			else
 				__window->m_Minimized = false;
-				Context::GetEventQueue().emplace(Event{.window_restored = {
+				Context::Get().event_queue().emplace(Event{.window_restored = {
 					EventType::WindowRestored,
 					false,
 					__window
@@ -261,7 +261,7 @@ namespace Na {
 		glfwSetCursorPosCallback(_window, [](GLFWwindow* window, double x, double y)
 		{
 			Window* __window = (Window*)glfwGetWindowUserPointer(window);
-			Context::GetEventQueue().emplace(Event{.mouse_moved = {
+			Context::Get().event_queue().emplace(Event{.mouse_moved = {
 				EventType::MouseMoved,
 				false,
 				__window,
@@ -271,7 +271,7 @@ namespace Na {
 		glfwSetScrollCallback(_window, [](GLFWwindow* window, double x_offset, double y_offset)
 		{
 			Window* __window = (Window*)glfwGetWindowUserPointer(window);
-			Context::GetEventQueue().emplace(Event{.mouse_scrolled = {
+			Context::Get().event_queue().emplace(Event{.mouse_scrolled = {
 				EventType::MouseScrolled,
 				false,
 				__window,
@@ -284,7 +284,7 @@ namespace Na {
 			switch (action)
 			{
 			case InputActions::k_Press:
-				Context::GetEventQueue().emplace(Event{.mouse_button_pressed = {
+				Context::Get().event_queue().emplace(Event{.mouse_button_pressed = {
 					EventType::MouseButtonPressed,
 					false,
 					__window,
@@ -292,7 +292,7 @@ namespace Na {
 				}});
 				break;
 			case InputActions::k_Release:
-				Context::GetEventQueue().emplace(Event{.mouse_button_released = {
+				Context::Get().event_queue().emplace(Event{.mouse_button_released = {
 					EventType::MouseButtonReleased,
 					false,
 					__window,
@@ -308,7 +308,7 @@ namespace Na {
 
 			if (event == GLFW_CONNECTED)
 			{
-				Context::GetEventQueue().emplace(Event{.gamepad_connected = {
+				Context::Get().event_queue().emplace(Event{.gamepad_connected = {
 					EventType::GamepadConnected,
 					false,
 					nullptr,
@@ -317,7 +317,7 @@ namespace Na {
 			} else
 			if (event == GLFW_DISCONNECTED)
 			{
-				Context::GetEventQueue().emplace(Event{.gamepad_disconnected = {
+				Context::Get().event_queue().emplace(Event{.gamepad_disconnected = {
 					EventType::GamepadDisconnected,
 					false,
 					nullptr,

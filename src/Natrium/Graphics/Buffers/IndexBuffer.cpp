@@ -22,7 +22,7 @@ namespace Na {
 
 	void IndexBuffer::set_data(const u32* data)
 	{
-		vk::Device logical_device = VkContext::GetLogicalDevice();
+		vk::Device logical_device = VkContext::Get().logical_device();
 
 		DeviceBuffer stage_buffer(
 			m_Buffer.size,

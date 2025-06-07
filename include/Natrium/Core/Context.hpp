@@ -10,22 +10,26 @@ namespace Na {
 	public:
 		Context(void) = default;
 
+		Context(initialize_t);
+		~Context(void) { this->destroy(); }
+
+		void destroy(void);
+
 		Context(const Context& other) = delete;
 		Context& operator=(const Context& other) = delete;
 
 		Context(Context&& other);
 		Context& operator=(Context&& other);
 
-		static Context Initialize(void);
-		static void Shutdown(void);
+		[[nodiscard]] static inline bool Exists(void) { return Context::s_Context; }
+		[[nodiscard]] static inline Context& Get(void) { return *Context::s_Context; }
 
-		static EventQueue& GetEventQueue(void) { return s_Context->m_EventQueue; }
+		[[nodiscard]] inline EventQueue& event_queue(void) { return m_EventQueue; }
+		[[nodiscard]] inline const EventQueue& event_queue(void) const { return m_EventQueue; }
 
-		static const std::filesystem::path& GetExecPath(void) { return s_Context->m_ExecPath; }
-		static const std::filesystem::path& GetExecDir(void)  { return s_Context->m_ExecDir; }
-		static const std::filesystem::path& GetExecName(void) { return s_Context->m_ExecName; }
-	private:
-		Context(const std::filesystem::path& exec_path, const std::string_view& version);
+		[[nodiscard]] inline const std::filesystem::path& exec_path(void) const { return m_ExecPath; }
+		[[nodiscard]] inline const std::filesystem::path& exec_dir(void)  const { return m_ExecDir; }
+		[[nodiscard]] inline const std::filesystem::path& exec_name(void) const { return m_ExecName; }
 	private:
 		std::filesystem::path m_ExecPath, m_ExecDir, m_ExecName;
 		std::string_view m_Version;
@@ -33,6 +37,8 @@ namespace Na {
 		EventQueue m_EventQueue;
 
 		VkContext m_VkContext;
+
+		bool m_Valid = true;
 
 		static inline Context* s_Context = nullptr;
 	};

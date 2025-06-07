@@ -76,7 +76,7 @@ namespace Na {
 
 	float RendererSettingsAsset::AnisotropyLimit(void)
 	{
-		return VkContext::GetPhysicalDevice().getProperties().limits.maxSamplerAnisotropy;
+		return VkContext::Get().physical_device().getProperties().limits.maxSamplerAnisotropy;
 	}
 
 	void RendererSettingsAsset::_update_file(void) const

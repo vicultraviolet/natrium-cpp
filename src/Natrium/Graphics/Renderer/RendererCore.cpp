@@ -60,7 +60,7 @@ namespace Na {
 		if (!m_Window)
 			return;
 
-		vk::Device logical_device = VkContext::GetLogicalDevice();
+		vk::Device logical_device = VkContext::Get().logical_device();
 
 		for (vk::Framebuffer framebuffer : m_Framebuffers)
 			logical_device.destroyFramebuffer(framebuffer);
@@ -78,7 +78,7 @@ namespace Na {
 
 		logical_device.destroySwapchainKHR(m_Swapchain);
 
-		VkContext::GetInstance().destroySurfaceKHR(m_Surface);
+		VkContext::Get().instance().destroySurfaceKHR(m_Surface);
 
 		m_Window = nullptr;
 	}
@@ -86,7 +86,7 @@ namespace Na {
 	void RendererCore::_create_window_surface(void)
 	{
 		m_Surface = createWindowSurface(m_Window->native());
-		m_QueueIndices = QueueFamilyIndices::Get(VkContext::GetPhysicalDevice(), m_Surface);
+		m_QueueIndices = QueueFamilyIndices::Get(VkContext::Get().physical_device(), m_Surface);
 		if (!m_QueueIndices)
 			throw std::runtime_error("Queue indices is incomplete!");
 
@@ -108,9 +108,9 @@ namespace Na {
 
 	void RendererCore::_create_swapchain(void)
 	{
-		vk::Device logical_device = VkContext::GetLogicalDevice();
+		vk::Device logical_device = VkContext::Get().logical_device();
 
-		SurfaceSupport support = SurfaceSupport::Get(m_Surface, VkContext::GetPhysicalDevice());
+		SurfaceSupport support = SurfaceSupport::Get(m_Surface, VkContext::Get().physical_device());
 		if (!support)
 			throw std::runtime_error("Swapchain not supported!");
 
@@ -173,7 +173,7 @@ namespace Na {
 			vk::ImageTiling::eOptimal,
 			vk::ImageUsageFlagBits::eTransientAttachment | vk::ImageUsageFlagBits::eColorAttachment,
 			vk::SharingMode::eExclusive,
-			VkContext::GetMSAASamples(m_Settings->multisampling_enabled()),
+			VkContext::Get().msaa_samples(m_Settings->multisampling_enabled()),
 			vk::MemoryPropertyFlagBits::eDeviceLocal
 		);
 		m_ColorImageView = CreateImageView(
@@ -200,7 +200,7 @@ namespace Na {
 			vk::ImageTiling::eOptimal,
 			vk::ImageUsageFlagBits::eDepthStencilAttachment,
 			vk::SharingMode::eExclusive,
-			VkContext::GetMSAASamples(m_Settings->multisampling_enabled()),
+			VkContext::Get().msaa_samples(m_Settings->multisampling_enabled()),
 			vk::MemoryPropertyFlagBits::eDeviceLocal
 		);
 		m_DepthImageView = CreateImageView(
@@ -236,7 +236,7 @@ namespace Na {
 		vk::SubpassDependency dependency;
 
 		color_attachment.format                 = m_SwapchainFormat.format;
-		color_attachment.samples                = VkContext::GetMSAASamples(msaa_enabled);
+		color_attachment.samples                = VkContext::Get().msaa_samples(msaa_enabled);
 		color_attachment.loadOp                 = vk::AttachmentLoadOp::eClear;
 		color_attachment.storeOp                = vk::AttachmentStoreOp::eStore;
 		color_attachment.stencilLoadOp          = vk::AttachmentLoadOp::eDontCare;
@@ -250,7 +250,7 @@ namespace Na {
 		color_attachment_ref.layout             = vk::ImageLayout::eColorAttachmentOptimal;
 										        
 		depth_attachment.format                 = depth_format;
-		depth_attachment.samples                = VkContext::GetMSAASamples(msaa_enabled);
+		depth_attachment.samples                = VkContext::Get().msaa_samples(msaa_enabled);
 		depth_attachment.loadOp                 = vk::AttachmentLoadOp::eClear;
 		depth_attachment.storeOp                = vk::AttachmentStoreOp::eDontCare;
 		depth_attachment.stencilLoadOp          = vk::AttachmentLoadOp::eDontCare;
@@ -307,7 +307,7 @@ namespace Na {
 		create_info.dependencyCount = 1;
 		create_info.pDependencies = &dependency;
 
-		m_RenderPass = VkContext::GetLogicalDevice().createRenderPass(create_info);
+		m_RenderPass = VkContext::Get().logical_device().createRenderPass(create_info);
 	}
 
 	void RendererCore::_create_framebuffers(void)
@@ -334,13 +334,13 @@ namespace Na {
 			create_info.height = m_Height;
 			create_info.layers = 1;
 
-			m_Framebuffers[i] = VkContext::GetLogicalDevice().createFramebuffer(create_info);
+			m_Framebuffers[i] = VkContext::Get().logical_device().createFramebuffer(create_info);
 		}
 	}
 
 	void RendererCore::_recreate_swapchain(void)
 	{
-		vk::Device logical_device = VkContext::GetLogicalDevice();
+		vk::Device logical_device = VkContext::Get().logical_device();
 
 		m_Width = m_Window->width();
 		m_Height = m_Window->height();

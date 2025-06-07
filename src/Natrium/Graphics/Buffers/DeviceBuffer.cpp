@@ -6,7 +6,7 @@
 namespace Na {
 	u32 FindMemoryType(u32 typeFilter, vk::MemoryPropertyFlags properties)
 	{
-		vk::PhysicalDeviceMemoryProperties memory_properties = VkContext::GetPhysicalDevice().getMemoryProperties();
+		vk::PhysicalDeviceMemoryProperties memory_properties = VkContext::Get().physical_device().getMemoryProperties();
 
 		for (u32 i = 0; i < memory_properties.memoryTypeCount; i++)
 			if ((typeFilter & (1 << i)) && (memory_properties.memoryTypes[i].propertyFlags & properties) == properties)
@@ -23,7 +23,7 @@ namespace Na {
 	)
 	: size(size)
 	{
-		vk::Device logical_device = VkContext::GetLogicalDevice();
+		vk::Device logical_device = VkContext::Get().logical_device();
 
 		vk::BufferCreateInfo buffer_info;
 		buffer_info.size = size;
@@ -44,7 +44,7 @@ namespace Na {
 
 	void DeviceBuffer::destroy(void)
 	{
-		vk::Device logical_device = VkContext::GetLogicalDevice();
+		vk::Device logical_device = VkContext::Get().logical_device();
 
 		logical_device.destroyBuffer(this->buffer);
 		logical_device.freeMemory(this->memory);
@@ -54,7 +54,7 @@ namespace Na {
 
 	void DeviceBuffer::copy(const DeviceBuffer& other) 
 	{
-		vk::CommandBuffer cmd_buffer = VkContext::BeginSingleTimeCommands();
+		vk::CommandBuffer cmd_buffer = VkContext::Get().begin_single_time_cmds();
 
 		vk::BufferCopy copy_region;
 		copy_region.srcOffset = 0;
@@ -63,7 +63,7 @@ namespace Na {
 
 		cmd_buffer.copyBuffer(other.buffer, this->buffer, 1, &copy_region);
 
-		VkContext::EndSingleTimeCommands(cmd_buffer);
+		VkContext::Get().end_single_time_cmds(cmd_buffer);
 	}
 
 	DeviceBuffer::DeviceBuffer(DeviceBuffer&& other)
