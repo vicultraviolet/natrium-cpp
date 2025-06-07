@@ -17,6 +17,9 @@ namespace Na {
 
 	void Renderer::destroy(void)
 	{
+		if (!VkContext::Exists())
+			return;
+
 		vk::Device logical_device = VkContext::GetLogicalDevice();
 
 		for (FrameData& fd : m_Frames)
@@ -328,6 +331,7 @@ namespace Na {
 	m_GraphicsCmdPool(std::exchange(other.m_GraphicsCmdPool, nullptr)),
 	m_Frames(std::move(other.m_Frames)),
 	m_FrameIndex(other.m_FrameIndex),
+	m_ImageInFlightFences(std::move(other.m_ImageInFlightFences)),
 	m_ImageIndex(other.m_ImageIndex)
 	{}
 
@@ -339,6 +343,7 @@ namespace Na {
 		m_GraphicsCmdPool = std::exchange(other.m_GraphicsCmdPool, nullptr);
 		m_Frames = std::move(other.m_Frames);
 		m_FrameIndex = other.m_FrameIndex;
+		m_ImageInFlightFences = std::move(other.m_ImageInFlightFences);
 		m_ImageIndex = other.m_ImageIndex;
 
 		return *this;

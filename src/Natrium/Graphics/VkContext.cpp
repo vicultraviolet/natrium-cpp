@@ -391,19 +391,28 @@ namespace Na {
 	}
 
 	VkContext::VkContext(VkContext&& other)
+	: m_Instance(std::exchange(other.m_Instance, nullptr)),
+	m_DebugMessenger(std::exchange(other.m_DebugMessenger, nullptr)),
+	m_PhysicalDevice(std::exchange(other.m_PhysicalDevice, nullptr)),
+	m_LogicalDevice(std::exchange(other.m_LogicalDevice, nullptr)),
+	m_GraphicsQueue(std::exchange(other.m_GraphicsQueue, nullptr)),
+	m_SingleTimeCmdPool(std::exchange(other.m_SingleTimeCmdPool, nullptr)),
+	m_MSAASamples(other.m_MSAASamples)
 	{
-		memcpy(this, &other, sizeof(VkContext));
-		memset(&other, 0, sizeof(VkContext));
-
-		s_Context = this;
+		VkContext::s_Context = this;
 	}
 
 	VkContext& VkContext::operator=(VkContext&& other)
 	{
-		memcpy(this, &other, sizeof(VkContext));
-		memset(&other, 0, sizeof(VkContext));
+		m_Instance = std::exchange(other.m_Instance, nullptr);
+		m_DebugMessenger = std::exchange(other.m_DebugMessenger, nullptr);
+		m_PhysicalDevice = std::exchange(other.m_PhysicalDevice, nullptr);
+		m_LogicalDevice = std::exchange(other.m_LogicalDevice, nullptr);
+		m_GraphicsQueue = std::exchange(other.m_GraphicsQueue, nullptr);
+		m_SingleTimeCmdPool = std::exchange(other.m_SingleTimeCmdPool, nullptr);
+		m_MSAASamples = other.m_MSAASamples;
 
-		s_Context = this;
+		VkContext::s_Context = this;
 		return *this;
 	}
 } // namespace Na

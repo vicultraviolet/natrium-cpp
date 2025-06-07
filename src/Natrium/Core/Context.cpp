@@ -31,19 +31,26 @@ namespace Na {
 	}
 
 	Context::Context(Context&& other)
+	: m_ExecPath(std::move(other.m_ExecPath)),
+	m_ExecDir(std::move(other.m_ExecDir)),
+	m_ExecName(std::move(other.m_ExecName)),
+	m_Version(std::move(other.m_Version)),
+	m_EventQueue(std::move(other.m_EventQueue)),
+	m_VkContext(std::move(other.m_VkContext))
 	{
-		memcpy(this, &other, sizeof(Context));
-		memset(&other, 0, sizeof(Context));
-
-		s_Context = this;
+		Context::s_Context = this;
 	}
 
 	Context& Context::operator=(Context&& other)
 	{
-		memcpy(this, &other, sizeof(Context));
-		memset(&other, 0, sizeof(Context));
+		m_ExecPath = std::move(other.m_ExecPath);
+		m_ExecDir = std::move(other.m_ExecDir);
+		m_ExecName = std::move(other.m_ExecName);
+		m_Version = std::move(other.m_Version);
+		m_EventQueue = std::move(other.m_EventQueue);
+		m_VkContext = std::move(other.m_VkContext);
 
-		s_Context = this;
+		Context::s_Context = this;
 		return *this;
 	}
 

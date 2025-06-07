@@ -7,7 +7,7 @@ namespace Na {
 	template<typename T>
 	class UniqueRef {
 	public:
-		UniqueRef(void) = default;
+		UniqueRef(void) : m_Ptr(nullptr) {}
 		~UniqueRef(void) { this->destroy(); }
 
 		UniqueRef(nullptr_t) : m_Ptr(nullptr) {}
@@ -138,7 +138,7 @@ namespace Na {
 	public:
 		using ControlBlock = RefControlBlock<T>;
 
-		Ref(void) = default;
+		Ref(void) : m_ControlBlock(nullptr) {}
 		~Ref(void) { this->release(); }
 
 		Ref(nullptr_t) : m_ControlBlock(nullptr) {}
@@ -201,7 +201,7 @@ namespace Na {
 
 		void release(void)
 		{
-			if (!m_ControlBlock)
+			if (this->expired())
 				return;
 
 			m_ControlBlock->dec_strong_count();
@@ -279,7 +279,7 @@ namespace Na {
 	public:
 		using ControlBlock = RefControlBlock<T>;
 
-		WeakRef(void) = default;
+		WeakRef(void) : m_ControlBlock(nullptr) {}
 		~WeakRef(void) { this->release(); }
 
 		WeakRef(nullptr_t) : m_ControlBlock(nullptr) {}
@@ -347,7 +347,7 @@ namespace Na {
 
 		void release(void)
 		{
-			if (!m_ControlBlock)
+			if (this->expired())
 				return;
 
 			m_ControlBlock->dec_weak_count();

@@ -31,6 +31,8 @@
 
 #include "./Math/Camera3dData.hpp"
 
+#include "./Core/Application.hpp"
+
 // entry point
 #include "./Main.hpp"
 
