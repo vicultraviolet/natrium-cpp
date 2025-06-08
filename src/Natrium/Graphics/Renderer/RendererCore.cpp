@@ -114,7 +114,8 @@ namespace Na {
 		if (!support)
 			throw std::runtime_error("Swapchain not supported!");
 
-		m_Extent = support.capabilities.currentExtent;
+		m_Width = support.capabilities.currentExtent.width;
+		m_Height = support.capabilities.currentExtent.height;
 		m_SwapchainFormat = pickSurfaceFormat(support.formats);
 
 		vk::SwapchainCreateInfoKHR create_info;
@@ -122,7 +123,7 @@ namespace Na {
 
 		create_info.imageFormat = m_SwapchainFormat.format;
 		create_info.imageColorSpace = m_SwapchainFormat.colorSpace;
-		create_info.imageExtent = m_Extent;
+		create_info.imageExtent = support.capabilities.currentExtent;
 
 		create_info.imageArrayLayers = 1;
 		create_info.imageUsage = vk::ImageUsageFlagBits::eColorAttachment;

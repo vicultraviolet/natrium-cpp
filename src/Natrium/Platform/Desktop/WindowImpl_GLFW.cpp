@@ -80,6 +80,8 @@ namespace Na {
 		glfwSetWindowUserPointer(m_Window, this);
 
 		Window_SetGLFWCallbacks(m_Window);
+
+		m_Focus = glfwGetWindowAttrib(m_Window, GLFW_FOCUSED) != 0;
 	}
 
 	void Window::destroy(void)
@@ -146,19 +148,28 @@ namespace Na {
 	: m_Window(std::exchange(other.m_Window, nullptr)),
 	m_Width(std::exchange(other.m_Width, 0)),
 	m_Height(std::exchange(other.m_Height, 0)),
-	m_Focus(other.m_Focus),
-	m_Minimized(other.m_Minimized)
-	{}
+	m_Focus(std::exchange(other.m_Focus, false)),
+	m_Minimized(std::exchange(other.m_Minimized, false)),
+	m_MouseCaptured(std::exchange(other.m_MouseCaptured, false))
+	{
+		glfwSetWindowUserPointer(m_Window, this);
+	}
 
 	WindowImpl_GLFW& WindowImpl_GLFW::operator=(WindowImpl_GLFW&& other)
 	{
-		glfwDestroyWindow(m_Window);
+		NA_VERIFY(m_Window != other.m_Window, "Failed to move Window: Cannot move assign a window to itself!");
+
+		if (m_Window)
+			glfwDestroyWindow(m_Window);
 
 		m_Window = std::exchange(other.m_Window, nullptr);
 		m_Width = std::exchange(other.m_Width, 0);
 		m_Height = std::exchange(other.m_Height, 0);
-		m_Focus = other.m_Focus;
-		m_Minimized = other.m_Minimized;
+		m_Focus = std::exchange(other.m_Focus, false);
+		m_Minimized = std::exchange(other.m_Minimized, false);
+		m_MouseCaptured = std::exchange(other.m_MouseCaptured, false);
+
+		glfwSetWindowUserPointer(m_Window, this);
 
 		return *this;
 	}

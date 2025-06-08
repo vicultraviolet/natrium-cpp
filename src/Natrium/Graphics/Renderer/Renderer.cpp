@@ -111,7 +111,7 @@ namespace Na {
 		render_pass_info.framebuffer = m_Core.m_Framebuffers[m_ImageIndex];
 
 		render_pass_info.renderArea.offset = { { 0, 0 } };
-		render_pass_info.renderArea.extent = m_Core.m_Extent;
+		render_pass_info.renderArea.extent = vk::Extent2D(m_Core.m_Width, m_Core.m_Height);
 
 		render_pass_info.clearValueCount = (u32)clear_values.size();
 		render_pass_info.pClearValues = clear_values.data();

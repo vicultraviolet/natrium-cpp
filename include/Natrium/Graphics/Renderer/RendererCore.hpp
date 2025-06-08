@@ -56,12 +56,7 @@ namespace Na {
 
 		Window* m_Window = nullptr;
 		vk::SurfaceKHR m_Surface;
-
-		union {
-			struct { u32 m_Width, m_Height; };
-			glm::uvec2 m_Size = { 0, 0 };
-			vk::Extent2D m_Extent;
-		};
+		u32 m_Width, m_Height;
 
 		QueueFamilyIndices m_QueueIndices;
 
