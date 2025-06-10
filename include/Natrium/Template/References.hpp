@@ -26,9 +26,10 @@ namespace Na {
 		}
 
 		template<typename... t_Args>
-		UniqueRef(t_Args&&... __args)
-		: m_Ptr(new T(std::forward<t_Args>(__args)...))
-		{}
+		static UniqueRef Make(t_Args&&... __args)
+		{
+			return UniqueRef(new T(std::forward<t_Args>(__args)...));
+		}
 
 		UniqueRef(UniqueRef&& other)
 		: m_Ptr(std::exchange(other.m_Ptr, nullptr))
