@@ -57,7 +57,6 @@
 #include "./Graphics/Vulkan.hpp"
 
 #include "./Template/ArrayList.hpp"
-#include "./Template/ArrayVector.hpp"
 #include "./Template/DoubleList.hpp"
 #include "./Template/References.hpp"
 

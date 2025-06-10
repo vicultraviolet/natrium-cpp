@@ -13,111 +13,124 @@ namespace Na {
 		using const_reverse_iterator = Array_ConstReverseIterator<ArrayList>;
 		using T_t = T;
 	public:
-		inline ArrayList(void)
-		: m_Capacity(0), m_Size(0), m_Buffer(nullptr)
-		{}
+		ArrayList(void) = default;
+		~ArrayList(void) { this->destroy(); }
 
-		inline ArrayList(u64 capacity, u64 size = 0)
-		: m_Capacity(capacity), m_Size(size), m_Buffer(tmalloc<T>(capacity))
+		void clear(void)
+		{
+			for (u64 i = 0; i < m_Size; i++)
+				m_Buffer[i].~T();
+			m_Size = 0;
+		}
+
+		void destroy(void)
+		{
+			if (!m_Capacity)
+				return;
+
+			this->clear();
+			free(m_Buffer);
+
+			m_Buffer = nullptr;
+			m_Capacity = 0;
+			m_Size = 0;
+		}
+
+		ArrayList(u64 capacity, u64 size = 0)
+		: m_Capacity(capacity), m_Size(size), m_Buffer(tcalloc<T>(capacity))
 		{}
 
 		template<typename t_Iterator>
-		inline ArrayList(const t_Iterator& begin, const t_Iterator& end)
-		: m_Capacity(std::distance(begin, end)), m_Size(m_Capacity), m_Buffer(tmalloc<T>(m_Size))
+		ArrayList(const t_Iterator& begin, const t_Iterator& end)
+		: m_Capacity(std::distance(begin, end)), m_Size(m_Capacity), m_Buffer(tcalloc<T>(m_Size))
 		{
 			u64 i = 0;
 			for (t_Iterator it = begin; it != end; it++)
 				new (m_Buffer + i++) T(*it);
 		}
 
-
-		inline ArrayList(const T* buffer, u64 size)
-		: m_Capacity(size), m_Size(0), m_Buffer(tmalloc<T>(size))
+		ArrayList(const T* buffer, u64 size)
+		: m_Capacity(size), m_Size(size), m_Buffer(tcalloc<T>(size))
 		{
-			while (m_Size < size)
-				this->emplace_d(buffer[m_Size]);
+			for (u64 i = 0; i < size; i++)
+				new (m_Buffer + i) T(buffer[i]);
 		}
 
-		inline ArrayList(T* buffer, u64 size)
-		: m_Capacity(size), m_Size(size), m_Buffer(tmalloc<T>(size))
-		{
-			while (m_Size < size)
-				this->emplace_d(std::move(buffer[m_Size]));
-		}
-
-		inline ArrayList(const std::initializer_list<T>& list)
+		ArrayList(const std::initializer_list<T>& list)
 		: ArrayList(list.begin(), list.size())
 		{}
 
-		inline ~ArrayList(void)
+		ArrayList(const ArrayList& other)
+		: ArrayList(other.m_Buffer, other.m_Size)
+		{}
+
+		ArrayList& operator=(const ArrayList& other)
 		{
-			if (!m_Capacity)
-				return;
+			if (this == &other)
+				return *this;
 
-			for (u64 i = 0; i < m_Size; i++)
-				m_Buffer[i].~T();
-			free(m_Buffer);
-			memset(this, 0, sizeof(ArrayList));
-		}
+			this->clear();
 
-		inline ArrayList(const ArrayList& other)
-		: ArrayList(other.m_Buffer, other.m_Size) {}
-
-		inline ArrayList& operator=(const ArrayList& other)
-		{
-			if (m_Capacity < other.m_Capacity)
+			if (m_Capacity != other.m_Capacity)
 			{
 				free(m_Buffer);
-				m_Buffer = tmalloc<T>(other.m_Capacity);
+				m_Buffer = tcalloc<T>(other.m_Capacity);
 				m_Capacity = other.m_Capacity;
 			}
 
-			while (m_Size < other.m_Size)
-				this->emplace_d(other[m_Size]);
+			for (u64 i = 0; i < other.m_Size; i++)
+				new (m_Buffer + i) T(other.m_Buffer[i]);
 
 			return *this;
 		}
 
-		inline ArrayList(ArrayList&& other)
-		{
-			memcpy(this, &other, sizeof(ArrayList));
-			memset(&other, 0, sizeof(ArrayList));
-		}
+		ArrayList(ArrayList&& other)
+		: m_Buffer(std::exchange(other.m_Buffer, nullptr)),
+		m_Capacity(std::exchange(other.m_Capacity, 0)),
+		m_Size(std::exchange(other.m_Size, 0))
+		{}
 
-		inline ArrayList& operator=(ArrayList&& other)
+		ArrayList& operator=(ArrayList&& other)
 		{
 			this->clear();
 			free(m_Buffer);
-			memcpy(this, &other, sizeof(ArrayList));
-			memset(&other, 0, sizeof(ArrayList));
+
+			m_Buffer = std::exchange(other.m_Buffer, nullptr);
+			m_Capacity = std::exchange(other.m_Capacity, 0);
+			m_Size = std::exchange(other.m_Size, 0);
+
 			return *this;
 		}
 
-		// capacity is not changed
-		bool clear(void)
+		void resize(u64 new_size)
 		{
-			bool cleared = m_Size;
-			for (u64 i = 0; i < m_Size; i++)
-				m_Buffer[i].~T();
-			return cleared;
+			NA_ASSERT(m_Capacity >= new_size, "Failed to resize ArrayList: specified size is bigger than capacity!");
+			m_Size = new_size;
 		}
 
-		inline void resize(u64 new_size) { m_Size = new_size; }
-
-		inline void reallocate(u64 new_capacity)
+		void reallocate(u64 new_capacity)
 		{
-			if (new_capacity == m_Capacity)
+			if (new_capacity == 0)
+				return this->destroy();
+
+			if (m_Capacity == new_capacity)
 				return;
-			m_Buffer = trealloc<T>(m_Buffer, new_capacity);
+
+			T* new_buffer = tcalloc<T>(new_capacity);
+			for (u64 i = 0; i < m_Size; i++)
+				new (new_buffer + i) T(std::move(m_Buffer[i]));
+
+			free(m_Buffer);
+			m_Buffer = new_buffer;
 			m_Capacity = new_capacity;
 		}
 
 		inline void reserve(u64 extra_capacity) { this->reallocate(m_Capacity + extra_capacity); }
 
-		inline void reallocate(u64 new_capacity, u64 new_size)
+		void reallocate(u64 new_capacity, u64 new_size)
 		{
-			m_Size = new_size;
 			this->reallocate(new_capacity);
+			this->resize(new_size);
 		}
 
 		template<typename... t_Args>
@@ -132,6 +145,8 @@ namespace Na {
 		template<typename... t_Args>
 		inline u64 emplace_d(t_Args&&... __args)
 		{
+			NA_ASSERT(m_Size < m_Capacity, "Failed to emplace to ArrayList: emplace_d called with full buffer!");
+
 			new (m_Buffer + m_Size) T(std::forward<t_Args>(__args)...);
 			return m_Size++;
 		}
@@ -174,20 +189,15 @@ namespace Na {
 		[[nodiscard]] inline T* ptr(void) { return m_Buffer; }
 		[[nodiscard]] inline const T* ptr(void) const { return m_Buffer; }
 
-		[[nodiscard]] inline T& head(void) { return *m_Buffer; }
-		[[nodiscard]] inline const T& head(void) const { return *m_Buffer; }
-
-		[[nodiscard]] inline T& tail(void) { return *(m_Buffer + m_Size - 1); }
-		[[nodiscard]] inline const T& tail(void) const { return *(m_Buffer + m_Size - 1); }
-
 		[[nodiscard]] inline u64 capacity(void) const { return m_Capacity; }
 		[[nodiscard]] inline u64 size(void) const { return m_Size; }
 		[[nodiscard]] inline u64 free_space(void) const { return m_Capacity - m_Size; }
 		[[nodiscard]] inline bool empty(void) const { return !m_Size; }
 		[[nodiscard]] inline bool full(void) const { return m_Size == m_Capacity; }
 	private:
-		u64 m_Capacity, m_Size;
-		T* m_Buffer;
+		u64 m_Capacity = 0;
+		u64 m_Size = 0;
+		T* m_Buffer = nullptr;
 	};
 } // namespace Na
 

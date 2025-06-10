@@ -14,7 +14,7 @@
 namespace Na {
 	extern vk::SurfaceKHR createWindowSurface(GLFWwindow* window);
 
-	static vk::SurfaceFormatKHR pickSurfaceFormat(const Na::ArrayVector<vk::SurfaceFormatKHR>& formats)
+	static vk::SurfaceFormatKHR pickSurfaceFormat(const Na::ArrayList<vk::SurfaceFormatKHR>& formats)
 	{
 		for (auto it = formats.begin(); it != formats.end(); it++)
 			if (it->format == vk::Format::eR8G8B8A8Uint
@@ -23,7 +23,7 @@ namespace Na {
 		return formats[0];
 	}
 
-	static vk::PresentModeKHR pickPresentMode(const Na::ArrayVector<vk::PresentModeKHR>& present_modes)
+	static vk::PresentModeKHR pickPresentMode(const Na::ArrayList<vk::PresentModeKHR>& present_modes)
 	{
 		for (auto it = present_modes.begin(); it != present_modes.end(); it++)
 			if (*it == vk::PresentModeKHR::eMailbox)
@@ -145,13 +145,13 @@ namespace Na {
 		
 		u32 img_count;
 		(void)logical_device.getSwapchainImagesKHR(m_Swapchain, &img_count, nullptr);
-		m_Images.resize(img_count);
+		m_Images.reallocate(img_count, img_count);
 		(void)logical_device.getSwapchainImagesKHR(m_Swapchain, &img_count, m_Images.ptr());
 	}
 
 	void RendererCore::_create_image_views(void)
 	{
-		m_ImageViews.resize(m_Images.size());
+		m_ImageViews.reallocate(m_Images.size(), m_Images.size());
 		for (u64 i = 0; i < m_Images.size(); i++)
 			m_ImageViews[i] = CreateImageView(
 				m_Images[i],
@@ -315,7 +315,7 @@ namespace Na {
 	{
 		bool msaa_enabled = m_Settings->multisampling_enabled();
 
-		m_Framebuffers.resize(m_ImageViews.size());
+		m_Framebuffers.reallocate(m_ImageViews.size(), m_ImageViews.size());
 		for (u64 i = 0; i < m_ImageViews.size(); i++)
 		{
 			std::array<vk::ImageView, 3> attachments = {

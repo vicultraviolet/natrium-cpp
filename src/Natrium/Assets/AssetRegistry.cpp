@@ -10,7 +10,7 @@
 #endif
 
 namespace Na {
-	extern ArrayVector<u32> LoadSpv(const std::filesystem::path& path);
+	extern ArrayList<Byte> LoadSpv(const std::filesystem::path& path);
 
 	AssetRegistry::AssetRegistry(
 		const std::filesystem::path& engine_asset_dir,

@@ -12,8 +12,8 @@
 
 namespace Na {
 	static std::tuple<
-		Na::ArrayVector<vk::VertexInputBindingDescription>,
-		Na::ArrayVector<vk::VertexInputAttributeDescription>
+		Na::ArrayList<vk::VertexInputBindingDescription>,
+		Na::ArrayList<vk::VertexInputAttributeDescription>
 	>
 		GetVertexInputInfo(
 			const ShaderAttributeLayout& vertex_buffer_layout
@@ -22,13 +22,15 @@ namespace Na {
 		if (!vertex_buffer_layout.size())
 			return { {}, {} };
 
-		Na::ArrayVector<vk::VertexInputBindingDescription> binding_descriptions(vertex_buffer_layout.size());
+		Na::ArrayList<vk::VertexInputBindingDescription> binding_descriptions(vertex_buffer_layout.size());
+		binding_descriptions.resize(binding_descriptions.capacity());
 
 		u64 attribute_count = 0;
 		for (const auto& binding : vertex_buffer_layout)
 			attribute_count += binding.attributes.size();
 
-		Na::ArrayVector<vk::VertexInputAttributeDescription> attribute_descriptions(attribute_count);
+		Na::ArrayList<vk::VertexInputAttributeDescription> attribute_descriptions(attribute_count);
+		attribute_descriptions.resize(attribute_descriptions.capacity());
 
 		for (u32 i = 0; const auto& binding : vertex_buffer_layout)
 		{
@@ -56,7 +58,9 @@ namespace Na {
 
 	static vk::DescriptorSetLayout createDescriptorSetLayout(const ShaderUniformLayout& descriptor_layout)
 	{
-		Na::ArrayVector<vk::DescriptorSetLayoutBinding> bindings(descriptor_layout.size());
+		Na::ArrayList<vk::DescriptorSetLayoutBinding> bindings(descriptor_layout.size());
+		bindings.resize(bindings.capacity());
+
 		for (size_t i = 0; const auto& binding : descriptor_layout)
 		{
 			bindings[i].binding            = binding.binding;
@@ -77,7 +81,9 @@ namespace Na {
 
 	static vk::DescriptorPool createDescriptorPool(const ShaderUniformLayout& descriptor_layout)
 	{
-		Na::ArrayVector<vk::DescriptorPoolSize> pool_sizes(descriptor_layout.size());
+		Na::ArrayList<vk::DescriptorPoolSize> pool_sizes(descriptor_layout.size());
+		pool_sizes.resize(pool_sizes.capacity());
+
 		for (size_t i = 0; const ShaderUniform& uniform : descriptor_layout)
 		{
 			pool_sizes[i].descriptorCount = 1; // 1 * uniform.count
@@ -95,31 +101,32 @@ namespace Na {
 
 	static vk::DescriptorSet createDescriptorSet(vk::DescriptorSetLayout& layout, vk::DescriptorPool pool)
 	{
-		vk::DescriptorSet descriptor_set;
-
 		vk::DescriptorSetAllocateInfo alloc_info;
 		alloc_info.descriptorPool = pool;
 		alloc_info.descriptorSetCount = 1;
 		alloc_info.pSetLayouts = &layout;
 
+		vk::DescriptorSet descriptor_set;
+
 		vk::Result result = VkContext::Get().logical_device().allocateDescriptorSets(&alloc_info, &descriptor_set);
-		if (result != vk::Result::eSuccess)
-			throw std::runtime_error("Failed to allocate descriptor set!");
+		NA_VERIFY_VK(result, "Failed to allocate descriptor set!");
 
 		return descriptor_set;
 	}
 
-	static Na::ArrayVector<vk::DescriptorSet> createDescriptorSets(u32 count, vk::DescriptorSetLayout* layouts, vk::DescriptorPool pool)
+	static Na::ArrayList<vk::DescriptorSet> createDescriptorSets(u32 count, vk::DescriptorSetLayout* layouts, vk::DescriptorPool pool)
 	{
 		vk::DescriptorSetAllocateInfo alloc_info;
 		alloc_info.descriptorPool = pool;
 		alloc_info.descriptorSetCount = count;
 		alloc_info.pSetLayouts = layouts;
 
-		Na::ArrayVector<vk::DescriptorSet> descriptor_sets(count);
+		Na::ArrayList<vk::DescriptorSet> descriptor_sets(count);
+		descriptor_sets.resize(descriptor_sets.capacity());
+
 		vk::Result result = VkContext::Get().logical_device().allocateDescriptorSets(&alloc_info, descriptor_sets.ptr());
-		if (result != vk::Result::eSuccess)
-			throw std::runtime_error("Failed to allocate descriptor sets!");
+		NA_VERIFY_VK(result, "Failed to allocate descriptor sets!");
+
 		return descriptor_sets;
 	}
 
@@ -142,7 +149,7 @@ namespace Na {
 		m_DynamicOffsets.reallocate(u64(m_DynamicOffsetCount * renderer_core.settings()->max_frames_in_flight()));
 		m_DynamicOffsets.resize(m_DynamicOffsets.capacity());
 
-		Na::ArrayVector<vk::DynamicState> dynamic_states = {
+		Na::ArrayList<vk::DynamicState> dynamic_states = {
 			vk::DynamicState::eViewport,
 			vk::DynamicState::eScissor
 		};
@@ -167,7 +174,8 @@ namespace Na {
 		if (uniform_data_layout.size())
 			m_DescriptorLayout = createDescriptorSetLayout(uniform_data_layout);
 
-		Na::ArrayVector<vk::PushConstantRange> push_constant_ranges(push_constant_layout.size());
+		Na::ArrayList<vk::PushConstantRange> push_constant_ranges(push_constant_layout.size());
+		push_constant_ranges.resize(push_constant_ranges.capacity());
 
 		for (u64 i = 0; const auto& push_constant : push_constant_layout)
 		{

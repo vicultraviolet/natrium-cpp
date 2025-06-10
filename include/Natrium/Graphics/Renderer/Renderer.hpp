@@ -66,10 +66,10 @@ namespace Na {
 
 		vk::CommandPool m_GraphicsCmdPool;
 
-		ArrayVector<FrameData> m_Frames;
+		ArrayList<FrameData> m_Frames;
 		u32 m_FrameIndex = 0;
 
-		ArrayVector<vk::Fence> m_ImageInFlightFences;
+		ArrayList<vk::Fence> m_ImageInFlightFences;
 		u32 m_ImageIndex = 0;
 	};
 } // namespace Na

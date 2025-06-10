@@ -6,10 +6,12 @@
 
 namespace Na {
 	Renderer::Renderer(Window& window, AssetHandle<RendererSettings> settings)
-	: m_Core(window, settings)
+	: m_Core(window, settings),
+	m_Frames(m_Core.m_Settings->max_frames_in_flight()),
+	m_ImageInFlightFences(m_Core.m_Images.size())
 	{
-		m_Frames.resize(m_Core.m_Settings->max_frames_in_flight());
-		m_ImageInFlightFences.resize(m_Core.m_Images.size());
+		m_Frames.resize(m_Frames.capacity());
+		m_ImageInFlightFences.resize(m_ImageInFlightFences.capacity());
 
 		this->_create_command_objects();
 		this->_create_sync_objects();
@@ -328,9 +330,12 @@ namespace Na {
 
 	Renderer::Renderer(Renderer&& other)
 	: m_Core(std::move(other.m_Core)),
+
 	m_GraphicsCmdPool(std::exchange(other.m_GraphicsCmdPool, nullptr)),
+
 	m_Frames(std::move(other.m_Frames)),
 	m_FrameIndex(other.m_FrameIndex),
+
 	m_ImageInFlightFences(std::move(other.m_ImageInFlightFences)),
 	m_ImageIndex(other.m_ImageIndex)
 	{}
@@ -340,9 +345,12 @@ namespace Na {
 		this->destroy();
 
 		m_Core = std::move(other.m_Core);
+
 		m_GraphicsCmdPool = std::exchange(other.m_GraphicsCmdPool, nullptr);
+
 		m_Frames = std::move(other.m_Frames);
 		m_FrameIndex = other.m_FrameIndex;
+
 		m_ImageInFlightFences = std::move(other.m_ImageInFlightFences);
 		m_ImageIndex = other.m_ImageIndex;
 

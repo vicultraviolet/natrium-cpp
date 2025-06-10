@@ -2,7 +2,7 @@
 #include "Natrium/Graphics/Pipeline.hpp"
 
 namespace Na {
-	static vk::PipelineDynamicStateCreateInfo dynamicStateInfo(const Na::ArrayVector<vk::DynamicState>& states)
+	static vk::PipelineDynamicStateCreateInfo dynamicStateInfo(const Na::ArrayList<vk::DynamicState>& states)
 	{
 		vk::PipelineDynamicStateCreateInfo dynamic_state_info;
 		dynamic_state_info.dynamicStateCount = (u32)states.size();

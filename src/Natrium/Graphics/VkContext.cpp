@@ -50,10 +50,10 @@ static void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMesse
 
 namespace Na {
 	static Na::ArrayList<const char*> extensions;
-	static Na::ArrayList<const char*> validationLayers = {
+	static const Na::ArrayList<const char*> validationLayers = {
 		"VK_LAYER_KHRONOS_validation"
 	};
-	static Na::ArrayList<const char*> requiredDeviceExtensions = {
+	static const Na::ArrayList<const char*> requiredDeviceExtensions = {
 		VK_KHR_SWAPCHAIN_EXTENSION_NAME,
 		VK_KHR_MAINTENANCE1_EXTENSION_NAME
 		//VK_EXT_DEPTH_RANGE_UNRESTRICTED_EXTENSION_NAME
@@ -144,13 +144,13 @@ namespace Na {
 
 		u32 format_count;
 		(void)device.getSurfaceFormatsKHR(surface, &format_count, nullptr);
-		support.formats.resize(format_count);
+		support.formats.reallocate(format_count, format_count);
 		(void)device.getSurfaceFormatsKHR(surface, &format_count, support.formats.ptr());
 
 		u32 present_mode_count;
 		(void)device.getSurfacePresentModesKHR(surface, &present_mode_count, nullptr);
-		support.present_modes.resize(format_count);
-		(void)device.getSurfacePresentModesKHR(surface, &format_count, support.present_modes.ptr());
+		support.present_modes.reallocate(present_mode_count, present_mode_count);
+		(void)device.getSurfacePresentModesKHR(surface, &present_mode_count, support.present_modes.ptr());
 
 		return support;
 	}
@@ -345,11 +345,17 @@ namespace Na {
 			return;
 		m_Valid = false;
 
-		m_LogicalDevice.destroyCommandPool(m_SingleTimeCmdPool);
-		m_LogicalDevice.destroy();
+		if (m_SingleTimeCmdPool)
+			m_LogicalDevice.destroyCommandPool(m_SingleTimeCmdPool);
 
-		DestroyDebugUtilsMessengerEXT(m_Instance, m_DebugMessenger, nullptr);
-		m_Instance.destroy();
+		if (m_LogicalDevice)
+			m_LogicalDevice.destroy();
+
+		if (m_DebugMessenger)
+			DestroyDebugUtilsMessengerEXT(m_Instance, m_DebugMessenger, nullptr);
+
+		if (m_Instance)
+			m_Instance.destroy();
 
 		VkContext::s_Context = nullptr;
 	}

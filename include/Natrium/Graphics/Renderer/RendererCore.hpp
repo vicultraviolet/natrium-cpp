@@ -66,8 +66,8 @@ namespace Na {
 		vk::SwapchainKHR m_Swapchain;
 		vk::SurfaceFormatKHR m_SwapchainFormat;
 
-		Na::ArrayVector<vk::Image> m_Images;
-		Na::ArrayVector<vk::ImageView> m_ImageViews;
+		Na::ArrayList<vk::Image> m_Images;
+		Na::ArrayList<vk::ImageView> m_ImageViews;
 
 		DeviceImage m_ColorImage;
 		vk::ImageView m_ColorImageView;
@@ -76,7 +76,7 @@ namespace Na {
 		vk::ImageView m_DepthImageView;
 
 		vk::RenderPass m_RenderPass;
-		ArrayVector<vk::Framebuffer> m_Framebuffers;
+		ArrayList<vk::Framebuffer> m_Framebuffers;
 
 		AssetHandle<RendererSettings> m_Settings;
 	};

@@ -14,7 +14,7 @@
 #endif
 
 namespace Na {
-	ArrayVector<u32> LoadSpv(const std::filesystem::path& path)
+	ArrayList<Byte> LoadSpv(const std::filesystem::path& path)
 	{
 		std::ifstream file(path, std::ios::ate | std::ios::binary);
 		NA_ASSERT(file, "Failed to open file {}", path.C_STR());
@@ -29,9 +29,7 @@ namespace Na {
 		while (file_data.size() % 4)
 			file_data.emplace(0);
 
-		ArrayVector<u32> spv((u32*)file_data.ptr(), file_data.size() / sizeof(u32));
-		memset(&file_data, 0, sizeof(ArrayList<Byte>));
-		return spv;
+		return file_data;
 	}
 
 	ShaderString::ShaderString(const std::filesystem::path& path)
@@ -47,7 +45,7 @@ namespace Na {
 		shader_file.close();
 	}
 
-	ArrayVector<u32> ShaderString::compile(const std::string_view& entry_point) const
+	ArrayList<Byte> ShaderString::compile(const std::string_view& entry_point) const
 	{
 		shaderc::Compiler compiler;
 		shaderc::CompileOptions options;
@@ -99,7 +97,7 @@ namespace Na {
 			}
 		}
 
-		return ArrayVector<u32>(spv.begin(), spv.end());
+		return ArrayList<Byte>(spv.begin(), spv.end());
 	}
 
 	AssetHandle<ShaderBinary> ShaderBinary::Load(const std::filesystem::path& path)

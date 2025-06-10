@@ -51,7 +51,7 @@ namespace Na {
 		this->running = true;
 		while (this->running)
 		{
-			//g_Logger.fmt(Na::Trace, "average fps: {}", (u32)(1.0 / dt));
+			//g_Logger.printf(Na::Trace, "average fps: {}", (u32)(1.0 / dt));
 
 			for (Na::Event& e : Na::PollEvents())
 			{

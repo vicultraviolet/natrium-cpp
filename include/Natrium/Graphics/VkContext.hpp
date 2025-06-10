@@ -8,8 +8,8 @@ namespace Na {
 
 	struct SurfaceSupport {
 		vk::SurfaceCapabilitiesKHR capabilities;
-		Na::ArrayVector<vk::SurfaceFormatKHR> formats;
-		Na::ArrayVector<vk::PresentModeKHR> present_modes;
+		Na::ArrayList<vk::SurfaceFormatKHR> formats;
+		Na::ArrayList<vk::PresentModeKHR> present_modes;
 
 		inline operator bool(void) const { return formats.size() && present_modes.size(); }
 
@@ -48,14 +48,14 @@ namespace Na {
 
 		[[nodiscard]] inline vk::SampleCountFlagBits    msaa_samples(bool enabled = true) const { return enabled ? m_MSAASamples : vk::SampleCountFlagBits::e1; }
 	private:
-		vk::Instance               m_Instance;
-		vk::DebugUtilsMessengerEXT m_DebugMessenger;
-		vk::PhysicalDevice         m_PhysicalDevice;
-		vk::Device                 m_LogicalDevice;
+		vk::Instance               m_Instance          = nullptr;
+		vk::DebugUtilsMessengerEXT m_DebugMessenger    = nullptr;
+		vk::PhysicalDevice         m_PhysicalDevice    = nullptr;
+		vk::Device                 m_LogicalDevice     = nullptr;
 												    
-		vk::Queue                  m_GraphicsQueue;
+		vk::Queue                  m_GraphicsQueue     = nullptr;
 
-		vk::CommandPool            m_SingleTimeCmdPool;
+		vk::CommandPool            m_SingleTimeCmdPool = nullptr;
 
 
 		vk::SampleCountFlagBits    m_MSAASamples = vk::SampleCountFlagBits::e1;

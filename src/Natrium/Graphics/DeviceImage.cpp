@@ -120,7 +120,7 @@ namespace Na {
 		vk::PipelineStageFlags wait_stage;
 
 		if (old_layout == vk::ImageLayout::eUndefined
-		 && new_layout == vk::ImageLayout::eTransferDstOptimal)
+		&& new_layout == vk::ImageLayout::eTransferDstOptimal)
 		{
 			barrier.srcAccessMask = {};
 			barrier.dstAccessMask = vk::AccessFlagBits::eTransferWrite;
@@ -129,7 +129,7 @@ namespace Na {
 			wait_stage = vk::PipelineStageFlagBits::eTransfer;
 		} else
 		if (old_layout == vk::ImageLayout::eTransferDstOptimal
-		 && new_layout == vk::ImageLayout::eShaderReadOnlyOptimal)
+		&& new_layout == vk::ImageLayout::eShaderReadOnlyOptimal)
 		{
 			barrier.srcAccessMask = vk::AccessFlagBits::eTransferWrite;
 			barrier.dstAccessMask = vk::AccessFlagBits::eShaderRead;
@@ -184,7 +184,9 @@ namespace Na {
 
 	void DeviceImage::copy_all_from_buffer(vk::Buffer buffer, u32 starting_layer)
 	{
-		Na::ArrayVector<vk::BufferImageCopy> regions(this->layer_count() - starting_layer);
+		Na::ArrayList<vk::BufferImageCopy> regions(this->layer_count() - starting_layer);
+		regions.resize(regions.capacity());
+
 		for (u32 i = 0; i < regions.size(); i++)
 		{
 			regions[i].bufferOffset = u64(i * this->width * this->height * 4);
@@ -208,38 +210,6 @@ namespace Na {
 
 		VkContext::Get().end_single_time_cmds(cmd_buffer);
 	}
-
-	/*
-	void DeviceImage::copy_all_from_buffer(vk::Buffer buffer, u32 element_size, u32 starting_layer)
-	{
-		vk::CommandBuffer cmd_buffer = VkContext::Get().begin_single_time_cmds();
-
-		for (u32 i = 0; i < this->layer_count - starting_layer; i++)
-		{
-			vk::BufferImageCopy region;
-			region.bufferOffset = u64(i * element_size);
-			region.bufferRowLength = 0;
-			region.bufferImageHeight = 0;
-
-			region.imageSubresource.aspectMask = this->subresource_range.aspectMask;
-			region.imageSubresource.mipLevel = 0;
-			region.imageSubresource.baseArrayLayer = i + starting_layer;
-			region.imageSubresource.layerCount = 1;
-
-			region.imageOffset = { { 0, 0, 0 } };
-			region.imageExtent = this->extent;
-
-			cmd_buffer.copyBufferToImage(
-				buffer,
-				this->img,
-				vk::ImageLayout::eTransferDstOptimal,
-				1, &region
-			);
-		}
-
-		VkContext::Get().end_single_time_cmds(cmd_buffer);
-	}
-	*/
 
 	void DeviceImage::copy_from_buffers(const vk::Buffer* buffers, u32 buffer_count, u32 starting_layer)
 	{
