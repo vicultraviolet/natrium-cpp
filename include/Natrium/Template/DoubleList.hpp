@@ -15,26 +15,25 @@ namespace Na {
 		using const_reverse_iterator = DoubleList_ConstReverseIterator<DoubleList>;
 		using T_t = T;
 	public:
-		inline DoubleList(void) : m_Head(nullptr), m_Tail(nullptr), m_Size(0) {}
-		inline ~DoubleList(void) { this->clear(); }
-		inline void clear(void) { while (this->pop_back()); }
+		DoubleList(void) = default;
+		~DoubleList(void) { this->clear(); }
+
+		void clear(void) { while (this->pop_back()); }
 
 		template<typename t_Iterator>
-		inline DoubleList(const t_Iterator& begin, const t_Iterator& end)
+		DoubleList(const t_Iterator& begin, const t_Iterator& end)
 		{
 			for (t_Iterator it = begin; it != end; it++)
 				this->emplace_back(*it);
 		}
 
 		DoubleList(const T* buffer, u64 size)
-		: m_Head(nullptr), m_Tail(nullptr), m_Size(0)
 		{
 			while (m_Size < size)
 				this->emplace_back(buffer[m_Size]);
 		}
 
 		DoubleList(T* buffer, u64 size)
-		: m_Head(nullptr), m_Tail(nullptr), m_Size(0)
 		{
 			while (m_Size < size)
 				this->emplace_back(std::move(buffer[m_Size]));
@@ -44,38 +43,39 @@ namespace Na {
 		: DoubleList(list.begin(), list.size()) {}
 
 		DoubleList(const DoubleList& other)
-		: DoubleList()
-		{
-			for (const T& data : other)
-				this->emplace_back(data);
-		}
+		: DoubleList(other.begin(), other.end())
+		{}
 
 		DoubleList& operator=(const DoubleList& other)
 		{
-			while (m_Size > other.m_Size)
-				this->pop_back();
+			if (this == &other)
+				return *this;
+			
+			this->clear();
 
-			auto other_it = other.begin();
-			for (T& data : *this)
-				data = *(other_it++);
-
-			for (; other_it != other.end(); other_it++)
-				this->emplace_back(*other_it);
+			for (const T& data : other)
+				this->emplace_back(data);
 
 			return *this;
 		}
 
-		inline DoubleList(DoubleList&& other)
-		{
-			memcpy(this, &other, sizeof(DoubleList));
-			memset(&other, 0, sizeof(DoubleList));
-		}
+		DoubleList(DoubleList&& other)
+		: m_Head(std::exchange(other.m_Head, nullptr)),
+		m_Tail(std::exchange(other.m_Tail, nullptr)),
+		m_Size(std::exchange(other.m_Size, 0))
+		{}
 
-		inline DoubleList& operator=(DoubleList&& other)
+		DoubleList& operator=(DoubleList&& other)
 		{
+			if (this == &other)
+				return *this;
+
 			this->clear();
-			memcpy(this, &other, sizeof(DoubleList));
-			memset(&other, 0, sizeof(DoubleList));
+
+			m_Head = std::exchange(other.m_Head, nullptr);
+			m_Tail = std::exchange(other.m_Tail, nullptr);
+			m_Size = std::exchange(other.m_Size, 0);
+			
 			return *this;
 		}
 
@@ -186,7 +186,7 @@ namespace Na {
 			if (!find(data))
 				return false;
 
-			Node* node = (Node*)((Byte*)data - 16);
+			Node* node = (Node*)((Byte*)data - offsetof(Node, data));
 			if (!node->is_tail())
 				node->next->previous = node->previous;
 			else
@@ -283,8 +283,8 @@ namespace Na {
 		[[nodiscard]] inline T& tail(void) { return *m_Tail; }
 		[[nodiscard]] inline const T& tail(void) const { return *m_Tail; }
 
-		[[nodiscard]] inline u64 size(void) { return m_Size; }
-		[[nodiscard]] inline bool empty(void) { return !m_Size; }
+		[[nodiscard]] inline u64 size(void) const { return m_Size; }
+		[[nodiscard]] inline bool empty(void) const { return !m_Size; }
 	private:
 		template<typename... t_Args>
 		Node* _emplace_empty(t_Args&&... __args)
@@ -293,8 +293,9 @@ namespace Na {
 			return m_Tail = m_Head;
 		}
 	private:
-		Node* m_Head, * m_Tail;
-		u64 m_Size;
+		Node* m_Head = nullptr;
+		Node* m_Tail = nullptr;
+		u64 m_Size = 0;
 	};
 } // namespace Neo
 
