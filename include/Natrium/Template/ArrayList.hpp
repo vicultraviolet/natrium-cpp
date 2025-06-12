@@ -61,8 +61,11 @@ namespace Na {
 		{}
 
 		ArrayList(const ArrayList& other)
-		: ArrayList(other.m_Buffer, other.m_Size)
-		{}
+		: m_Capacity(other.m_Capacity), m_Size(other.m_Size), m_Buffer(tcalloc<T>(m_Size))
+		{
+			for (u64 i = 0; i < m_Size; i++)
+				new (m_Buffer + i) T(other[i]);
+		}
 
 		ArrayList& operator=(const ArrayList& other)
 		{
@@ -78,6 +81,7 @@ namespace Na {
 				m_Capacity = other.m_Capacity;
 			}
 
+			m_Size = other.m_Size;
 			for (u64 i = 0; i < other.m_Size; i++)
 				new (m_Buffer + i) T(other.m_Buffer[i]);
 

@@ -12,7 +12,7 @@ namespace Na {
 	: m_Module(VkContext::Get().logical_device()
 			   .createShaderModule(vk::ShaderModuleCreateInfo(
 				   {},
-				   binary.size(),
+				   binary.size() * sizeof(u32),
 				   binary.ptr()
 			   ))),
 	m_Stage(stage),

@@ -14,20 +14,20 @@
 #endif
 
 namespace Na {
-	ArrayList<Byte> LoadSpv(const std::filesystem::path& path)
+	ArrayList<u32> LoadSpv(const std::filesystem::path& path)
 	{
 		std::ifstream file(path, std::ios::ate | std::ios::binary);
 		NA_ASSERT(file, "Failed to open file {}", path.C_STR());
 
 		u64 size = file.tellg();
-		ArrayList<Byte> file_data(size + size % 4, size);
+		NA_ASSERT(size % 4 == 0, "Failed to Load SPIR-V: {} File size wasn't a multiple of 4!", path.C_STR());
+
+		ArrayList<u32> file_data(size / 4);
+		file_data.resize(file_data.capacity());
 
 		file.seekg(0);
 		file.read((char*)file_data.ptr(), size);
 		file.close();
-
-		while (file_data.size() % 4)
-			file_data.emplace(0);
 
 		return file_data;
 	}
@@ -45,7 +45,7 @@ namespace Na {
 		shader_file.close();
 	}
 
-	ArrayList<Byte> ShaderString::compile(const std::string_view& entry_point) const
+	ArrayList<u32> ShaderString::compile(const std::string_view& entry_point) const
 	{
 		shaderc::Compiler compiler;
 		shaderc::CompileOptions options;
@@ -97,7 +97,9 @@ namespace Na {
 			}
 		}
 
-		return ArrayList<Byte>(spv.begin(), spv.end());
+		g_Logger.printf(Debug, "spv size: {}", std::distance(spv.begin(), spv.end()));
+
+		return ArrayList<u32>(spv.begin(), spv.end());
 	}
 
 	AssetHandle<ShaderBinary> ShaderBinary::Load(const std::filesystem::path& path)

@@ -10,7 +10,7 @@
 #endif
 
 namespace Na {
-	extern ArrayList<Byte> LoadSpv(const std::filesystem::path& path);
+	extern ArrayList<u32> LoadSpv(const std::filesystem::path& path);
 
 	AssetRegistry::AssetRegistry(
 		const std::filesystem::path& engine_asset_dir,
@@ -91,7 +91,7 @@ namespace Na {
 		std::ofstream output_file(output_path, std::ios::binary);
 		NA_ASSERT(output_file, "Failed to open file {}", output_path.C_STR());
 
-		output_file.write((const char*)shader_binary.ptr(), shader_binary.size());
+		output_file.write((const char*)shader_binary.ptr(), shader_binary.size() * sizeof(u32));
 		output_file.close();
 
 		return ShaderModule(shader_binary, stage, entry_point);
