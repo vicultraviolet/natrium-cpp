@@ -245,48 +245,60 @@ namespace Na {
 
         e.handled = io.WantCaptureMouse;
 
-        if (e.type == EventType::MouseButtonPressed
-         || e.type == EventType::MouseButtonReleased)
+        switch (e.type)
         {
-            io.AddMouseButtonEvent(
-                (int)e.mouse_button_pressed.button,
-                e.type == EventType::MouseButtonPressed
-            );
-        }
-
-        if (e.type == EventType::MouseMoved)
-        {
-            io.AddMousePosEvent(e.mouse_moved.x, e.mouse_moved.y);
-        }
-
-        if (e.type == EventType::MouseScrolled)
-        {
-            io.AddMouseWheelEvent(e.mouse_scrolled.x_offset, e.mouse_scrolled.y_offset);
-        }
-
-        if (e.type == EventType::KeyPressed || e.type == EventType::KeyReleased)
-        {
-            io.AddKeyEvent(
-                translateToImGuiKey(e.key_pressed.key),
-                e.type == EventType::KeyPressed
-            );
-        }
-
-        if (e.type == EventType::CharInput)
-        {
-            io.AddInputCharacter(e.char_input.codepoint);
-        }
+            case EventType::MouseButtonPressed:
+                io.AddMouseButtonEvent(
+                    (int)e.mouse_button_pressed.button,
+                    true
+                );
+                break;
+            case EventType::MouseButtonReleased:
+                io.AddMouseButtonEvent(
+                    (int)e.mouse_button_pressed.button,
+                    false
+                );
+                break;
+            case EventType::MouseMoved:
+                io.AddMousePosEvent(e.mouse_moved.x, e.mouse_moved.y);
+				break;
+            case EventType::MouseScrolled:
+                io.AddMouseWheelEvent(e.mouse_scrolled.x_offset, e.mouse_scrolled.y_offset);
+                break;
+            case EventType::KeyPressed:
+                io.AddKeyEvent(
+                    translateToImGuiKey(e.key_pressed.key),
+                    true
+                );
+                break;
+            case EventType::KeyReleased:
+                io.AddKeyEvent(
+                    translateToImGuiKey(e.key_pressed.key),
+                    false
+                );
+                break;
+            case EventType::CharInput:
+                io.AddInputCharacter(e.char_input.codepoint);
+                break;
+            case EventType::WindowResized:
+                io.DisplaySize = ImVec2((float)e.window_resized.width, (float)e.window_resized.height);
+                break;
+            case EventType::WindowFocused:
+                io.AddFocusEvent(true);
+                break;
+            case EventType::WindowLostFocus:
+                io.AddFocusEvent(false);
+				break;
+            case EventType::WindowClosed:
+                io.AddFocusEvent(false);
+                break;
+		}
     }
 
     void ImGuiLayer::draw(void)
     {
         if (m_DemoWindowShown)
             ImGui::ShowDemoWindow(&m_DemoWindowShown);
-    }
-
-    void ImGuiLayer::set_enabled(bool enabled)
-    {
-        Layer::set_enabled(enabled);
     }
 } // namespace Na
 
