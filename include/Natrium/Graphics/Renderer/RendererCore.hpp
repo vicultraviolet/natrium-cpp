@@ -27,8 +27,20 @@ namespace Na {
 		[[nodiscard]] inline const Window& window(void) const { return *m_Window; }
 
 		[[nodiscard]] inline vk::SurfaceKHR surface(void) const { return m_Surface; }
+
 		[[nodiscard]] inline vk::SwapchainKHR swapchain(void) const { return m_Swapchain; }
 		[[nodiscard]] inline vk::SurfaceFormatKHR swapchain_format(void) const { return m_SwapchainFormat; }
+
+		[[nodiscard]] inline const Na::ArrayList<vk::Image>& images(void) const { return m_Images; }
+		[[nodiscard]] inline const Na::ArrayList<vk::ImageView>& image_views(void) const { return m_ImageViews; }
+
+		[[nodiscard]] inline const DeviceImage& color_image(void) const { return m_ColorImage; }
+		[[nodiscard]] inline vk::ImageView color_image_view(void) const { return m_ColorImageView; }
+
+		[[nodiscard]] inline const DeviceImage& depth_image(void) const { return m_DepthImage; }
+		[[nodiscard]] inline vk::ImageView depth_image_view(void) const { return m_DepthImageView; }
+
+		[[nodiscard]] inline const ArrayList<vk::Framebuffer>& framebuffers(void) const { return m_Framebuffers; }
 
 		[[nodiscard]] inline vk::RenderPass render_pass(void) const { return m_RenderPass; }
 

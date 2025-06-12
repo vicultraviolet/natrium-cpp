@@ -320,6 +320,8 @@ namespace Na {
 		NA_VERIFY(!VkContext::s_Context, "Failed to create VkContext: Cannot create more than one Vulkan context!");
 		VkContext::s_Context = this;
 
+		NA_VERIFY(glfwVulkanSupported(), "Vulkan is not supported by GLFW!");
+
 		g_Logger.print(Info, "Initializing Vulkan!");
 
 		m_Instance = createInstance();

@@ -76,6 +76,11 @@ namespace Na {
 		std::filesystem::path input_path = src_path;
 		std::filesystem::path output_path = m_ShaderOutputDir / input_path.filename().replace_extension(".spv");
 
+		g_Logger.print (Trace, "Creating shader module: [");
+		g_Logger.printf(Trace, "\tinput path: {}", src_path);
+		g_Logger.printf(Trace, "\toutput path: {}", output_path.C_STR());
+		g_Logger.print (Trace, "]");
+
 		if (std::filesystem::exists(output_path) &&
 			std::filesystem::last_write_time(output_path)
 				> std::filesystem::last_write_time(input_path))

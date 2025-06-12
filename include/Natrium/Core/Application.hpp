@@ -6,6 +6,7 @@
 #include "Natrium/Layers/LayerManager.hpp"
 #include "Natrium/Assets/AssetRegistry.hpp"
 #include "Natrium/Graphics/Renderer/Renderer.hpp"
+#include "Natrium/Layers/ImGuiLayer.hpp"
 
 namespace Na {
 	class Application {
@@ -36,8 +37,15 @@ namespace Na {
 		inline void attach_layer(LayerHandle<> layer) { m_LayerManager.attach_layer(layer); }
 		inline void detach_layer(LayerHandle<> layer) { m_LayerManager.detach_layer(layer); }
 
+		void attach_layer(LayerHandle<ImGuiLayer> layer);
+
 		template<typename T, typename... t_Args>
-		inline void create_layer(t_Args&&... __args) { m_LayerManager.attach_layer(CreateLayer<T>(std::forward<t_Args>(__args)...)); }
+		LayerHandle<T> create_layer(t_Args&&... __args)
+		{
+			LayerHandle<T> layer = CreateLayer<T>(std::forward<t_Args>(__args)...);
+			this->attach_layer(layer);
+			return layer;
+		}
 
 		[[nodiscard]] static inline Application& Get(void) { return *s_Application; }
 		[[nodiscard]] static inline bool Exists(void) { return s_Application; }
@@ -53,6 +61,8 @@ namespace Na {
 
 		[[nodiscard]] inline Renderer& renderer(void) { return m_Renderer; }
 		[[nodiscard]] inline const Renderer& renderer(void) const { return m_Renderer; }
+
+		[[nodiscard]] inline WeakLayerHandle<ImGuiLayer> imgui_layer(void) const { return m_ImGuiLayer; }
 	private:
 		Context m_Context;
 
@@ -61,6 +71,8 @@ namespace Na {
 
 		Window m_Window;
 		Renderer m_Renderer;
+
+		WeakLayerHandle<ImGuiLayer> m_ImGuiLayer;
 
 		static inline Application* s_Application = nullptr;
 	};

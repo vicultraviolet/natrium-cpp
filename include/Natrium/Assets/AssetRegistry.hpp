@@ -23,6 +23,8 @@ namespace Na {
 		template<LoadableAsset T>
 		inline AssetHandle<T> load_asset(const std::string& path)
 		{
+			g_Logger.printf(Trace, "Loading asset: {}", path);
+
 			auto it = m_Assets.find(path);
 			if (it != m_Assets.end())
 				return dynamic_pointer_cast<T>(it->second);

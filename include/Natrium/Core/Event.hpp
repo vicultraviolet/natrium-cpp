@@ -20,6 +20,7 @@ namespace Na {
 	enum class EventType : u8 {
 		None = 0,
 		KeyPressed, KeyReleased,
+		CharInput,
 		WindowResized, WindowClosed, WindowFocused, WindowLostFocus, WindowMinimized, WindowRestored,
 		MouseMoved, MouseScrolled, MouseButtonPressed, MouseButtonReleased,
 		GamepadConnected, GamepadDisconnected,
@@ -39,6 +40,11 @@ namespace Na {
 		Key key;
 		KeyMod mod;
 		u32 padding = 0;
+	};
+
+	struct Event_CharInput {
+		NA_EVENT_BASE(CharInput);
+		char32_t codepoint = 0;
 	};
 
 	struct Event_WindowResized {
@@ -133,6 +139,8 @@ namespace Na {
 
 		Event_KeyPressed key_pressed;
 		Event_KeyReleased key_released;
+
+		Event_CharInput char_input;
 
 		Event_WindowResized window_resized;
 		Event_WindowClosed window_closed;

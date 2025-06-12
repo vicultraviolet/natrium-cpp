@@ -33,6 +33,8 @@
 
 #include "./Core/Application.hpp"
 
+#include "./Layers/ImGuiLayer.hpp"
+
 // entry point
 #include "./Main.hpp"
 

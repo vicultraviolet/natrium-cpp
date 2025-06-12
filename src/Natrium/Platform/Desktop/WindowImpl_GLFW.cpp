@@ -213,6 +213,16 @@ namespace Na {
 				break;
 			}
 		});
+		glfwSetCharCallback(_window, [](GLFWwindow* window, unsigned int codepoint)
+		{
+			Window* __window = (Window*)glfwGetWindowUserPointer(window);
+			Context::Get().event_queue().emplace(Event{.char_input = {
+				EventType::CharInput,
+				false,
+				__window,
+				codepoint
+			}});
+		});
 		glfwSetWindowSizeCallback(_window, [](GLFWwindow* window, int width, int height)
 		{
 			Window* __window = (Window*)glfwGetWindowUserPointer(window);

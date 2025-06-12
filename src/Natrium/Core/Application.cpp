@@ -62,13 +62,25 @@ namespace Na {
 				}
 
 				for (Na::LayerHandle<>& layer : m_LayerManager)
-					if (!e.handled)
-						layer->on_event(e);
+				{
+					if (!layer->enabled())
+						continue;
+
+					layer->on_event(e);
+					if (e.handled)
+						break;
+				}
 			}
 
 			dt.calculate();
+
 			for (Na::LayerHandle<>& layer : m_LayerManager)
+			{
+				if (!layer->updatable())
+					continue;
+
 				layer->update(dt);
+			}
 
 			if (m_Window.minimized())
 				continue;
@@ -76,12 +88,40 @@ namespace Na {
 			if (!m_Renderer.begin_frame())
 				continue;
 
-			for (Na::LayerHandle<>& layer : m_LayerManager)
-				layer->draw();
+			if (auto imgui_layer = m_ImGuiLayer.lock())
+			{
+				imgui_layer->begin();
+
+				for (Na::LayerHandle<>& layer : m_LayerManager)
+				{
+					if (!layer->visible())
+						continue;
+
+					layer->draw();
+				}
+
+				imgui_layer->end();
+			} else
+			{
+				for (Na::LayerHandle<>& layer : m_LayerManager)
+				{
+					if (!layer->visible())
+						continue;
+
+					layer->draw();
+				}
+			}
 
 			m_Renderer.end_frame();
 		}
 	}
+
+	void Application::attach_layer(LayerHandle<ImGuiLayer> layer)
+	{
+		m_LayerManager.attach_layer(layer);
+		m_ImGuiLayer = layer;
+	}
+
 
 	Application::Application(Application&& other)
 	: running(std::exchange(other.running, false)),

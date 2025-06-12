@@ -45,7 +45,7 @@ namespace Na {
 		void set_title(const char* title);
 		[[nodiscard]] const char* title(void) const;
 
-		[[nodiscard]] inline GLFWwindow* native(void) { return m_Window; }
+		[[nodiscard]] inline GLFWwindow* native(void) const { return m_Window; }
 		inline operator bool(void) const { return m_Window; }
 	private:
 		friend void Window_SetGLFWCallbacks(GLFWwindow* window);

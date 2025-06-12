@@ -35,6 +35,9 @@ namespace Na {
 
 		glfwSetErrorCallback([](int error, const char* description)
 		{
+			if (error == 65539)
+				return;
+
 			g_Logger.printf(Error, "GLFW Error#{}: {}", error, description);
 			throw std::runtime_error(NA_FORMAT("GLFW Error #{}", error));
 		});

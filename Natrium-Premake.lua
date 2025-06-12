@@ -12,6 +12,7 @@ include "dependencies/tinyobjloader-Premake.lua"
 include "dependencies/GLFW-Premake.lua"
 IncludeDirectories["glm"] = "dependencies/glm/"
 IncludeDirectories["nlohmann_json"] = "dependencies/nlohmann_json/include/"
+include "dependencies/imgui-Premake.lua"
 
 project "Natrium"
     location "./"
@@ -39,6 +40,8 @@ project "Natrium"
         "%{IncludeDirectories.nlohmann_json}",
 		"%{IncludeDirectories.tiny_obj_loader}",
         "%{IncludeDirectories.glfw}",
+        "%{IncludeDirectories.imgui}",
+        "dependencies/",
         "include/",
         "src/Natrium/"
     }
@@ -48,6 +51,7 @@ project "Natrium"
         "%{Libraries.fmt}",
         "%{Libraries.tiny_obj_loader}",
         "%{Libraries.glfw}",
+        "%{Libraries.imgui}",
     }
 
     filter "system:linux"

@@ -48,14 +48,15 @@ namespace Na {
 
 		[[nodiscard]] inline vk::SampleCountFlagBits    msaa_samples(bool enabled = true) const { return enabled ? m_MSAASamples : vk::SampleCountFlagBits::e1; }
 	private:
-		vk::Instance               m_Instance          = nullptr;
-		vk::DebugUtilsMessengerEXT m_DebugMessenger    = nullptr;
-		vk::PhysicalDevice         m_PhysicalDevice    = nullptr;
-		vk::Device                 m_LogicalDevice     = nullptr;
+		vk::Instance               m_Instance           = nullptr;
+		vk::DebugUtilsMessengerEXT m_DebugMessenger     = nullptr;
+		vk::PhysicalDevice         m_PhysicalDevice     = nullptr;
+		vk::Device                 m_LogicalDevice      = nullptr;
 												    
-		vk::Queue                  m_GraphicsQueue     = nullptr;
+		vk::Queue                  m_GraphicsQueue      = nullptr;
+		u32                        m_GraphicsQueueIndex = k_U32Max;
 
-		vk::CommandPool            m_SingleTimeCmdPool = nullptr;
+		vk::CommandPool            m_SingleTimeCmdPool  = nullptr;
 
 
 		vk::SampleCountFlagBits    m_MSAASamples = vk::SampleCountFlagBits::e1;

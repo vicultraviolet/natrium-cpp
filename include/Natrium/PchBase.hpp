@@ -56,6 +56,12 @@
 
 #include "./Graphics/Vulkan.hpp"
 
+#if !defined(NA_DISABLE_IMGUI)
+#include <imgui/imgui.h>
+#include <imgui/backends/imgui_impl_glfw.h>
+#include <imgui/backends/imgui_impl_vulkan.h>
+#endif // NA_DISABLE_IMGUI
+
 #include "./Template/ArrayList.hpp"
 #include "./Template/DoubleList.hpp"
 #include "./Template/References.hpp"
