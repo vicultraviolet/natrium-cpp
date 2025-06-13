@@ -154,10 +154,10 @@ namespace Na {
 				return;
 
 			T* new_buffer = m_Allocator.allocate(new_capacity);
-			u64 copy_size = std::min(m_Size, new_capacity);
 
+			u64 copy_size = std::min(m_Size, new_capacity);
 			for (u64 i = 0; i < copy_size; i++)
-				std::construct_at(m_Buffer + i, std::move(m_Buffer[i]));
+				std::construct_at(new_buffer + i, std::move_if_noexcept(m_Buffer[i]));
 
 			for (u64 i = 0; i < m_Size; i++)
 				std::destroy_at(m_Buffer + i);
@@ -182,7 +182,7 @@ namespace Na {
 		u64 emplace(t_Args&&... __args)
 		{
 			if (m_Size == m_Capacity)
-				this->reallocate((u64)std::ceil(m_Capacity * 1.5f));
+				this->reallocate((u64)std::ceil(m_Capacity * 1.5f) + 1);
 
 			return this->emplace_d(std::forward<t_Args>(__args)...);
 		}

@@ -189,6 +189,8 @@ namespace Na {
 
 		for (u32 i = 0; i < regions.size(); i++)
 		{
+			regions[i].bufferImageHeight = 0;
+			regions[i].bufferRowLength = 0;
 			regions[i].bufferOffset = u64(i * this->width * this->height * 4);
 			regions[i].imageSubresource = vk::ImageSubresourceLayers(
 				vk::ImageAspectFlagBits::eColor,
@@ -196,6 +198,8 @@ namespace Na {
 				i + starting_layer,
 				1 // layer count (1 at a time)
 			);
+
+			regions[i].imageOffset = vk::Offset3D();
 			regions[i].imageExtent = vk::Extent3D(this->width, this->height, 1);
 		}
 

@@ -31,7 +31,7 @@ namespace Na {
             for (u64 free_index : m_FreeList)
                 is_free[free_index] = true;
 
-            for (u64 i = 0; i < m_Capacity; ++i)
+            for (u64 i = 0; i < m_Capacity; i++)
                 if (!is_free[i])
                     std::destroy_at(m_Buffer + i);
 
@@ -74,7 +74,7 @@ namespace Na {
         [[nodiscard]] u64 fetch_slot(void)
         {
             if (m_FreeList.empty())
-                this->reallocate((u64)std::ceil(m_Capacity * 1.5));
+                this->reallocate((u64)std::ceil(m_Capacity * 1.5f) + 1);
 
             u64 index = m_FreeList.back();
             m_FreeList.pop_back();
@@ -91,8 +91,6 @@ namespace Na {
         [[nodiscard]] u64 emplace(t_Args&&... args)
         {
             u64 index = this->fetch_slot();
-            if (index == k_InvalidHandle)
-                return k_InvalidHandle;
 
             std::construct_at(m_Buffer + index, std::forward<t_Args>(args)...);
             return index;
@@ -121,21 +119,34 @@ namespace Na {
             if (new_capacity == m_Capacity)
                 return;
 
-            for (u64 i = new_capacity; i < m_Capacity; i++)
-                std::destroy_at(m_Buffer + i);
+            u64 old_capacity = m_Capacity;
+
+            ArrayList<bool> is_free(initialize, old_capacity, false);
+            for (u64 free_index : m_FreeList)
+                is_free[free_index] = true;
+
+            for (u64 i = new_capacity; i < old_capacity; i++)
+                if (!is_free[i])
+                    std::destroy_at(m_Buffer + i);
 
             T* new_buffer = m_Allocator.allocate(new_capacity);
 
-            for (u64 i = 0; i < std::min(m_Capacity, new_capacity); i++)
-                std::construct_at(new_buffer + i, std::move(m_Buffer[i]));
+            for (u64 i = 0; i < std::min(old_capacity, new_capacity); i++)
+            {
+                if (!is_free[i])
+                {
+                    std::construct_at(new_buffer + i, std::move(m_Buffer[i]));
+                    std::destroy_at(m_Buffer + i);
+                }
+            }
 
-			m_Allocator.deallocate(m_Buffer, m_Capacity);
+            m_Allocator.deallocate(m_Buffer, old_capacity);
 
             m_Buffer = new_buffer;
             m_Capacity = new_capacity;
 
             m_FreeList.reallocate(new_capacity);
-            for (u64 i = m_Capacity; i < new_capacity; i++)
+            for (u64 i = old_capacity; i < new_capacity; i++)
                 m_FreeList.emplace_back(i);
         }
 

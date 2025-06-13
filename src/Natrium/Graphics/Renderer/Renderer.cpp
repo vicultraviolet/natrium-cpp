@@ -12,6 +12,7 @@ namespace Na {
 	{
 		m_Frames.resize(m_Frames.capacity());
 		m_ImageInFlightFences.resize(m_ImageInFlightFences.capacity());
+		std::memset(m_ImageInFlightFences.ptr(), 0, m_Core.m_Images.size() * sizeof(m_ImageInFlightFences[0]));
 
 		this->_create_command_objects();
 		this->_create_sync_objects();
