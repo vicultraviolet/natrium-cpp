@@ -85,9 +85,7 @@ namespace Na {
         {
             NA_VERIFY(index < m_Capacity, "Failed to deallocate Arena element: out of bounds!");
             m_FreeList.emplace_back(index);
-            std::destroy_at(m_Buffer + index);
         }
-		inline void remove_at(u64 index) { this->release_slot(index); }
 
         template<typename... t_Args>
         [[nodiscard]] u64 emplace(t_Args&&... args)
@@ -98,6 +96,12 @@ namespace Na {
 
             std::construct_at(m_Buffer + index, std::forward<t_Args>(args)...);
             return index;
+        }
+
+        inline void remove_at(u64 index)
+        {
+            this->release_slot(index);
+            std::destroy_at(m_Buffer + index);
         }
 
         template<typename... t_Args>
