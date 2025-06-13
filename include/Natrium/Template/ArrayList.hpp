@@ -4,9 +4,10 @@
 #include "./ArrayIterator.hpp"
 
 namespace Na {
-	template<typename T>
+	template<typename T, typename t_Allocator = std::allocator<T>>
 	class ArrayList {
 	public:
+		using allocator_type = t_Allocator;
 		using iterator = Array_Iterator<ArrayList>;
 		using reverse_iterator = Array_ReverseIterator<ArrayList>;
 		using const_iterator = Array_ConstIterator<ArrayList>;
@@ -19,7 +20,8 @@ namespace Na {
 		void clear(void)
 		{
 			for (u64 i = 0; i < m_Size; i++)
-				m_Buffer[i].~T();
+				std::destruct_at(m_Buffer + i);
+
 			m_Size = 0;
 		}
 
@@ -29,42 +31,67 @@ namespace Na {
 				return;
 
 			this->clear();
-			free(m_Buffer);
+
+			if (m_Buffer)
+				m_Allocator.deallocate(m_Buffer, m_Capacity);
 
 			m_Buffer = nullptr;
 			m_Capacity = 0;
-			m_Size = 0;
 		}
 
-		ArrayList(u64 capacity, u64 size = 0)
-		: m_Capacity(capacity), m_Size(size), m_Buffer(tcalloc<T>(capacity))
-		{}
+		explicit ArrayList(u64 capacity, u64 size = 0, const t_Allocator& allocator = t_Allocator())
+		: m_Capacity(capacity), m_Size(size), m_Allocator(allocator)
+		{
+			m_Buffer = m_Capacity ? m_Allocator.allocate(m_Capacity) : nullptr;
+		}
+
+		template<typename... t_Args>
+		ArrayList(initialize_t, u64 capacity, t_Args&&... __args)
+		: m_Capacity(capacity),m_Size(capacity)
+		{
+			m_Buffer = m_Capacity ? m_Allocator.allocate(m_Capacity) : nullptr;
+
+			for (u64 i = 0; i < m_Capacity; i++)
+				std::construct_at(m_Buffer + i, std::forward<t_Args>(__args)...);
+		}
 
 		template<typename t_Iterator>
-		ArrayList(const t_Iterator& begin, const t_Iterator& end)
-		: m_Capacity(std::distance(begin, end)), m_Size(m_Capacity), m_Buffer(tcalloc<T>(m_Size))
+		ArrayList(
+			const t_Iterator& begin,
+			const t_Iterator& end,
+			const t_Allocator& allocator = t_Allocator()
+		)
+		: m_Capacity(std::distance(begin, end)),
+		m_Size(m_Capacity),
+		m_Allocator(allocator)
 		{
+			m_Buffer = m_Capacity ? m_Allocator.allocate(m_Capacity) : nullptr;
+
 			u64 i = 0;
 			for (t_Iterator it = begin; it != end; it++)
-				new (m_Buffer + i++) T(*it);
+				std::construct_at(m_Buffer + i++, *it);
 		}
 
-		ArrayList(const T* buffer, u64 size)
-		: m_Capacity(size), m_Size(size), m_Buffer(tcalloc<T>(size))
+		ArrayList(const T* buffer, u64 size, const t_Allocator& allocator = t_Allocator())
+		: m_Capacity(size), m_Size(size), m_Allocator(allocator)
 		{
-			for (u64 i = 0; i < size; i++)
-				new (m_Buffer + i) T(buffer[i]);
+			m_Buffer = m_Capacity ? m_Allocator.allocate(m_Capacity) : nullptr;
+
+			for (u64 i = 0; i < m_Size; i++)
+				std::construct_at(m_Buffer + i, buffer[i]);
 		}
 
-		ArrayList(const std::initializer_list<T>& list)
-		: ArrayList(list.begin(), list.size())
+		ArrayList(const std::initializer_list<T>& list, const t_Allocator& allocator = t_Allocator())
+		: ArrayList(list.begin(), list.end(), allocator)
 		{}
 
 		ArrayList(const ArrayList& other)
-		: m_Capacity(other.m_Capacity), m_Size(other.m_Size), m_Buffer(tcalloc<T>(m_Size))
+		: m_Capacity(other.m_Capacity), m_Size(other.m_Size), m_Allocator(std::allocator_traits<t_Allocator>::select_on_container_copy_construction(other.m_Allocator))
 		{
+			m_Buffer = m_Capacity ? m_Allocator.allocate(m_Capacity) : nullptr;
+
 			for (u64 i = 0; i < m_Size; i++)
-				new (m_Buffer + i) T(other[i]);
+				std::construct_at(m_Buffer + i, other[i]);
 		}
 
 		ArrayList& operator=(const ArrayList& other)
@@ -76,32 +103,38 @@ namespace Na {
 
 			if (m_Capacity != other.m_Capacity)
 			{
-				free(m_Buffer);
-				m_Buffer = tcalloc<T>(other.m_Capacity);
+				if (m_Buffer)
+					m_Allocator.deallocate(m_Buffer, m_Capacity);
+
 				m_Capacity = other.m_Capacity;
+				m_Buffer = m_Capacity ? m_Allocator.allocate(m_Capacity) : nullptr;
 			}
 
 			m_Size = other.m_Size;
-			for (u64 i = 0; i < other.m_Size; i++)
-				new (m_Buffer + i) T(other.m_Buffer[i]);
+			for (u64 i = 0; i < m_Size; i++)
+				std::construct_at(m_Buffer + i, other[i]);
 
 			return *this;
 		}
 
-		ArrayList(ArrayList&& other)
-		: m_Buffer(std::exchange(other.m_Buffer, nullptr)),
-		m_Capacity(std::exchange(other.m_Capacity, 0)),
-		m_Size(std::exchange(other.m_Size, 0))
+		ArrayList(ArrayList&& other) noexcept
+		: m_Capacity(std::exchange(other.m_Capacity, 0)),
+		m_Size(std::exchange(other.m_Size, 0)),
+		m_Buffer(std::exchange(other.m_Buffer, nullptr)),
+		m_Allocator(std::move(other.m_Allocator))
 		{}
 
-		ArrayList& operator=(ArrayList&& other)
+		ArrayList& operator=(ArrayList&& other) noexcept
 		{
-			this->clear();
-			free(m_Buffer);
+			if (this == &other)
+				return *this;
 
-			m_Buffer = std::exchange(other.m_Buffer, nullptr);
+			this->destroy();
+
 			m_Capacity = std::exchange(other.m_Capacity, 0);
 			m_Size = std::exchange(other.m_Size, 0);
+			m_Buffer = std::exchange(other.m_Buffer, nullptr);
+			m_Allocator = std::move(other.m_Allocator);
 
 			return *this;
 		}
@@ -120,13 +153,21 @@ namespace Na {
 			if (m_Capacity == new_capacity)
 				return;
 
-			T* new_buffer = tcalloc<T>(new_capacity);
-			for (u64 i = 0; i < m_Size; i++)
-				new (new_buffer + i) T(std::move(m_Buffer[i]));
+			T* new_buffer = m_Allocator.allocate(new_capacity);
+			u64 copy_size = std::min(m_Size, new_capacity);
 
-			free(m_Buffer);
+			for (u64 i = 0; i < copy_size; i++)
+				std::construct_at(m_Buffer + i, std::move(m_Buffer[i]));
+
+			for (u64 i = 0; i < m_Size; i++)
+				std::destruct_at(m_Buffer + i);
+
+			if (m_Buffer)
+				m_Allocator.deallocate(m_Buffer, m_Capacity);
+
 			m_Buffer = new_buffer;
 			m_Capacity = new_capacity;
+			m_Size = copy_size;
 		}
 
 		inline void reserve(u64 extra_capacity) { this->reallocate(m_Capacity + extra_capacity); }
@@ -138,29 +179,26 @@ namespace Na {
 		}
 
 		template<typename... t_Args>
-		inline u64 emplace(t_Args&&... __args)
+		u64 emplace(t_Args&&... __args)
 		{
 			if (m_Size == m_Capacity)
-				this->reallocate(m_Capacity * 2 + 1);
-			new (m_Buffer + m_Size) T(std::forward<t_Args>(__args)...);
-			return m_Size++;
+				this->reallocate((u64)std::ceil(m_Capacity * 1.5f));
+
+			return this->emplace_d(std::forward<t_Args>(__args)...);
 		}
+		template<typename... t_Args>
+		inline u64 emplace_back(t_Args&&... __args) { return this->emplace(std::forward<t_Args>(__args)...); }
 
 		template<typename... t_Args>
-		inline u64 emplace_d(t_Args&&... __args)
+		u64 emplace_d(t_Args&&... __args)
 		{
 			NA_ASSERT(m_Size < m_Capacity, "Failed to emplace to ArrayList: emplace_d called with full buffer!");
-
-			new (m_Buffer + m_Size) T(std::forward<t_Args>(__args)...);
+			std::construct_at(m_Buffer + m_Size, std::forward<t_Args>(__args)...);
 			return m_Size++;
 		}
 
-		inline bool pop(void)
-		{
-			if (m_Size)
-				m_Buffer[--m_Size].~T();
-			return m_Size;
-		}
+		inline void pop(void) { std::destruct_at(m_Buffer + --m_Size); }
+		inline void pop_back(void) { return this->pop(); }
 
 		[[nodiscard]] inline iterator begin(void) { return m_Buffer; }
 		[[nodiscard]] inline const_iterator begin(void) const { return m_Buffer; }
@@ -178,17 +216,39 @@ namespace Na {
 		[[nodiscard]] inline const_reverse_iterator rend(void) const { return m_Buffer - 1; }
 		[[nodiscard]] inline const_reverse_iterator crend(void) const { return m_Buffer - 1; }
 
-		[[nodiscard]] inline iterator at(u64 index) { return m_Buffer + index; }
-		[[nodiscard]] inline const_iterator at(u64 index) const { return m_Buffer + index; }
+		[[nodiscard]] T& front(void)
+		{
+			NA_VERIFY(m_Size > 0, "Failed to get front element: ArrayList is empty!");
+			return m_Buffer[0];
+		}
+		[[nodiscard]] const T& front(void) const
+		{
+			NA_VERIFY(m_Size > 0, "Failed to get front element: ArrayList is empty!");
+			return m_Buffer[0];
+		}
 
-		[[nodiscard]] inline T& operator[](u64 index) { return m_Buffer[index]; }
-		[[nodiscard]] inline const T& operator[](u64 index) const { return m_Buffer[index]; }
+		[[nodiscard]] T& back(void)
+		{
+			NA_VERIFY(m_Size > 0, "Failed to get back element: ArrayList is empty!");
+			return m_Buffer[m_Size - 1];
+		}
+		[[nodiscard]] const T& back(void) const
+		{
+			NA_VERIFY(m_Size > 0, "Failed to get back element: ArrayList is empty!");
+			return m_Buffer[m_Size - 1];
+		}
 
-		[[nodiscard]] inline T& operator*(void) { return *m_Buffer; }
-		[[nodiscard]] inline const T& operator*(void) const { return *m_Buffer; }
+		[[nodiscard]] T& operator[](u64 index)
+		{
+			NA_VERIFY(index < m_Size, "Failed to access element at index {}: out of bounds!", index);
+			return m_Buffer[index];
+		}
 
-		[[nodiscard]] inline T* operator->(void) { return m_Buffer; }
-		[[nodiscard]] inline const T* operator->(void) const { return m_Buffer; }
+		[[nodiscard]] const T& operator[](u64 index) const
+		{
+			NA_VERIFY(index < m_Size, "Failed to access element at index {}: out of bounds!", index);
+			return m_Buffer[index];
+		}
 
 		[[nodiscard]] inline T* ptr(void) { return m_Buffer; }
 		[[nodiscard]] inline const T* ptr(void) const { return m_Buffer; }
@@ -196,12 +256,16 @@ namespace Na {
 		[[nodiscard]] inline u64 capacity(void) const { return m_Capacity; }
 		[[nodiscard]] inline u64 size(void) const { return m_Size; }
 		[[nodiscard]] inline u64 free_space(void) const { return m_Capacity - m_Size; }
+
 		[[nodiscard]] inline bool empty(void) const { return !m_Size; }
 		[[nodiscard]] inline bool full(void) const { return m_Size == m_Capacity; }
+
+		[[nodiscard]] const t_Allocator& allocator(void) const { return m_Allocator; }
 	private:
 		u64 m_Capacity = 0;
 		u64 m_Size = 0;
 		T* m_Buffer = nullptr;
+		t_Allocator m_Allocator;
 	};
 } // namespace Na
 
