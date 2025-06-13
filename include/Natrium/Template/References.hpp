@@ -251,6 +251,9 @@ namespace Na {
 
 		ControlBlock* m_ControlBlock;
 	};
+	
+	template<typename T>
+	using SharedRef = Ref<T>;
 
 	template<typename To, typename From>
 	Ref<To> static_pointer_cast(const Ref<From>& from)

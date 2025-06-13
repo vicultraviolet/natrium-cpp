@@ -9,7 +9,10 @@ namespace Na {
     class Arena {
     public:
         using T_t = T;
+
         using UniqueHandle = Na::UniqueHandle<Arena>;
+        using SharedHandle = Na::SharedHandle<Arena>;
+        using WeakHandle   = Na::WeakHandle<Arena>;
 
         Arena(void) = default;
         ~Arena(void) { this->destroy(); }
@@ -87,14 +90,26 @@ namespace Na {
 		inline void remove_at(u64 index) { this->release_slot(index); }
 
         template<typename... t_Args>
-        [[nodiscard]] UniqueHandle make_unique(t_Args&&... args)
+        [[nodiscard]] u64 emplace(t_Args&&... args)
         {
             u64 index = this->fetch_slot();
             if (index == k_InvalidHandle)
-                return nullptr;
+                return k_InvalidHandle;
 
             std::construct_at(m_Buffer + index, std::forward<t_Args>(args)...);
-            return UniqueHandle(this, index);
+            return index;
+        }
+
+        template<typename... t_Args>
+        [[nodiscard]] UniqueHandle make_unique(t_Args&&... args)
+        {
+            return UniqueHandle(this, this->emplace(std::forward<t_Args>(args)...));
+        }
+
+        template<typename... t_Args>
+        [[nodiscard]] SharedHandle make_shared(t_Args&&... args)
+        {
+            return SharedHandle(this, this->emplace(std::forward<t_Args>(args)...));
         }
 
         void reallocate(u64 new_capacity)
@@ -154,6 +169,12 @@ namespace Na {
 
     template<typename T, typename t_Allocator = std::allocator<T>>
     using Arena_UniqueHandle = Na::UniqueHandle<Arena<T, t_Allocator>>;
+
+    template<typename T, typename t_Allocator = std::allocator<T>>
+    using Arena_SharedHandle = Na::SharedHandle<Arena<T, t_Allocator>>;
+
+    template<typename T, typename t_Allocator = std::allocator<T>>
+    using Arena_WeakHandle = Na::WeakHandle<Arena<T, t_Allocator>>;
 } // namespace Na
 
 #endif // NA_ARENA_HPP
