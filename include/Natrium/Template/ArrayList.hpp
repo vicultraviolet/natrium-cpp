@@ -20,7 +20,7 @@ namespace Na {
 		void clear(void)
 		{
 			for (u64 i = 0; i < m_Size; i++)
-				std::destruct_at(m_Buffer + i);
+				std::destroy_at(m_Buffer + i);
 
 			m_Size = 0;
 		}
@@ -160,7 +160,7 @@ namespace Na {
 				std::construct_at(m_Buffer + i, std::move(m_Buffer[i]));
 
 			for (u64 i = 0; i < m_Size; i++)
-				std::destruct_at(m_Buffer + i);
+				std::destroy_at(m_Buffer + i);
 
 			if (m_Buffer)
 				m_Allocator.deallocate(m_Buffer, m_Capacity);
@@ -197,7 +197,7 @@ namespace Na {
 			return m_Size++;
 		}
 
-		inline void pop(void) { std::destruct_at(m_Buffer + --m_Size); }
+		inline void pop(void) { std::destroy_at(m_Buffer + --m_Size); }
 		inline void pop_back(void) { return this->pop(); }
 
 		[[nodiscard]] inline iterator begin(void) { return m_Buffer; }

@@ -63,9 +63,12 @@
 #include <imgui/backends/imgui_impl_vulkan.h>
 #endif // NA_DISABLE_IMGUI
 
+#include "./Template/References.hpp"
+#include "./Template/Handles.hpp"
+
 #include "./Template/ArrayList.hpp"
 #include "./Template/DoubleList.hpp"
-#include "./Template/References.hpp"
+#include "./Template/Arena.hpp"
 
 // for convenience
 #include "Natrium/Core/Logger.hpp"
