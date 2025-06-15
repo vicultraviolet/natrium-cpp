@@ -10,6 +10,7 @@ namespace Na {
     public:
         using T_t = T;
 
+        using ViewHandle   = Na::ViewHandle<Arena>;
         using UniqueHandle = Na::UniqueHandle<Arena>;
         using SharedHandle = Na::SharedHandle<Arena>;
         using WeakHandle   = Na::WeakHandle<Arena>;
@@ -103,6 +104,12 @@ namespace Na {
         }
 
         template<typename... t_Args>
+        [[nodiscard]] ViewHandle make_view(t_Args&&... args)
+        {
+            return ViewHandle(this, this->emplace(std::forward<t_Args>(args)...));
+        }
+
+        template<typename... t_Args>
         [[nodiscard]] UniqueHandle make_unique(t_Args&&... args)
         {
             return UniqueHandle(this, this->emplace(std::forward<t_Args>(args)...));
@@ -181,6 +188,9 @@ namespace Na {
 
         t_Allocator m_Allocator;
     };
+
+    template<typename T, typename t_Allocator = std::allocator<T>>
+    using Arena_ViewHandle = Na::UniqueHandle<Arena<T, t_Allocator>>;
 
     template<typename T, typename t_Allocator = std::allocator<T>>
     using Arena_UniqueHandle = Na::UniqueHandle<Arena<T, t_Allocator>>;

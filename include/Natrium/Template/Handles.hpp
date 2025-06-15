@@ -4,6 +4,100 @@
 #include "Natrium/Core.hpp"
 
 namespace Na {
+    template<typename t_Container>
+    class ViewHandle {
+    public:
+        using T = typename t_Container::T_t;
+
+        ViewHandle(void) = default;
+        ~ViewHandle(void) = default;
+
+        void destroy(void)
+        {
+            if (!*this)
+                return;
+
+            m_Container = nullptr;
+            m_Index = k_InvalidHandle;
+        }
+
+        ViewHandle(nullptr_t) : m_Container(nullptr) {}
+        ViewHandle& operator=(nullptr_t)
+        {
+            this->destroy();
+            return *this;
+        }
+
+        ViewHandle(const ViewHandle& other)
+        : m_Container(other.m_Container), m_Index(other.m_Index)
+        {}
+
+        ViewHandle& operator=(const ViewHandle& other)
+        {
+            m_Container = other.m_Container;
+            m_Index = other.m_Index;
+        }
+
+        ViewHandle(ViewHandle&& other) noexcept
+        : m_Container(std::exchange(other.m_Container, nullptr)),
+        m_Index(std::exchange(other.m_Index, k_InvalidHandle))
+        {}
+
+        ViewHandle& operator=(ViewHandle&& other) noexcept
+        {
+            if (this == &other)
+                return *this;
+
+            m_Container = std::exchange(other.m_Container, nullptr);
+            m_Index = std::exchange(other.m_Index, k_InvalidHandle);
+
+            return *this;
+        }
+
+        ViewHandle(t_Container* container, u64 index = k_InvalidHandle)
+        : m_Container(container), m_Index(index)
+        {}
+
+        void swap(T& other)
+        {
+            std::swap(m_Container, other.m_Container);
+            std::swap(m_Index, other.m_Index);
+        }
+
+        [[nodiscard]] T* ptr(void)
+        {
+            NA_VERIFY(*this, "Failed to dereference ViewHandle: Container is null or index is invalid!");
+            return &m_Container->operator[](m_Index);
+        }
+
+        [[nodiscard]] const T* ptr(void) const
+        {
+            NA_VERIFY(*this, "Failed to dereference ViewHandle: Container is null or index is invalid!");
+            return &m_Container->operator[](m_Index);
+        }
+
+        [[nodiscard]] inline T& operator*(void) { return *this->ptr(); }
+        [[nodiscard]] const T& operator*(void) const { return *this->ptr(); }
+
+        [[nodiscard]] inline T* operator->(void) { return this->ptr(); }
+        [[nodiscard]] inline const T* operator->(void) const { return this->ptr(); }
+
+        [[nodiscard]] auto operator==(const ViewHandle& other) const
+        {
+            return m_Index == other.m_Index && m_Container == other.m_Container;
+        }
+
+        [[nodiscard]] inline u64 index(void) const { return m_Index; }
+
+        [[nodiscard]] operator bool(void) const
+        {
+            return m_Container && m_Index < m_Container->capacity();
+        }
+    private:
+        t_Container* m_Container = nullptr;
+        u64 m_Index = k_InvalidHandle;
+    };
+
 	template<typename t_Container>
 	class UniqueHandle {
 	public:
@@ -81,15 +175,9 @@ namespace Na {
 
 		void swap(T& other)
 		{
-			NA_VERIFY(*this, "Failed to swap UniqueHandle: Container is null or index is invalid!");
-			NA_VERIFY(other, "Failed to swap UniqueHandle: Other handle is null or index is invalid!");
-
 			std::swap(m_Container, other.m_Container);
 			std::swap(m_Index, other.m_Index);
 		}
-
-		template<typename U, std::enable_if_t<std::is_base_of_v<U, T>, int> = 0>
-		[[nodiscard]] inline operator UniqueHandle<U>(void)&& { return UniqueHandle<U>(m_Container, this->release()); }
 
 		[[nodiscard]] T* ptr(void)
 		{
@@ -325,6 +413,11 @@ namespace Na {
             m_ControlBlock = std::exchange(other.m_ControlBlock, nullptr);
 
             return *this;
+        }
+
+        void swap(T& other)
+        {
+            std::swap(m_ControlBlock, other.m_ControlBlock);
         }
 
         void release(void)
