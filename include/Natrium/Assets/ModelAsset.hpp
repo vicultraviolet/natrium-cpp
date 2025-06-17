@@ -2,6 +2,7 @@
 #define NA_MODEL_ASSET_HPP
 
 #include "Natrium/Assets/Asset.hpp"
+#include "Natrium/Graphics/Pipeline.hpp"
 
 namespace Na {
 	struct Vertex {
@@ -24,16 +25,18 @@ namespace Na {
 		[[nodiscard]] inline u32 vertex_count(void) const { return (u32)m_Vertices.size(); }
 		[[nodiscard]] inline u32 index_count(void) const { return (u32)m_Indices.size(); }
 
-		[[nodiscard]] inline Na::ArrayList<Vertex>& vertices(void) { return m_Vertices; }
-		[[nodiscard]] inline const Na::ArrayList<Vertex>& vertices(void) const { return m_Vertices; }
+		[[nodiscard]] inline ArrayList<Vertex>& vertices(void) { return m_Vertices; }
+		[[nodiscard]] inline const ArrayList<Vertex>& vertices(void) const { return m_Vertices; }
 
-		[[nodiscard]] inline Na::ArrayList<u32>& indices(void) { return m_Indices; }
-		[[nodiscard]] inline const Na::ArrayList<u32>& indices(void) const { return m_Indices; }
+		[[nodiscard]] inline ArrayList<u32>& indices(void) { return m_Indices; }
+		[[nodiscard]] inline const ArrayList<u32>& indices(void) const { return m_Indices; }
+
+		[[nodiscard]] static const ShaderAttributeLayout& ShaderLayout(void);
 
 		[[nodiscard]] inline operator bool(void) const override { return !m_Vertices.empty() && !m_Indices.empty(); };
 	private:
-		Na::ArrayList<Vertex> m_Vertices;
-		Na::ArrayList<u32> m_Indices;
+		ArrayList<Vertex> m_Vertices;
+		ArrayList<u32> m_Indices;
 	};
 	using Model = ModelAsset;
 }

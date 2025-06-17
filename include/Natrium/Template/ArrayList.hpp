@@ -218,35 +218,35 @@ namespace Na {
 
 		[[nodiscard]] T& front(void)
 		{
-			NA_VERIFY(m_Size > 0, "Failed to get front element: ArrayList is empty!");
+			NA_ASSERT(m_Size > 0, "Failed to get front element: ArrayList is empty!");
 			return m_Buffer[0];
 		}
 		[[nodiscard]] const T& front(void) const
 		{
-			NA_VERIFY(m_Size > 0, "Failed to get front element: ArrayList is empty!");
+			NA_ASSERT(m_Size > 0, "Failed to get front element: ArrayList is empty!");
 			return m_Buffer[0];
 		}
 
 		[[nodiscard]] T& back(void)
 		{
-			NA_VERIFY(m_Size > 0, "Failed to get back element: ArrayList is empty!");
+			NA_ASSERT(m_Size > 0, "Failed to get back element: ArrayList is empty!");
 			return m_Buffer[m_Size - 1];
 		}
 		[[nodiscard]] const T& back(void) const
 		{
-			NA_VERIFY(m_Size > 0, "Failed to get back element: ArrayList is empty!");
+			NA_ASSERT(m_Size > 0, "Failed to get back element: ArrayList is empty!");
 			return m_Buffer[m_Size - 1];
 		}
 
 		[[nodiscard]] T& operator[](u64 index)
 		{
-			NA_VERIFY(index < m_Size, "Failed to access element at index {}: out of bounds!", index);
+			NA_ASSERT(index < m_Size, "Failed to access element at index {}: out of bounds!", index);
 			return m_Buffer[index];
 		}
 
 		[[nodiscard]] const T& operator[](u64 index) const
 		{
-			NA_VERIFY(index < m_Size, "Failed to access element at index {}: out of bounds!", index);
+			NA_ASSERT(index < m_Size, "Failed to access element at index {}: out of bounds!", index);
 			return m_Buffer[index];
 		}
 

@@ -66,13 +66,13 @@ namespace Na {
 
         [[nodiscard]] T* ptr(void)
         {
-            NA_VERIFY(*this, "Failed to dereference ViewHandle: Container is null or index is invalid!");
+            NA_ASSERT(*this, "Failed to dereference ViewHandle: Container is null or index is invalid!");
             return &m_Container->operator[](m_Index);
         }
 
         [[nodiscard]] const T* ptr(void) const
         {
-            NA_VERIFY(*this, "Failed to dereference ViewHandle: Container is null or index is invalid!");
+            NA_ASSERT(*this, "Failed to dereference ViewHandle: Container is null or index is invalid!");
             return &m_Container->operator[](m_Index);
         }
 
@@ -181,13 +181,13 @@ namespace Na {
 
 		[[nodiscard]] T* ptr(void)
 		{
-			NA_VERIFY(*this, "Failed to dereference UniqueHandle: Container is null or index is invalid!");
+            NA_ASSERT(*this, "Failed to dereference UniqueHandle: Container is null or index is invalid!");
 			return &m_Container->operator[](m_Index);
 		}
 
 		[[nodiscard]] const T* ptr(void) const
 		{
-			NA_VERIFY(*this, "Failed to dereference UniqueHandle: Container is null or index is invalid!");
+            NA_ASSERT(*this, "Failed to dereference UniqueHandle: Container is null or index is invalid!");
 			return &m_Container->operator[](m_Index);
 		}
 

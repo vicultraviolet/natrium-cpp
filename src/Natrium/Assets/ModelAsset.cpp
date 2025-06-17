@@ -69,4 +69,25 @@ namespace Na {
         return asset;
 	}
 
+    static ShaderAttributeLayout shader_layout{
+        Na::ShaderAttributeBinding{
+            .binding = 0,
+            .input_rate = Na::AttributeInputRate::Vertex,
+            .attributes = {
+                Na::ShaderAttribute{
+                    .location = 0,
+                    .type = Na::ShaderAttributeType::Vec3
+                },
+                Na::ShaderAttribute{
+                    .location = 1,
+                    .type = Na::ShaderAttributeType::Vec2
+                }
+            }
+        }
+    };
+    const ShaderAttributeLayout& ModelAsset::ShaderLayout(void) 
+    {
+        return shader_layout;
+	}
+
 } // namespace Na

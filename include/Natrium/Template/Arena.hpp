@@ -84,7 +84,7 @@ namespace Na {
 
         void release_slot(u64 index)
         {
-            NA_VERIFY(index < m_Capacity, "Failed to deallocate Arena element: out of bounds!");
+            NA_ASSERT(index < m_Capacity, "Failed to deallocate Arena element: out of bounds!");
             m_FreeList.emplace_back(index);
         }
 
@@ -161,12 +161,12 @@ namespace Na {
 
         [[nodiscard]] inline T& operator[](u64 index)
         {
-            NA_VERIFY(index < m_Capacity, "Failed to index Arena: out of bounds!");
+            NA_ASSERT(index < m_Capacity, "Failed to index Arena: out of bounds!");
             return m_Buffer[index];
         }
         [[nodiscard]] inline const T& operator[](u64 index) const
         {
-            NA_VERIFY(index < m_Capacity, "Failed to index Arena: out of bounds!");
+            NA_ASSERT(index < m_Capacity, "Failed to index Arena: out of bounds!");
             return m_Buffer[index];
         }
 
