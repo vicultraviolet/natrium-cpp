@@ -63,9 +63,9 @@ namespace Na {
 		[[nodiscard]] inline const Renderer& renderer(void) const { return m_Renderer; }
 
 		[[nodiscard]] inline WeakLayerHandle<ImGuiLayer> imgui_layer(void) const { return m_ImGuiLayer; }
-	private:
-		Context m_Context;
 
+		[[nodiscard]] inline u64 average_fps(void) const { return m_AverageFPS; }
+	private:
 		AssetRegistry m_AssetRegistry;
 		LayerManager m_LayerManager;
 
@@ -73,6 +73,8 @@ namespace Na {
 		Renderer m_Renderer;
 
 		WeakLayerHandle<ImGuiLayer> m_ImGuiLayer;
+
+		u64 m_AverageFPS = 0;
 
 		static inline Application* s_Application = nullptr;
 	};

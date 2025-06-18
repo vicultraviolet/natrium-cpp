@@ -32,8 +32,10 @@ namespace Na {
 			logical_device.destroySemaphore(fd.image_available_semaphore);
 			logical_device.destroySemaphore(fd.render_finished_semaphore);
 		}
+		m_Frames.destroy();
 
 		logical_device.destroyCommandPool(m_GraphicsCmdPool);
+		m_GraphicsCmdPool = nullptr;
 
 		m_Core.destroy();
 	}

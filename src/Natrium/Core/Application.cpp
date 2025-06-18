@@ -16,8 +16,6 @@ namespace Na {
 		NA_VERIFY(!Application::s_Application, "Failed to create Application: Cannot create more than one Application instance!");
 		Application::s_Application = this;
 
-		m_Context = Context(initialize);
-
 		m_AssetRegistry = AssetRegistry(engine_asset_dir, shader_output_dir);
 
 		auto renderer_settings = m_AssetRegistry.load_renderer_settings(renderer_settings_path);
@@ -38,8 +36,6 @@ namespace Na {
 
 		m_LayerManager.destroy();
 		m_AssetRegistry.destroy();
-
-		m_Context.destroy();
 
 		s_Application = nullptr;
 	}
@@ -73,6 +69,7 @@ namespace Na {
 			}
 
 			dt.calculate();
+			m_AverageFPS = (u64)(1.0f / dt);
 
 			for (Na::LayerHandle<>& layer : m_LayerManager)
 			{
@@ -125,7 +122,6 @@ namespace Na {
 
 	Application::Application(Application&& other)
 	: running(std::exchange(other.running, false)),
-	m_Context(std::move(other.m_Context)),
 	m_AssetRegistry(std::move(other.m_AssetRegistry)),
 	m_LayerManager(std::move(other.m_LayerManager)),
 	m_Window(std::move(other.m_Window)),
@@ -139,7 +135,6 @@ namespace Na {
 		this->destroy();
 
 		running = std::exchange(other.running, false);
-		m_Context = std::move(other.m_Context);
 		m_AssetRegistry = std::move(other.m_AssetRegistry);
 		m_LayerManager = std::move(other.m_LayerManager);
 		m_Window = std::move(other.m_Window);

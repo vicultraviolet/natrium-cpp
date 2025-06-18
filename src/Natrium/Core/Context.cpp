@@ -21,7 +21,7 @@ namespace Na {
 	#endif // NA_PLATFORM
 	}
 
-	Context::Context(initialize_t)
+	Context::Context(const InitInfo& info)
 	: m_ExecPath(getExecPath()),
 	m_ExecDir(m_ExecPath.parent_path()),
 	m_ExecName(m_ExecPath.filename()),
@@ -45,7 +45,15 @@ namespace Na {
 		NA_ASSERT(result, "Failed to initialize glfw!");
 		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
-		m_VkContext = VkContext(initialize);
+		if (info.init_vulkan)
+		{
+			g_Logger.print(Info, "Initializing Vulkan context...");
+			m_VkContext = VkContext(initialize);
+		}
+		else
+		{
+			g_Logger.print(Info, "Vulkan context initialization skipped.");
+		}
 	}
 
 	void Context::destroy(void)

@@ -6,11 +6,15 @@
 #include "Natrium/Graphics/VkContext.hpp"
 
 namespace Na {
+	struct InitInfo {
+		bool init_vulkan = true;
+	};
+
 	class Context {
 	public:
 		Context(void) = default;
 
-		Context(initialize_t);
+		Context(const InitInfo& info);
 		~Context(void) { this->destroy(); }
 
 		void destroy(void);

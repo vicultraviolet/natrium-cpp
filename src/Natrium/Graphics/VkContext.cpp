@@ -322,8 +322,6 @@ namespace Na {
 
 		NA_VERIFY(glfwVulkanSupported(), "Vulkan is not supported by GLFW!");
 
-		g_Logger.print(Info, "Initializing Vulkan!");
-
 		m_Instance = createInstance();
 		m_DebugMessenger = createDebugMessenger(m_Instance);
 
