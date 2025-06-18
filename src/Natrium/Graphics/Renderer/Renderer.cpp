@@ -107,7 +107,7 @@ namespace Na {
 		fd.cmd_buffer.begin(begin_info);
 
 		std::array<vk::ClearValue, 2> clear_values;
-		clear_values[0].color = std::array<float, 4>{ color.r, color.g, color.g, color.a };
+		clear_values[0].color = std::array<float, 4>{ color.r, color.g, color.b, color.a };
 		clear_values[1].depthStencil = { { 1.0f, 0 } };
 
 		vk::RenderPassBeginInfo render_pass_info;
