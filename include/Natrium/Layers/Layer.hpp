@@ -26,6 +26,7 @@ namespace Na {
 		virtual void on_event(Event& e) {}
 		virtual void update(double dt) {}
 		virtual void draw(void) {}
+		virtual void imgui_draw(void) {}
 
 		[[nodiscard]] bool enabled(void) const;
 		[[nodiscard]] bool updatable(void) const;

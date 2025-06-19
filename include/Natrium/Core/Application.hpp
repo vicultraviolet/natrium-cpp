@@ -29,8 +29,8 @@ namespace Na {
 		Application(const Application& other) = delete;
 		Application& operator=(const Application& other) = delete;
 
-		Application(Application&& other);
-		Application& operator=(Application&& other);
+		Application(Application&& other) noexcept;
+		Application& operator=(Application&& other) noexcept;
 
 		void run(void);
 

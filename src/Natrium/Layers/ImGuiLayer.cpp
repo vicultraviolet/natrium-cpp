@@ -295,7 +295,7 @@ namespace Na {
 		}
     }
 
-    void ImGuiLayer::draw(void)
+    void ImGuiLayer::imgui_draw(void)
     {
         if (m_DemoWindowShown)
             ImGui::ShowDemoWindow(&m_DemoWindowShown);

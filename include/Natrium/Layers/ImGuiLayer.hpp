@@ -15,7 +15,7 @@ namespace Na {
 		void end(void) const;
 
 		virtual void on_event(Event& e) override;
-		virtual void draw(void) override;
+		virtual void imgui_draw(void) override;
 
 		[[nodiscard]] inline bool demo_window_shown(void) const { return m_DemoWindowShown; }
 		inline void set_demo_window_shown(bool shown) { m_DemoWindowShown = shown; }

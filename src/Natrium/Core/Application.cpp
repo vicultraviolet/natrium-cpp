@@ -85,6 +85,15 @@ namespace Na {
 			if (!m_Renderer.begin_frame())
 				continue;
 
+			for (Na::LayerHandle<>& layer : m_LayerManager)
+			{
+				if (!layer->visible())
+					continue;
+
+				layer->draw();
+			}
+
+		#if !defined(NA_DISABLE_IMGUI)
 			if (auto imgui_layer = m_ImGuiLayer.lock())
 			{
 				imgui_layer->begin();
@@ -94,20 +103,12 @@ namespace Na {
 					if (!layer->visible())
 						continue;
 
-					layer->draw();
+					layer->imgui_draw();
 				}
 
 				imgui_layer->end();
-			} else
-			{
-				for (Na::LayerHandle<>& layer : m_LayerManager)
-				{
-					if (!layer->visible())
-						continue;
-
-					layer->draw();
-				}
-			}
+			} 
+		#endif // NA_DISABLE_IMGUI
 
 			m_Renderer.end_frame();
 		}
@@ -119,18 +120,17 @@ namespace Na {
 		m_ImGuiLayer = layer;
 	}
 
-
-	Application::Application(Application&& other)
+	Application::Application(Application&& other) noexcept
 	: running(std::exchange(other.running, false)),
 	m_AssetRegistry(std::move(other.m_AssetRegistry)),
 	m_LayerManager(std::move(other.m_LayerManager)),
 	m_Window(std::move(other.m_Window)),
-	m_Renderer(std::move(other.m_Renderer))
+	m_Renderer(std::move(other.m_Renderer)) 
 	{
 		Application::s_Application = this;
 	}
 
-	Application& Application::operator=(Application&& other)
+	Application& Application::operator=(Application&& other) noexcept
 	{
 		this->destroy();
 
