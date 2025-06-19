@@ -1,7 +1,7 @@
 #include "Pch.hpp"
 #include "Natrium/Graphics/ShaderModule.hpp"
 
-#include "Natrium/Graphics/VkContext.hpp"
+#include "Internal.hpp"
 
 namespace Na {
 	ShaderModule::ShaderModule(
@@ -9,7 +9,7 @@ namespace Na {
 		ShaderStageBits stage,
 		const std::string_view& entry_point
 	)
-	: m_Module(VkContext::Get().logical_device()
+	: m_Module(Internal::g_DeviceData.logical_device
 			   .createShaderModule(vk::ShaderModuleCreateInfo(
 				   {},
 				   binary.size() * sizeof(u32),
@@ -21,7 +21,7 @@ namespace Na {
 
 	ShaderModule::~ShaderModule(void)
 	{
-		VkContext::Get().logical_device().destroyShaderModule(m_Module);
+		Internal::g_DeviceData.logical_device.destroyShaderModule(m_Module);
 	}
 
 	ShaderModule::ShaderModule(ShaderModule&& other)
@@ -32,7 +32,7 @@ namespace Na {
 
 	ShaderModule& ShaderModule::operator=(ShaderModule&& other)
 	{
-		VkContext::Get().logical_device().destroyShaderModule(m_Module);
+		Internal::g_DeviceData.logical_device.destroyShaderModule(m_Module);
 		m_Module = std::exchange(other.m_Module, nullptr);
 		m_Stage = std::move(other.m_Stage);
 		m_EntryPoint = std::move(other.m_EntryPoint);

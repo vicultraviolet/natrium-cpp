@@ -1,7 +1,7 @@
 #include "Pch.hpp"
 #include "Natrium/Graphics/Buffers/VertexBuffer.hpp"
 
-#include "Natrium/Graphics/VkContext.hpp"
+#include "Internal.hpp"
 
 namespace Na {
 	VertexBuffer::VertexBuffer(u64 size, const void* data)
@@ -21,7 +21,7 @@ namespace Na {
 
 	void VertexBuffer::set_data(const void* data)
 	{
-		vk::Device logical_device = VkContext::Get().logical_device();
+		vk::Device logical_device = Internal::g_DeviceData.logical_device;
 
 		DeviceBuffer stage_buffer(
 			m_Buffer.size,

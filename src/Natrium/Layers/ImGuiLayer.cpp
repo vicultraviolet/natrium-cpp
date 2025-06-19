@@ -3,8 +3,8 @@
 
 #if !defined(NA_DISABLE_IMGUI)
 
-#include "Natrium/Graphics/VkContext.hpp"
-#include "GLFW/glfw3.h"
+#include "Natrium/Graphics/Device.hpp"
+#include "Internal.hpp"
 
 namespace Na {
     static ImGuiKey translateToImGuiKey(Key key)
@@ -158,7 +158,7 @@ namespace Na {
         create_info.pPoolSizes = &pool_size;
         create_info.maxSets = pool_size.descriptorCount;
 
-        m_DescriptorPool = VkContext::Get().logical_device().createDescriptorPool(create_info);
+        m_DescriptorPool = Internal::g_DeviceData.logical_device.createDescriptorPool(create_info);
 
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
@@ -173,18 +173,18 @@ namespace Na {
 
         ImGui_ImplVulkan_InitInfo init_info{};
 		init_info.ApiVersion = VK_API_VERSION_1_0; 
-        init_info.Instance = VkContext::Get().instance();
-        init_info.PhysicalDevice = VkContext::Get().physical_device();
-        init_info.Device = VkContext::Get().logical_device();
-        init_info.QueueFamily = renderer.core().queue_family_indices().graphics;
-        init_info.Queue = VkContext::Get().graphics_queue();
+        init_info.Instance = Internal::g_DeviceData.instance;
+        init_info.PhysicalDevice = Internal::g_DeviceData.physical_device;
+        init_info.Device = Internal::g_DeviceData.logical_device;
+        init_info.QueueFamily = Internal::g_DeviceData.graphics_queue_index;
+        init_info.Queue = Internal::g_DeviceData.graphics_queue;
         init_info.PipelineCache = nullptr;
         init_info.DescriptorPool = m_DescriptorPool;
         init_info.RenderPass = renderer.core().render_pass();
         init_info.Subpass = 0;
         init_info.MinImageCount = 2;
         init_info.ImageCount = (u32)renderer.core().images().size();
-        init_info.MSAASamples = (VkSampleCountFlagBits)VkContext::Get().msaa_samples(renderer.core().settings()->multisampling_enabled());
+        init_info.MSAASamples = (VkSampleCountFlagBits)Device::Limits::MSAASampleCount(renderer.core().settings()->multisampling_enabled());
         init_info.Allocator = nullptr;
         init_info.CheckVkResultFn = nullptr;
         ImGui_ImplVulkan_Init(&init_info);
@@ -198,7 +198,7 @@ namespace Na {
 
         if (m_DescriptorPool)
         {
-            VkContext::Get().logical_device().destroyDescriptorPool(m_DescriptorPool);
+            Internal::g_DeviceData.logical_device.destroyDescriptorPool(m_DescriptorPool);
             m_DescriptorPool = nullptr;
         }
 	}

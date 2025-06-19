@@ -1,7 +1,7 @@
 #include "Pch.hpp"
 #include "Natrium/Graphics/DeviceImage.hpp"
 
-#include "Natrium/Graphics/VkContext.hpp"
+#include "Internal.hpp"
 #include "Natrium/Graphics/Buffers/DeviceBuffer.hpp"
 
 namespace Na {
@@ -13,7 +13,7 @@ namespace Na {
 	{
 		for (vk::Format format : candidates)
 		{
-			vk::FormatProperties properties = VkContext::Get().physical_device().getFormatProperties(format);
+			vk::FormatProperties properties = Internal::g_DeviceData.physical_device.getFormatProperties(format);
 
 			if (tiling == vk::ImageTiling::eLinear && (properties.linearTilingFeatures & features) == features)
 				return format;
@@ -48,7 +48,7 @@ namespace Na {
 	{
 		NA_ASSERT(layer_count > 0, "Failed to create DeviceImage: Invalid layer count!");
 
-		vk::Device logical_device = VkContext::Get().logical_device();
+		vk::Device logical_device = Internal::g_DeviceData.logical_device;
 
 		vk::ImageCreateInfo create_info;
 
@@ -90,7 +90,7 @@ namespace Na {
 
 	void DeviceImage::destroy(void)
 	{
-		vk::Device logical_device = VkContext::Get().logical_device();
+		vk::Device logical_device = Internal::g_DeviceData.logical_device;
 
 		if (this->img)
 			logical_device.destroyImage(this->img);
@@ -103,7 +103,7 @@ namespace Na {
 
 	void DeviceImage::transition_layout(vk::ImageLayout old_layout, vk::ImageLayout new_layout)
 	{
-		vk::Device logical_device = VkContext::Get().logical_device();
+		vk::Device logical_device = Internal::g_DeviceData.logical_device;
 
 		vk::ImageMemoryBarrier barrier;
 
@@ -141,7 +141,7 @@ namespace Na {
 			throw std::runtime_error("Unsupported image layout transition!");
 		}
 
-		vk::CommandBuffer cmd_buffer = VkContext::Get().begin_single_time_cmds();
+		vk::CommandBuffer cmd_buffer = Internal::BeginSingleTimeCommands();
 
 		cmd_buffer.pipelineBarrier(
 			execute_stage,
@@ -152,7 +152,7 @@ namespace Na {
 			1, &barrier // image memory barriers
 		);
 
-		VkContext::Get().end_single_time_cmds(cmd_buffer);
+		Internal::EndSingleTimeCommands(cmd_buffer);
 	}
 
 	void DeviceImage::copy_from_buffer(vk::Buffer buffer, u32 starting_layer, u32 layer_count)
@@ -170,7 +170,7 @@ namespace Na {
 		region.imageOffset = {{ 0, 0, 0 }};
 		region.imageExtent = this->extent;
 
-		vk::CommandBuffer cmd_buffer = VkContext::Get().begin_single_time_cmds();
+		vk::CommandBuffer cmd_buffer = Internal::BeginSingleTimeCommands();
 
 		cmd_buffer.copyBufferToImage(
 			buffer,
@@ -179,7 +179,7 @@ namespace Na {
 			1, &region
 		);
 
-		VkContext::Get().end_single_time_cmds(cmd_buffer);
+		Internal::EndSingleTimeCommands(cmd_buffer);
 	}
 
 	void DeviceImage::copy_all_from_buffer(vk::Buffer buffer, u32 starting_layer)
@@ -203,7 +203,7 @@ namespace Na {
 			regions[i].imageExtent = vk::Extent3D(this->width, this->height, 1);
 		}
 
-		vk::CommandBuffer cmd_buffer = VkContext::Get().begin_single_time_cmds();
+		vk::CommandBuffer cmd_buffer = Internal::BeginSingleTimeCommands();
 
 		cmd_buffer.copyBufferToImage(
 			buffer, // src
@@ -212,12 +212,12 @@ namespace Na {
 			(u32)regions.size(), regions.ptr()
 		);
 
-		VkContext::Get().end_single_time_cmds(cmd_buffer);
+		Internal::EndSingleTimeCommands(cmd_buffer);
 	}
 
 	void DeviceImage::copy_from_buffers(const vk::Buffer* buffers, u32 buffer_count, u32 starting_layer)
 	{
-		vk::CommandBuffer cmd_buffer = VkContext::Get().begin_single_time_cmds();
+		vk::CommandBuffer cmd_buffer = Internal::BeginSingleTimeCommands();
 
 		vk::BufferImageCopy region;
 		region.bufferOffset = 0;
@@ -244,7 +244,7 @@ namespace Na {
 			);
 		}
 
-		VkContext::Get().end_single_time_cmds(cmd_buffer);
+		Internal::EndSingleTimeCommands(cmd_buffer);
 	}
 
 	DeviceImage::DeviceImage(DeviceImage&& other)
@@ -303,6 +303,6 @@ namespace Na {
 		create_info.subresourceRange.baseArrayLayer = 0;
 		create_info.subresourceRange.layerCount = layer_count;
 
-		return VkContext::Get().logical_device().createImageView(create_info);
+		return Internal::g_DeviceData.logical_device.createImageView(create_info);
 	}
 } // namespace Na

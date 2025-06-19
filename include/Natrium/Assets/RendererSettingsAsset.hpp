@@ -23,8 +23,6 @@ namespace Na {
 		[[nodiscard]] float max_anisotropy(void) const;
 		[[nodiscard]] bool multisampling_enabled(void) const;
 
-		[[nodiscard]] static float AnisotropyLimit(void);
-
 		[[nodiscard]] inline operator bool(void) const override { return m_Json; }
 	private:
 		void _update_file(void) const;

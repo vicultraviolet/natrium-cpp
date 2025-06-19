@@ -1,7 +1,7 @@
 #include "Pch.hpp"
 #include "Natrium/Assets/RendererSettingsAsset.hpp"
 
-#include "Natrium/Graphics/VkContext.hpp"
+#include "Natrium/Graphics/Device.hpp"
 
 #if defined(NA_PLATFORM_WINDOWS)
 #define C_STR string().c_str
@@ -44,7 +44,7 @@ namespace Na {
 
 	void RendererSettingsAsset::set_max_anisotropy(float max_anisotropy)
 	{
-		m_Json["max_anisotropy"] = std::min(max_anisotropy, RendererSettingsAsset::AnisotropyLimit());
+		m_Json["max_anisotropy"] = std::min(max_anisotropy, Device::Limits::Anisotropy());
 		this->_update_file();
 	}
 
@@ -72,11 +72,6 @@ namespace Na {
 	bool RendererSettingsAsset::multisampling_enabled(void) const
 	{
 		return m_Json["multisampling_enabled"];
-	}
-
-	float RendererSettingsAsset::AnisotropyLimit(void)
-	{
-		return VkContext::Get().physical_device().getProperties().limits.maxSamplerAnisotropy;
 	}
 
 	void RendererSettingsAsset::_update_file(void) const

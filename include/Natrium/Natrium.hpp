@@ -20,6 +20,7 @@
 #include "./Assets/JsonAsset.hpp"
 #include "./Assets/RendererSettingsAsset.hpp"
 
+#include "./Graphics/Device.hpp"
 #include "./Graphics/Renderer/RendererCore.hpp"
 #include "./Graphics/Pipeline.hpp"
 #include "./Graphics/Buffers/VertexBuffer.hpp"

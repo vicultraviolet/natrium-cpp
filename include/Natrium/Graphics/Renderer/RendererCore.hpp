@@ -11,9 +11,17 @@ namespace Na {
 	class RendererCore {
 	public:
 		RendererCore(void) = default;
+		~RendererCore(void) { this->destroy(); }
+
 		RendererCore(Window& window, AssetHandle<RendererSettings> settings);
+
 		void destroy(void);
-		inline ~RendererCore(void) { this->destroy(); }
+
+		RendererCore(const RendererCore& other) = delete;
+		RendererCore& operator=(const RendererCore& other) = delete;
+
+		RendererCore(RendererCore&& other);
+		RendererCore& operator=(RendererCore&& other);
 
 		[[nodiscard]] inline AssetHandle<RendererSettings> settings(void) const { return m_Settings; }
 
@@ -44,15 +52,7 @@ namespace Na {
 
 		[[nodiscard]] inline vk::RenderPass render_pass(void) const { return m_RenderPass; }
 
-		[[nodiscard]] inline QueueFamilyIndices queue_family_indices(void) const { return m_QueueIndices; }
-
 		[[nodiscard]] inline operator bool(void) const { return m_Window; }
-
-		RendererCore(const RendererCore& other) = delete;
-		RendererCore& operator=(const RendererCore& other) = delete;
-
-		RendererCore(RendererCore&& other);
-		RendererCore& operator=(RendererCore&& other);
 	private:
 		void _create_window_surface(void);
 		void _create_swapchain(void);
@@ -69,8 +69,6 @@ namespace Na {
 		Window* m_Window = nullptr;
 		vk::SurfaceKHR m_Surface;
 		u32 m_Width, m_Height;
-
-		QueueFamilyIndices m_QueueIndices;
 
 		vk::Viewport m_Viewport;
 		vk::Rect2D m_Scissor;

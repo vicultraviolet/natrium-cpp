@@ -1,7 +1,7 @@
 #include "Pch.hpp"
 #include "Natrium/Graphics/Renderer/Renderer.hpp"
 
-#include "Natrium/Graphics/VkContext.hpp"
+#include "Internal.hpp"
 #include "Natrium/Graphics/Pipeline.hpp"
 
 namespace Na {
@@ -20,10 +20,10 @@ namespace Na {
 
 	void Renderer::destroy(void)
 	{
-		if (!VkContext::Exists())
+		if (!Device::Initialized())
 			return;
 
-		vk::Device logical_device = VkContext::Get().logical_device();
+		vk::Device logical_device = Internal::g_DeviceData.logical_device;
 
 		for (FrameData& fd : m_Frames)
 		{
@@ -34,8 +34,11 @@ namespace Na {
 		}
 		m_Frames.destroy();
 
-		logical_device.destroyCommandPool(m_GraphicsCmdPool);
-		m_GraphicsCmdPool = nullptr;
+		if (m_GraphicsCmdPool)
+		{
+			logical_device.destroyCommandPool(m_GraphicsCmdPool);
+			m_GraphicsCmdPool = nullptr;
+		}
 
 		m_Core.destroy();
 	}
@@ -44,7 +47,7 @@ namespace Na {
 	{
 		//g_Logger.fmt(Na::Info, "Frame #{}, Image #{}", m_FrameIndex, m_ImageIndex);
 
-		vk::Device logical_device = VkContext::Get().logical_device();
+		vk::Device logical_device = Internal::g_DeviceData.logical_device;
 		FrameData& fd = m_Frames[m_FrameIndex];
 
 		fd.valid = true;
@@ -131,7 +134,7 @@ namespace Na {
 
 	void Renderer::end_frame(void)
 	{
-		vk::Device logical_device = VkContext::Get().logical_device();
+		vk::Device logical_device = Internal::g_DeviceData.logical_device;
 		FrameData& fd = m_Frames[m_FrameIndex];
 
 		vk::Result result = vk::Result::eSuccess;
@@ -155,7 +158,8 @@ namespace Na {
 		submit_info.commandBufferCount = 1;
 		submit_info.pCommandBuffers = &fd.cmd_buffer;
 
-		result = VkContext::Get().graphics_queue().submit(1, &submit_info, fd.in_flight_fence);
+		result = Internal::g_DeviceData.graphics_queue.submit(1, &submit_info, fd.in_flight_fence);
+
 		NA_VERIFY_VK(
 			result,
 			"Failed to end frame #{} with image #{}:"
@@ -174,7 +178,7 @@ namespace Na {
 
 		try
 		{
-			result = VkContext::Get().graphics_queue().presentKHR(present_info);
+			result = Internal::g_DeviceData.graphics_queue.presentKHR(present_info);
 			switch (result)
 			{
 			case vk::Result::eSuboptimalKHR:
@@ -200,7 +204,7 @@ namespace Na {
 
 	void Renderer::bind_pipeline(const GraphicsPipeline& pipeline)
 	{
-		vk::Device logical_device = VkContext::Get().logical_device();
+		vk::Device logical_device = Internal::g_DeviceData.logical_device;
 		FrameData& fd = m_Frames[m_FrameIndex];
 
 		fd.cmd_buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline.pipeline());
@@ -221,7 +225,7 @@ namespace Na {
 		const GraphicsPipeline& pipeline
 	)
 	{
-		vk::Device logical_device = VkContext::Get().logical_device();
+		vk::Device logical_device = Internal::g_DeviceData.logical_device;
 		FrameData& fd = m_Frames[m_FrameIndex];
 
 		fd.cmd_buffer.pushConstants(
@@ -295,10 +299,10 @@ namespace Na {
 
 	void Renderer::_create_command_objects(void)
 	{
-		vk::Device logical_device = VkContext::Get().logical_device();
+		vk::Device logical_device = Internal::g_DeviceData.logical_device;
 
 		vk::CommandPoolCreateInfo graphics_pool_info;
-		graphics_pool_info.queueFamilyIndex = m_Core.m_QueueIndices.graphics;
+		graphics_pool_info.queueFamilyIndex = Internal::g_DeviceData.graphics_queue_index;
 		graphics_pool_info.flags = vk::CommandPoolCreateFlagBits::eResetCommandBuffer;
 
 		m_GraphicsCmdPool = logical_device.createCommandPool(graphics_pool_info);
@@ -314,7 +318,7 @@ namespace Na {
 
 	void Renderer::_create_sync_objects(void)
 	{
-		vk::Device logical_device = VkContext::Get().logical_device();
+		vk::Device logical_device = Internal::g_DeviceData.logical_device;
 
 		vk::SemaphoreCreateInfo semaphore_info;
 

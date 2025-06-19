@@ -1,7 +1,8 @@
 #include "Pch.hpp"
 #include "Natrium/Graphics/Renderer/RendererCore.hpp"
 
-#include "Natrium/Graphics/VkContext.hpp"
+#include "Natrium/Graphics/Device.hpp"
+#include "Internal.hpp"
 #include "Natrium/Graphics/Pipeline.hpp"
 
 #if defined(NA_PLATFORM_WINDOWS) || defined(NA_PLATFORM_LINUX)
@@ -12,8 +13,6 @@
 #endif // NA_PLATFORM
 
 namespace Na {
-	extern vk::SurfaceKHR createWindowSurface(GLFWwindow* window);
-
 	static vk::SurfaceFormatKHR pickSurfaceFormat(const Na::ArrayList<vk::SurfaceFormatKHR>& formats)
 	{
 		for (auto it = formats.begin(); it != formats.end(); it++)
@@ -57,38 +56,56 @@ namespace Na {
 
 	void RendererCore::destroy(void)
 	{
-		if (!m_Window)
-			return;
-
-		vk::Device logical_device = VkContext::Get().logical_device();
+		vk::Device logical_device = Internal::g_DeviceData.logical_device;
 
 		for (vk::Framebuffer framebuffer : m_Framebuffers)
 			logical_device.destroyFramebuffer(framebuffer);
+		m_Framebuffers.destroy();
 
-		logical_device.destroyRenderPass(m_RenderPass);
+		if (m_RenderPass)
+		{
+			logical_device.destroyRenderPass(m_RenderPass);
+			m_RenderPass = nullptr;
+		}
 
 		m_DepthImage.destroy();
-		logical_device.destroyImageView(m_DepthImageView);
+
+		if (m_DepthImageView)
+		{
+			logical_device.destroyImageView(m_DepthImageView);
+			m_DepthImageView = nullptr;
+		}
 
 		m_ColorImage.destroy();
-		logical_device.destroyImageView(m_ColorImageView);
+
+		if (m_ColorImageView)
+		{
+			logical_device.destroyImageView(m_ColorImageView);
+			m_ColorImageView = nullptr;
+		}
 
 		for (auto& img_view : m_ImageViews)
 			logical_device.destroyImageView(img_view);
+		m_ImageViews.destroy();
 
-		logical_device.destroySwapchainKHR(m_Swapchain);
+		if (m_Swapchain)
+		{
+			logical_device.destroySwapchainKHR(m_Swapchain);
+			m_Swapchain = nullptr;
+		}
 
-		VkContext::Get().instance().destroySurfaceKHR(m_Surface);
+		if (m_Surface)
+		{
+			Internal::g_DeviceData.instance.destroySurfaceKHR(m_Surface);
+			m_Surface = nullptr;
+		}
 
 		m_Window = nullptr;
 	}
 
 	void RendererCore::_create_window_surface(void)
 	{
-		m_Surface = createWindowSurface(m_Window->native());
-		m_QueueIndices = QueueFamilyIndices::Get(VkContext::Get().physical_device(), m_Surface);
-		if (!m_QueueIndices)
-			throw std::runtime_error("Queue indices is incomplete!");
+		m_Surface = Internal::CreateWindowSurface(m_Window->native());
 
 		m_Width = m_Window->width();
 		m_Height = m_Window->height();
@@ -108,37 +125,36 @@ namespace Na {
 
 	void RendererCore::_create_swapchain(void)
 	{
-		vk::Device logical_device = VkContext::Get().logical_device();
+		vk::Device logical_device = Internal::g_DeviceData.logical_device;
 
-		SurfaceSupport support = SurfaceSupport::Get(m_Surface, VkContext::Get().physical_device());
-		if (!support)
-			throw std::runtime_error("Swapchain not supported!");
+		Internal::SurfaceSupport support(Internal::g_DeviceData.physical_device, m_Surface);
+		NA_VERIFY(support, "Failed to create RendererCore: Swapchain not supported!");
 
-		m_Width = support.capabilities.currentExtent.width;
-		m_Height = support.capabilities.currentExtent.height;
-		m_SwapchainFormat = pickSurfaceFormat(support.formats);
+		m_Width = support.capabilities().currentExtent.width;
+		m_Height = support.capabilities().currentExtent.height;
+		m_SwapchainFormat = pickSurfaceFormat(support.formats());
 
 		vk::SwapchainCreateInfoKHR create_info;
 		create_info.surface = m_Surface;
 
 		create_info.imageFormat = m_SwapchainFormat.format;
 		create_info.imageColorSpace = m_SwapchainFormat.colorSpace;
-		create_info.imageExtent = support.capabilities.currentExtent;
+		create_info.imageExtent = support.capabilities().currentExtent;
 
 		create_info.imageArrayLayers = 1;
 		create_info.imageUsage = vk::ImageUsageFlagBits::eColorAttachment;
 
-		if (support.capabilities.maxImageCount > 0
-		&& support.capabilities.minImageCount + 1 > support.capabilities.maxImageCount)
-			create_info.minImageCount = support.capabilities.maxImageCount;
+		if (support.capabilities().maxImageCount > 0
+		&& support.capabilities().minImageCount + 1 > support.capabilities().maxImageCount)
+			create_info.minImageCount = support.capabilities().maxImageCount;
 		else
-			create_info.minImageCount = support.capabilities.minImageCount + 1;
+			create_info.minImageCount = support.capabilities().minImageCount + 1;
 
 		create_info.imageSharingMode = vk::SharingMode::eExclusive;
 
-		create_info.preTransform = support.capabilities.currentTransform;
+		create_info.preTransform = support.capabilities().currentTransform;
 		create_info.compositeAlpha = vk::CompositeAlphaFlagBitsKHR::eOpaque;
-		create_info.presentMode = pickPresentMode(support.present_modes);
+		create_info.presentMode = pickPresentMode(support.present_modes());
 		create_info.clipped = true;
 
 		m_Swapchain = logical_device.createSwapchainKHR(create_info);
@@ -174,7 +190,7 @@ namespace Na {
 			vk::ImageTiling::eOptimal,
 			vk::ImageUsageFlagBits::eTransientAttachment | vk::ImageUsageFlagBits::eColorAttachment,
 			vk::SharingMode::eExclusive,
-			VkContext::Get().msaa_samples(m_Settings->multisampling_enabled()),
+			Device::Limits::MSAASampleCount(m_Settings->multisampling_enabled()),
 			vk::MemoryPropertyFlagBits::eDeviceLocal
 		);
 		m_ColorImageView = CreateImageView(
@@ -201,7 +217,7 @@ namespace Na {
 			vk::ImageTiling::eOptimal,
 			vk::ImageUsageFlagBits::eDepthStencilAttachment,
 			vk::SharingMode::eExclusive,
-			VkContext::Get().msaa_samples(m_Settings->multisampling_enabled()),
+			Device::Limits::MSAASampleCount(m_Settings->multisampling_enabled()),
 			vk::MemoryPropertyFlagBits::eDeviceLocal
 		);
 		m_DepthImageView = CreateImageView(
@@ -236,31 +252,31 @@ namespace Na {
 		vk::SubpassDescription subpass;
 		vk::SubpassDependency dependency;
 
-		color_attachment.format                 = m_SwapchainFormat.format;
-		color_attachment.samples                = VkContext::Get().msaa_samples(msaa_enabled);
-		color_attachment.loadOp                 = vk::AttachmentLoadOp::eClear;
-		color_attachment.storeOp                = vk::AttachmentStoreOp::eStore;
-		color_attachment.stencilLoadOp          = vk::AttachmentLoadOp::eDontCare;
-		color_attachment.stencilStoreOp         = vk::AttachmentStoreOp::eDontCare;
-		color_attachment.initialLayout          = vk::ImageLayout::eUndefined;
-		color_attachment.finalLayout            = m_Settings->multisampling_enabled() ?
-			                                      vk::ImageLayout::eColorAttachmentOptimal :
-			                                      vk::ImageLayout::ePresentSrcKHR;
+		color_attachment.format         = m_SwapchainFormat.format;
+		color_attachment.samples        = Device::Limits::MSAASampleCount(msaa_enabled);
+		color_attachment.loadOp         = vk::AttachmentLoadOp::eClear;
+		color_attachment.storeOp        = vk::AttachmentStoreOp::eStore;
+		color_attachment.stencilLoadOp  = vk::AttachmentLoadOp::eDontCare;
+		color_attachment.stencilStoreOp = vk::AttachmentStoreOp::eDontCare;
+		color_attachment.initialLayout  = vk::ImageLayout::eUndefined;
+		color_attachment.finalLayout    = msaa_enabled ?
+			                              vk::ImageLayout::eColorAttachmentOptimal :
+			                              vk::ImageLayout::ePresentSrcKHR;
+										
+		color_attachment_ref.attachment = 0;
+		color_attachment_ref.layout     = vk::ImageLayout::eColorAttachmentOptimal;
 										        
-		color_attachment_ref.attachment         = 0;
-		color_attachment_ref.layout             = vk::ImageLayout::eColorAttachmentOptimal;
-										        
-		depth_attachment.format                 = depth_format;
-		depth_attachment.samples                = VkContext::Get().msaa_samples(msaa_enabled);
-		depth_attachment.loadOp                 = vk::AttachmentLoadOp::eClear;
-		depth_attachment.storeOp                = vk::AttachmentStoreOp::eDontCare;
-		depth_attachment.stencilLoadOp          = vk::AttachmentLoadOp::eDontCare;
-		depth_attachment.stencilStoreOp         = vk::AttachmentStoreOp::eDontCare;
-		depth_attachment.initialLayout          = vk::ImageLayout::eUndefined;
-		depth_attachment.finalLayout            = vk::ImageLayout::eDepthStencilAttachmentOptimal;
-										        
-		depth_attachment_ref.attachment         = 1;
-		depth_attachment_ref.layout             = vk::ImageLayout::eDepthStencilAttachmentOptimal;
+		depth_attachment.format         = depth_format;
+		depth_attachment.samples        = Device::Limits::MSAASampleCount(msaa_enabled);
+		depth_attachment.loadOp         = vk::AttachmentLoadOp::eClear;
+		depth_attachment.storeOp        = vk::AttachmentStoreOp::eDontCare;
+		depth_attachment.stencilLoadOp  = vk::AttachmentLoadOp::eDontCare;
+		depth_attachment.stencilStoreOp = vk::AttachmentStoreOp::eDontCare;
+		depth_attachment.initialLayout  = vk::ImageLayout::eUndefined;
+		depth_attachment.finalLayout    = vk::ImageLayout::eDepthStencilAttachmentOptimal;
+										
+		depth_attachment_ref.attachment = 1;
+		depth_attachment_ref.layout     = vk::ImageLayout::eDepthStencilAttachmentOptimal;
 
 		color_attachment_resolve.format         = m_SwapchainFormat.format;
 		color_attachment_resolve.samples        = vk::SampleCountFlagBits::e1;
@@ -308,7 +324,7 @@ namespace Na {
 		create_info.dependencyCount = 1;
 		create_info.pDependencies = &dependency;
 
-		m_RenderPass = VkContext::Get().logical_device().createRenderPass(create_info);
+		m_RenderPass = Internal::g_DeviceData.logical_device.createRenderPass(create_info);
 	}
 
 	void RendererCore::_create_framebuffers(void)
@@ -335,13 +351,13 @@ namespace Na {
 			create_info.height = m_Height;
 			create_info.layers = 1;
 
-			m_Framebuffers[i] = VkContext::Get().logical_device().createFramebuffer(create_info);
+			m_Framebuffers[i] = Internal::g_DeviceData.logical_device.createFramebuffer(create_info);
 		}
 	}
 
 	void RendererCore::_recreate_swapchain(void)
 	{
-		vk::Device logical_device = VkContext::Get().logical_device();
+		vk::Device logical_device = Internal::g_DeviceData.logical_device;
 
 		m_Width = m_Window->width();
 		m_Height = m_Window->height();
@@ -393,8 +409,6 @@ namespace Na {
 	m_Width(other.m_Width),
 	m_Height(other.m_Height),
 
-	m_QueueIndices(std::move(other.m_QueueIndices)),
-
 	m_Viewport(std::move(other.m_Viewport)),
 	m_Scissor(std::move(other.m_Scissor)),
 
@@ -426,8 +440,6 @@ namespace Na {
 
 		m_Width = other.m_Width;
 		m_Height = other.m_Height;
-
-		m_QueueIndices = std::move(other.m_QueueIndices);
 
 		m_Viewport = std::move(other.m_Viewport);
 		m_Scissor = std::move(other.m_Scissor);

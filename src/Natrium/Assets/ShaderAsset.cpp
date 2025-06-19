@@ -1,8 +1,6 @@
 #include "Pch.hpp"
 #include "Natrium/Assets/ShaderAsset.hpp"
 
-#include "Natrium/Graphics/VkContext.hpp"
-
 #include <shaderc/shaderc.hpp>
 
 #if defined(NA_PLATFORM_WINDOWS)

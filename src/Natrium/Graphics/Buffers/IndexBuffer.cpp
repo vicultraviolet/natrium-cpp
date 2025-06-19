@@ -1,7 +1,7 @@
 #include "Pch.hpp"
 #include "Natrium/Graphics/Buffers/IndexBuffer.hpp"
 
-#include "Natrium/Graphics/VkContext.hpp"
+#include "Internal.hpp"
 
 namespace Na {
 	IndexBuffer::IndexBuffer(u32 count, const u32* data)
@@ -22,7 +22,7 @@ namespace Na {
 
 	void IndexBuffer::set_data(const u32* data)
 	{
-		vk::Device logical_device = VkContext::Get().logical_device();
+		vk::Device logical_device = Internal::g_DeviceData.logical_device;
 
 		DeviceBuffer stage_buffer(
 			m_Buffer.size,

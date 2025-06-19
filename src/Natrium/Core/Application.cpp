@@ -19,7 +19,7 @@ namespace Na {
 		m_AssetRegistry = AssetRegistry(engine_asset_dir, shader_output_dir);
 
 		auto renderer_settings = m_AssetRegistry.load_renderer_settings(renderer_settings_path);
-		renderer_settings->set_max_anisotropy(renderer_settings->AnisotropyLimit());
+		renderer_settings->set_max_anisotropy(Device::Limits::Anisotropy());
 
 		m_Window = Window(window_width, window_height, window_title);
 		m_Renderer = Renderer(m_Window, renderer_settings);
@@ -27,7 +27,7 @@ namespace Na {
 
 	void Application::destroy(void)
 	{
-		Na::VkContext::Get().wait_for_device();
+		Device::Wait();
 
 		m_LayerManager.detach_all();
 

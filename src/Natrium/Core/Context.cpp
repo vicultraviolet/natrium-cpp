@@ -21,7 +21,7 @@ namespace Na {
 	#endif // NA_PLATFORM
 	}
 
-	Context::Context(const InitInfo& info)
+	Context::Context(const ContextInitInfo& info)
 	: m_ExecPath(getExecPath()),
 	m_ExecDir(m_ExecPath.parent_path()),
 	m_ExecName(m_ExecPath.filename()),
@@ -44,16 +44,6 @@ namespace Na {
 		int result = glfwInit();
 		NA_ASSERT(result, "Failed to initialize glfw!");
 		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-
-		if (info.init_vulkan)
-		{
-			g_Logger.print(Info, "Initializing Vulkan context...");
-			m_VkContext = VkContext(initialize);
-		}
-		else
-		{
-			g_Logger.print(Info, "Vulkan context initialization skipped.");
-		}
 	}
 
 	void Context::destroy(void)
@@ -64,7 +54,6 @@ namespace Na {
 
 		g_Logger.print(Info, "Shutting down Natrium, Goodbye!");
 
-		m_VkContext.destroy();
 		glfwTerminate();
 
 		s_Context = nullptr;
@@ -76,7 +65,6 @@ namespace Na {
 	m_ExecName(std::move(other.m_ExecName)),
 	m_Version(std::move(other.m_Version)),
 	m_EventQueue(std::move(other.m_EventQueue)),
-	m_VkContext(std::move(other.m_VkContext)),
 	m_Valid(std::exchange(other.m_Valid, false))
 	{
 		Context::s_Context = this;
@@ -89,7 +77,6 @@ namespace Na {
 		m_ExecName = std::move(other.m_ExecName);
 		m_Version = std::move(other.m_Version);
 		m_EventQueue = std::move(other.m_EventQueue);
-		m_VkContext = std::move(other.m_VkContext);
 		m_Valid = std::exchange(other.m_Valid, false);
 
 		Context::s_Context = this;

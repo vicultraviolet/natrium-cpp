@@ -51,7 +51,7 @@ namespace Na {
 	{
 		vk::PipelineMultisampleStateCreateInfo multisample_info;
 
-		multisample_info.rasterizationSamples = VkContext::Get().msaa_samples(enabled);
+		multisample_info.rasterizationSamples = Device::Limits::MSAASampleCount(enabled);
 
 		multisample_info.sampleShadingEnable = enabled;
 		multisample_info.minSampleShading = enabled ? 0.2f : 0.0f;

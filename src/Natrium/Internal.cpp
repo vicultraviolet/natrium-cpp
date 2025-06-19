@@ -1,9 +1,80 @@
 #include "Pch.hpp"
 #include "Internal.hpp"
 
-#include "Natrium/Graphics/VkContext.hpp"
-
 namespace Na {
+	vk::SurfaceKHR Internal::CreateWindowSurface(GLFWwindow* window)
+	{
+		VkSurfaceKHR surface;
+		VkResult result = glfwCreateWindowSurface(g_DeviceData.instance, window, nullptr, &surface);
+		if (result != VK_SUCCESS)
+			throw std::runtime_error("Failed to create window surface!");
+		return surface;
+	}
+
+	Internal::QueueFamilyIndices::QueueFamilyIndices(vk::PhysicalDevice device, vk::SurfaceKHR surface)
+	{
+		auto properties = device.getQueueFamilyProperties();
+
+		for (u32 i = 0; const auto& property : properties)
+		{
+			if (property.queueFlags & vk::QueueFlagBits::eGraphics)
+				if (device.getSurfaceSupportKHR(i, surface))
+					m_Graphics = i;
+
+			if (*this)
+				break;
+
+			i++;
+		}
+	}
+
+	Internal::SurfaceSupport::SurfaceSupport(vk::PhysicalDevice device, vk::SurfaceKHR surface)
+	{
+		m_Capabilities = device.getSurfaceCapabilitiesKHR(surface);
+
+		u32 format_count;
+		(void)device.getSurfaceFormatsKHR(surface, &format_count, nullptr);
+		m_Formats.reallocate(format_count, format_count);
+		(void)device.getSurfaceFormatsKHR(surface, &format_count, m_Formats.ptr());
+
+		u32 present_mode_count;
+		(void)device.getSurfacePresentModesKHR(surface, &present_mode_count, nullptr);
+		m_PresentModes.reallocate(present_mode_count, present_mode_count);
+		(void)device.getSurfacePresentModesKHR(surface, &present_mode_count, m_PresentModes.ptr());
+	}
+
+	vk::CommandBuffer Internal::BeginSingleTimeCommands(void)
+	{
+		vk::CommandBufferAllocateInfo alloc_info;
+		alloc_info.level = vk::CommandBufferLevel::ePrimary;
+		alloc_info.commandPool = g_DeviceData.single_time_cmd_pool;
+		alloc_info.commandBufferCount = 1;
+
+		vk::CommandBuffer cmd_buffer;
+		(void)g_DeviceData.logical_device.allocateCommandBuffers(&alloc_info, &cmd_buffer);
+
+		vk::CommandBufferBeginInfo begin_info;
+		begin_info.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
+
+		cmd_buffer.begin(begin_info);
+
+		return cmd_buffer;
+	}
+
+	void Internal::EndSingleTimeCommands(vk::CommandBuffer cmd_buffer)
+	{
+		cmd_buffer.end();
+
+		vk::SubmitInfo submit_info;
+		submit_info.commandBufferCount = 1;
+		submit_info.pCommandBuffers = &cmd_buffer;
+
+		(void)g_DeviceData.graphics_queue.submit(1, &submit_info, nullptr);
+		g_DeviceData.graphics_queue.waitIdle();
+
+		g_DeviceData.logical_device.freeCommandBuffers(g_DeviceData.single_time_cmd_pool, 1, &cmd_buffer);
+	}
+
 	void Internal::WriteToDescriptorSet(
 		vk::DescriptorSet set,
 		u32 binding,
@@ -26,7 +97,7 @@ namespace Na {
 		descriptor_write.pImageInfo = image_info;
 		descriptor_write.pTexelBufferView = texel_buffer_view;
 
-		VkContext::Get().logical_device().updateDescriptorSets(
+		g_DeviceData.logical_device.updateDescriptorSets(
 			1, &descriptor_write,
 			0, nullptr // descriptor copy
 		);
@@ -63,6 +134,6 @@ namespace Na {
 		create_info.minLod = 0.0f;
 		create_info.maxLod = 0.0f;
 
-		return VkContext::Get().logical_device().createSampler(create_info);
+		return g_DeviceData.logical_device.createSampler(create_info);
 	}
 } // namespace Na

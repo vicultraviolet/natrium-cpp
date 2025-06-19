@@ -1,6 +1,7 @@
 #if !defined(NA_RENDERER_HPP)
 #define NA_RENDERER_HPP
 
+#include "Natrium/Graphics/Device.hpp"
 #include "Natrium/Graphics/Renderer/RendererCore.hpp"
 #include "Natrium/Graphics/Pipeline.hpp"
 

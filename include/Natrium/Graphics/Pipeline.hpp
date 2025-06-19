@@ -1,6 +1,7 @@
 #if !defined(NA_PIPELINE_HPP)
 #define NA_PIPELINE_HPP
 
+#include "Natrium/Graphics/Device.hpp"
 #include "Natrium/Graphics/Renderer/RendererCore.hpp"
 #include "Natrium/Assets/ShaderAsset.hpp"
 

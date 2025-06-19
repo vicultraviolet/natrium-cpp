@@ -3,18 +3,16 @@
 
 #include "Natrium/Core.hpp"
 #include "Natrium/Core/Event.hpp"
-#include "Natrium/Graphics/VkContext.hpp"
 
 namespace Na {
-	struct InitInfo {
-		bool init_vulkan = true;
+	struct ContextInitInfo {
 	};
 
 	class Context {
 	public:
 		Context(void) = default;
 
-		Context(const InitInfo& info);
+		Context(const ContextInitInfo& info);
 		~Context(void) { this->destroy(); }
 
 		void destroy(void);
@@ -39,8 +37,6 @@ namespace Na {
 		std::string_view m_Version;
 
 		EventQueue m_EventQueue;
-
-		VkContext m_VkContext;
 
 		bool m_Valid = true;
 

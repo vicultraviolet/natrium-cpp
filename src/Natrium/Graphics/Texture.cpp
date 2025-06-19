@@ -2,7 +2,6 @@
 #include "Natrium/Graphics/Texture.hpp"
 
 #include "Natrium/Graphics/Buffers/DeviceBuffer.hpp"
-#include "Natrium/Graphics/VkContext.hpp"
 #include "Natrium/Graphics/Pipeline.hpp"
 #include "Internal.hpp"
 
@@ -15,7 +14,7 @@ namespace Na {
 	{
 		NA_ASSERT(imgs, "Failed to create TextureArray: imgs is null!");
 		NA_ASSERT(count, "Failed to create TextureArray: count is 0!");
-		NA_ASSERT(count <= VkContext::Get().physical_device().getProperties().limits.maxImageArrayLayers,
+		NA_ASSERT(count <= Internal::g_DeviceData.physical_device.getProperties().limits.maxImageArrayLayers,
 				  "Failed to create TextureArray: image count exceeded gpu limit!");
 
 		const AssetHandle<Image>& first_img = imgs[0];
@@ -32,7 +31,7 @@ namespace Na {
 			}
 		}
 
-		vk::Device logical_device = VkContext::Get().logical_device();
+		vk::Device logical_device = Internal::g_DeviceData.logical_device;
 
 		DeviceBuffer buffer(
 			first_img->size() * count,
@@ -78,7 +77,7 @@ namespace Na {
 		if (!m_Image)
 			return;
 
-		vk::Device logical_device = VkContext::Get().logical_device();
+		vk::Device logical_device = Internal::g_DeviceData.logical_device;
 
 		logical_device.destroySampler(m_Sampler);
 		m_Sampler = nullptr;
