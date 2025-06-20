@@ -9,68 +9,6 @@
 #include <GLFW/glfw3.h>
 
 namespace Na {
-	static std::unordered_map<Joystick, GLFWgamepadstate> previousGamepadStates;
-
-	EventQueue& PollEvents(void)
-	{
-		Context::Get().event_queue().resize(0);
-		glfwPollEvents();
-
-		for (Joystick jid = Joysticks::k_1; jid <= Joysticks::k_Last; jid++)
-		{
-			if (glfwJoystickPresent(jid) && glfwJoystickIsGamepad(jid))
-			{
-				GLFWgamepadstate current_state;
-				if (glfwGetGamepadState(jid, &current_state))
-				{
-					auto& previous_state = previousGamepadStates[jid];
-					
-					for (GamepadButton button = 0; button <= GamepadButtons::k_Last; button++)
-					{
-						if (current_state.buttons[button] == previous_state.buttons[button])
-							continue;
-
-						if (current_state.buttons[button] == InputActions::k_Press)
-							Context::Get().event_queue().emplace(Event{.gamepad_button_pressed = {
-								EventType::GamepadButtonPressed,
-								false,
-								nullptr,
-								jid,
-								button
-						    }});
-						else
-							Context::Get().event_queue().emplace(Event{.gamepad_button_released = {
-								EventType::GamepadButtonReleased,
-								false,
-								nullptr,
-								jid,
-								button
-							}});
-					}
-
-					for (GamepadAxis axis = 0; axis <= GamepadAxes::k_Last; ++axis)
-					{
-						if (current_state.axes[axis] == previous_state.axes[axis])
-							continue;
-
-						Context::Get().event_queue().emplace(Event{.gamepad_axis_moved = {
-							EventType::GamepadAxisMoved,
-							false,
-							nullptr,
-							jid,
-							axis,
-							current_state.axes[axis]
-						}});
-					}
-
-					previous_state = current_state;
-				}
-			}
-		}
-
-		return Context::Get().event_queue();
-	}
-
 	Window::WindowImpl_GLFW(u32 width, u32 height, const std::string_view& title)
 	: m_Width(width), m_Height(height)
 	{
@@ -134,12 +72,12 @@ namespace Na {
 		glfwSetWindowSize(m_Window, m_Width = width, m_Height = height);
 	}
 
-	void Window::set_title(const char* title)
+	void Window::set_title(const std::string_view& title)
 	{
-		glfwSetWindowTitle(m_Window, title);
+		glfwSetWindowTitle(m_Window, title.data());
 	}
 
-	const char* Window::title(void) const
+	std::string_view Window::title(void) const
 	{
 		return glfwGetWindowTitle(m_Window);
 	}
@@ -153,6 +91,68 @@ namespace Na {
 	m_MouseCaptured(std::exchange(other.m_MouseCaptured, false))
 	{
 		glfwSetWindowUserPointer(m_Window, this);
+	}
+
+	static std::unordered_map<Joystick, GLFWgamepadstate> previousGamepadStates;
+
+	EventQueue& PollEvents(void)
+	{
+		Context::Get().event_queue().resize(0);
+		glfwPollEvents();
+
+		for (Joystick jid = Joysticks::k_1; jid <= Joysticks::k_Last; jid++)
+		{
+			if (glfwJoystickPresent(jid) && glfwJoystickIsGamepad(jid))
+			{
+				GLFWgamepadstate current_state;
+				if (glfwGetGamepadState(jid, &current_state))
+				{
+					auto& previous_state = previousGamepadStates[jid];
+
+					for (GamepadButton button = 0; button <= GamepadButtons::k_Last; button++)
+					{
+						if (current_state.buttons[button] == previous_state.buttons[button])
+							continue;
+
+						if (current_state.buttons[button] == InputActions::k_Press)
+							Context::Get().event_queue().emplace(Event{ .gamepad_button_pressed = {
+								EventType::GamepadButtonPressed,
+								false,
+								nullptr,
+								jid,
+								button
+							} });
+						else
+							Context::Get().event_queue().emplace(Event{ .gamepad_button_released = {
+								EventType::GamepadButtonReleased,
+								false,
+								nullptr,
+								jid,
+								button
+							} });
+					}
+
+					for (GamepadAxis axis = 0; axis <= GamepadAxes::k_Last; ++axis)
+					{
+						if (current_state.axes[axis] == previous_state.axes[axis])
+							continue;
+
+						Context::Get().event_queue().emplace(Event{ .gamepad_axis_moved = {
+							EventType::GamepadAxisMoved,
+							false,
+							nullptr,
+							jid,
+							axis,
+							current_state.axes[axis]
+						} });
+					}
+
+					previous_state = current_state;
+				}
+			}
+		}
+
+		return Context::Get().event_queue();
 	}
 
 	WindowImpl_GLFW& WindowImpl_GLFW::operator=(WindowImpl_GLFW&& other)

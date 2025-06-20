@@ -42,8 +42,8 @@ namespace Na {
 		[[nodiscard]] inline u32 height(void) const { return m_Height; }
 		void set_size(u32 width, u32 height);
 
-		void set_title(const char* title);
-		[[nodiscard]] const char* title(void) const;
+		void set_title(const std::string_view& title);
+		[[nodiscard]] std::string_view title(void) const;
 
 		[[nodiscard]] inline GLFWwindow* native(void) const { return m_Window; }
 		inline operator bool(void) const { return m_Window; }

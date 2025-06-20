@@ -20,7 +20,7 @@ namespace Na {
 
 	void Renderer::destroy(void)
 	{
-		if (!Device::Initialized())
+		if (!Device::Get().initialized())
 			return;
 
 		vk::Device logical_device = Internal::g_DeviceData.logical_device;

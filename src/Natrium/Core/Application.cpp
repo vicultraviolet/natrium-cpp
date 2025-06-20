@@ -27,7 +27,7 @@ namespace Na {
 
 	void Application::destroy(void)
 	{
-		Device::Wait();
+		Device::Get().wait_all();
 
 		m_LayerManager.detach_all();
 

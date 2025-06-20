@@ -194,7 +194,7 @@ namespace Na {
 	{
 		Internal::DeviceData& data = Internal::g_DeviceData;
 
-		Device::Wait();
+		Internal::g_DeviceData.logical_device.waitIdle();
 
 		if (data.single_time_cmd_pool)
 		{
@@ -224,12 +224,12 @@ namespace Na {
 		}
 	}
 
-	void Device::Wait(void)
+	void Device::wait_all(void)
 	{
 		Internal::g_DeviceData.logical_device.waitIdle();
 	}
 
-	bool Device::Initialized(void)
+	bool Device::initialized(void)
 	{
 		return Internal::g_DeviceData;
 	}

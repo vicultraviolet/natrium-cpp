@@ -23,9 +23,9 @@ namespace Na {
 		static void Shutdown(void);
 
 		Device(void) = default;
-		~Device(void) { Device::Shutdown(); }
+		~Device(void) { if (m_Valid) Device::Shutdown(); }
 
-		Device(const DeviceInitInfo& info) { Device::Initialize(info); }
+		Device(const DeviceInitInfo& info) : m_Valid(true) { Device::Initialize(info); }
 
 		Device(const Device& other) = delete;
 		Device& operator=(const Device& other) = delete;
@@ -33,9 +33,10 @@ namespace Na {
 		Device(Device&& other) = default;
 		Device& operator=(Device&& other) = default;
 
-		static void Wait(void);
+		[[nodiscard]] static inline Device Get(void) { return Device(); }
 
-		[[nodiscard]] static bool Initialized(void);
+		void wait_all(void);
+		[[nodiscard]] bool initialized(void);
 	private:
 		static void _CreateInstance(const char* app_name);
 		static void _CreateDebugMessenger(void);
@@ -43,6 +44,8 @@ namespace Na {
 		static void _CreateLogicalDevice(vk::SurfaceKHR surface, const Na::ArrayList<const char*>& extensions);
 		static void _CreateSingleTimeCommandPool(void);
 		static void _GetLimits(void);
+	private:
+		bool m_Valid = false;
 	};
 } // namespace Na
 

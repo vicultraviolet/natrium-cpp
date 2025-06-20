@@ -2,6 +2,7 @@
 #define NA_CAMERA3D_DATA_HPP
 
 #include "Natrium/Core.hpp"
+#include "Natrium/Graphics/Pipeline.hpp"
 
 namespace Na {
 	struct CameraMatrices {
@@ -23,6 +24,8 @@ namespace Na {
 		);
 
 		~Camera3dData(void) = default;
+
+		[[nodiscard]] static const PushConstant& PushConstantData(void);
 
 		// vector is right, up, forward
 		void move(const glm::vec3& amount);
