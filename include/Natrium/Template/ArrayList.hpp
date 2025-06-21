@@ -200,55 +200,36 @@ namespace Na {
 		inline void pop(void) { std::destroy_at(m_Buffer + --m_Size); }
 		inline void pop_back(void) { return this->pop(); }
 
-		[[nodiscard]] inline iterator begin(void) { return m_Buffer; }
-		[[nodiscard]] inline const_iterator begin(void) const { return m_Buffer; }
-		[[nodiscard]] inline const_iterator cbegin(void) const { return m_Buffer; }
+		[[nodiscard]] inline iterator at_s(i64 index) { return m_Buffer + index; }
+		[[nodiscard]] inline const_iterator at_s(i64 index) const { return m_Buffer + index; }
 
-		[[nodiscard]] inline iterator end(void) { return m_Buffer + m_Size; }
-		[[nodiscard]] inline const_iterator end(void) const { return m_Buffer + m_Size; }
-		[[nodiscard]] inline const_iterator cend(void) const { return m_Buffer + m_Size; }
+		[[nodiscard]] inline iterator at(u64 index) { return m_Buffer + index; }
+		[[nodiscard]] inline const_iterator at(u64 index) const { return m_Buffer + index; }
 
-		[[nodiscard]] inline reverse_iterator rbegin(void) { return m_Buffer + m_Size - 1; }
-		[[nodiscard]] inline const_reverse_iterator rbegin(void) const { return m_Buffer + m_Size - 1; }
-		[[nodiscard]] inline const_reverse_iterator crbegin(void) const { return m_Buffer + m_Size - 1; }
+		[[nodiscard]] inline iterator begin(void) { return this->at(0); }
+		[[nodiscard]] inline const_iterator begin(void) const { return this->at(0); }
+		[[nodiscard]] inline const_iterator cbegin(void) const { return this->at(0); }
 
-		[[nodiscard]] inline reverse_iterator rend(void) { return m_Buffer - 1; }
-		[[nodiscard]] inline const_reverse_iterator rend(void) const { return m_Buffer - 1; }
-		[[nodiscard]] inline const_reverse_iterator crend(void) const { return m_Buffer - 1; }
+		[[nodiscard]] inline iterator end(void) { return this->at(m_Size); }
+		[[nodiscard]] inline const_iterator end(void) const { return this->at(m_Size);  }
+		[[nodiscard]] inline const_iterator cend(void) const { return this->at(m_Size); }
 
-		[[nodiscard]] T& front(void)
-		{
-			NA_ASSERT(m_Size > 0, "Failed to get front element: ArrayList is empty!");
-			return m_Buffer[0];
-		}
-		[[nodiscard]] const T& front(void) const
-		{
-			NA_ASSERT(m_Size > 0, "Failed to get front element: ArrayList is empty!");
-			return m_Buffer[0];
-		}
+		[[nodiscard]] inline reverse_iterator rbegin(void) { return this->at_s(m_Size - 1).reverse(); }
+		[[nodiscard]] inline const_reverse_iterator rbegin(void) const { return this->at_s(m_Size - 1).reverse(); }
+		[[nodiscard]] inline const_reverse_iterator crbegin(void) const { return this->at_s(m_Size - 1).reverse(); }
 
-		[[nodiscard]] T& back(void)
-		{
-			NA_ASSERT(m_Size > 0, "Failed to get back element: ArrayList is empty!");
-			return m_Buffer[m_Size - 1];
-		}
-		[[nodiscard]] const T& back(void) const
-		{
-			NA_ASSERT(m_Size > 0, "Failed to get back element: ArrayList is empty!");
-			return m_Buffer[m_Size - 1];
-		}
+		[[nodiscard]] inline reverse_iterator rend(void) { return this->at_s(-1).reverse(); }
+		[[nodiscard]] inline const_reverse_iterator rend(void) const { return this->at_s(-1).reverse(); }
+		[[nodiscard]] inline const_reverse_iterator crend(void) const { return this->at_s(-1).reverse(); }
 
-		[[nodiscard]] T& operator[](u64 index)
-		{
-			NA_ASSERT(index < m_Size, "Failed to access element at index {}: out of bounds!", index);
-			return m_Buffer[index];
-		}
+		[[nodiscard]] inline T& front(void) { return *this->begin(); }
+		[[nodiscard]] inline const T& front(void) const { return *this->begin(); }
 
-		[[nodiscard]] const T& operator[](u64 index) const
-		{
-			NA_ASSERT(index < m_Size, "Failed to access element at index {}: out of bounds!", index);
-			return m_Buffer[index];
-		}
+		[[nodiscard]] inline T& back(void) { return *this->rbegin(); }
+		[[nodiscard]] inline const T& back(void) const { return *this->rbegin(); }
+
+		[[nodiscard]] inline T& operator[](u64 index) { return *this->at(index); }
+		[[nodiscard]] inline const T& operator[](u64 index) const { return *this->at(index); }
 
 		[[nodiscard]] inline T* ptr(void) { return m_Buffer; }
 		[[nodiscard]] inline const T* ptr(void) const { return m_Buffer; }

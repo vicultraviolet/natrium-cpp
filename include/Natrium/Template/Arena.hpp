@@ -19,11 +19,12 @@ namespace Na {
         ~Arena(void) { this->destroy(); }
 
         explicit Arena(u64 capacity, const t_Allocator& allocator = t_Allocator())
-        : m_Capacity(capacity), m_FreeList(capacity), m_Allocator(allocator)
+        : m_Capacity(capacity), m_FreeList(capacity, capacity), m_Allocator(allocator)
         {
 			m_Buffer = m_Allocator.allocate(capacity);
-            for (u64 i = 0; i < capacity; i++)
-				m_FreeList.emplace_back(i);
+
+            for (u64 i = m_Capacity; i-- > 0; )
+                m_FreeList[m_Capacity - 1 - i] = i;
         }
 
         void clear(void)
@@ -152,9 +153,17 @@ namespace Na {
             m_Buffer = new_buffer;
             m_Capacity = new_capacity;
 
-            m_FreeList.reallocate(new_capacity);
-            for (u64 i = old_capacity; i < new_capacity; i++)
-                m_FreeList.emplace_back(i);
+            Na::ArrayList<u64> new_free_list(new_capacity);
+
+            u64 free_count = 0;
+            for (u64 i = new_capacity; i-- > 0; )
+            {
+                if ((i < old_capacity && is_free[i]) || (i >= old_capacity))
+                    new_free_list[free_count++] = i;
+            }
+            new_free_list.resize(free_count);
+
+            m_FreeList = std::move(new_free_list);
         }
 
         inline void reserve(u64 extra_capacity) { this->reallocate(m_Capacity + extra_capacity); }
@@ -176,8 +185,10 @@ namespace Na {
         [[nodiscard]] inline bool full(void) const { return m_FreeList.empty(); }
         [[nodiscard]] inline bool empty(void) const { return m_Capacity == 0 || m_FreeList.size() == m_Capacity; }
 
+        [[nodiscard]] inline const ArrayList<u64>& free_list(void) const { return m_FreeList; }
+
         [[nodiscard]] inline T* ptr(void) { return m_Buffer; }
-        [[nodiscard]] inline const T* ptr(void) const { return m_Buffer; }
+		[[nodiscard]] inline const T* ptr(void) const { return m_Buffer; }
     private:
         friend class UniqueHandle;
 
