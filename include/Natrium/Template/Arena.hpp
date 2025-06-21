@@ -10,10 +10,17 @@ namespace Na {
     public:
         using T_t = T;
 
-        using ViewHandle   = Na::ViewHandle<Arena>;
-        using UniqueHandle = Na::UniqueHandle<Arena>;
-        using SharedHandle = Na::SharedHandle<Arena>;
-        using WeakHandle   = Na::WeakHandle<Arena>;
+        template<typename U = T>
+        using ViewHandle = Na::ViewHandle<Arena<T, t_Allocator>, U>;
+
+        template<typename U = T>
+        using UniqueHandle = Na::UniqueHandle<Arena<T, t_Allocator>, U>;
+
+        template<typename U = T>
+        using SharedHandle = Na::SharedHandle<Arena<T, t_Allocator>, U>;
+
+        template<typename U = T>
+        using WeakHandle = Na::WeakHandle<Arena<T, t_Allocator>, U>;
 
         Arena(void) = default;
         ~Arena(void) { this->destroy(); }
@@ -52,11 +59,15 @@ namespace Na {
         Arena& operator=(const Arena& other) = delete;
 
         Arena(Arena&& other) noexcept
-        : m_Capacity(std::exchange(other.m_Capacity, 0)),
-        m_Buffer(std::exchange(other.m_Buffer, nullptr)),
-        m_FreeList(std::move(other.m_FreeList)),
-        m_Allocator(std::move(other.m_Allocator))
-        {}
+        {
+            m_Capacity = other.m_Capacity;
+            m_Buffer = other.m_Buffer;
+            m_FreeList = std::move(other.m_FreeList);
+            m_Allocator = std::move(other.m_Allocator);
+
+            other.m_Capacity = 0;
+            other.m_Buffer = nullptr;
+        }
 
         Arena& operator=(Arena&& other) noexcept
         {
@@ -65,10 +76,13 @@ namespace Na {
 
             this->destroy();
 
-            m_Capacity = std::exchange(other.m_Capacity, 0);
-            m_Buffer = std::exchange(other.m_Buffer, nullptr);
+            m_Capacity = other.m_Capacity;
+            m_Buffer = other.m_Buffer;
             m_FreeList = std::move(other.m_FreeList);
             m_Allocator = std::move(other.m_Allocator);
+
+            other.m_Capacity = 0;
+            other.m_Buffer = nullptr;
 
             return *this;
         }
@@ -105,21 +119,21 @@ namespace Na {
         }
 
         template<typename... t_Args>
-        [[nodiscard]] ViewHandle make_view(t_Args&&... args)
+        [[nodiscard]] ViewHandle<T> make_view(t_Args&&... args)
         {
-            return ViewHandle(this, this->emplace(std::forward<t_Args>(args)...));
+            return ViewHandle<T>(static_cast<Arena<T, t_Allocator>*>(this), this->emplace(std::forward<t_Args>(args)...));
         }
 
         template<typename... t_Args>
-        [[nodiscard]] UniqueHandle make_unique(t_Args&&... args)
+        [[nodiscard]] UniqueHandle<T> make_unique(t_Args&&... args)
         {
-            return UniqueHandle(this, this->emplace(std::forward<t_Args>(args)...));
+            return UniqueHandle<T>(static_cast<Arena<T, t_Allocator>*>(this), this->emplace(std::forward<t_Args>(args)...));
         }
 
         template<typename... t_Args>
-        [[nodiscard]] SharedHandle make_shared(t_Args&&... args)
+        [[nodiscard]] SharedHandle<T> make_shared(t_Args&&... args)
         {
-            return SharedHandle(this, this->emplace(std::forward<t_Args>(args)...));
+            return SharedHandle<T>(static_cast<Arena<T, t_Allocator>*>(this), this->emplace(std::forward<t_Args>(args)...));
         }
 
         void reallocate(u64 new_capacity)
@@ -190,8 +204,6 @@ namespace Na {
         [[nodiscard]] inline T* ptr(void) { return m_Buffer; }
 		[[nodiscard]] inline const T* ptr(void) const { return m_Buffer; }
     private:
-        friend class UniqueHandle;
-
         u64 m_Capacity = 0;
         T* m_Buffer = nullptr;
 
@@ -199,18 +211,6 @@ namespace Na {
 
         t_Allocator m_Allocator;
     };
-
-    template<typename T, typename t_Allocator = std::allocator<T>>
-    using Arena_ViewHandle = Na::UniqueHandle<Arena<T, t_Allocator>>;
-
-    template<typename T, typename t_Allocator = std::allocator<T>>
-    using Arena_UniqueHandle = Na::UniqueHandle<Arena<T, t_Allocator>>;
-
-    template<typename T, typename t_Allocator = std::allocator<T>>
-    using Arena_SharedHandle = Na::SharedHandle<Arena<T, t_Allocator>>;
-
-    template<typename T, typename t_Allocator = std::allocator<T>>
-    using Arena_WeakHandle = Na::WeakHandle<Arena<T, t_Allocator>>;
 } // namespace Na
 
 #endif // NA_ARENA_HPP
