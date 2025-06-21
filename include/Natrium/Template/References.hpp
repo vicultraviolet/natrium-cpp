@@ -5,6 +5,98 @@
 
 namespace Na {
 	template<typename T>
+	class ViewRef {
+	public:
+		ViewRef(void) : m_Ptr(nullptr) {}
+		~ViewRef(void) { this->destroy(); }
+
+		ViewRef(nullptr_t) : m_Ptr(nullptr) {}
+		ViewRef& operator=(nullptr_t)
+		{
+			this->destroy();
+			return *this;
+		}
+
+		ViewRef(T* ptr) : m_Ptr(ptr) {}
+		ViewRef& operator=(T* ptr)
+		{
+			m_Ptr = ptr;
+			return *this;
+		}
+
+		ViewRef(ViewRef&& other)
+		: m_Ptr(std::exchange(other.m_Ptr, nullptr))
+		{}
+
+		ViewRef& operator=(ViewRef&& other)
+		{
+			m_Ptr = std::exchange(other.m_Ptr, nullptr);
+			return *this;
+		}
+
+		void swap(ViewRef& other)
+		{
+			std::swap(m_Ptr, other.m_Ptr);
+		}
+
+		void destroy(void)
+		{
+			m_Ptr = nullptr;
+		}
+
+		T* release(void)
+		{
+			if (!m_Ptr)
+				return nullptr;
+
+			T* temp = m_Ptr;
+			m_Ptr = nullptr;
+			return temp;
+		}
+
+		template<typename U, std::enable_if_t<std::is_base_of_v<U, T>, int> = 0>
+		[[nodiscard]] inline operator ViewRef<U>(void) { return ViewRef<U>(m_Ptr); }
+
+		[[nodiscard]] inline T* ptr(void) { return m_Ptr; }
+		[[nodiscard]] inline const T* ptr(void) const { return m_Ptr; }
+
+		[[nodiscard]] inline T& operator*(void) { return *m_Ptr; }
+		[[nodiscard]] inline const T& operator*(void) const { return *m_Ptr; }
+
+		[[nodiscard]] inline T* operator->(void) { return m_Ptr; }
+		[[nodiscard]] inline const T* operator->(void) const { return m_Ptr; }
+
+		[[nodiscard]] inline auto operator<=>(const ViewRef& other) const { return m_Ptr <=> other.m_Ptr; }
+		[[nodiscard]] inline auto operator==(const ViewRef& other) const { return m_Ptr == other.m_Ptr; }
+
+		[[nodiscard]] inline operator bool(void) const { return m_Ptr; }
+	private:
+		template<typename To, typename From>
+		friend ViewRef<To> static_pointer_cast(const ViewRef<From>& from);
+
+		template<typename To, typename From>
+		friend ViewRef<To> dynamic_pointer_cast(const ViewRef<From>& from);
+
+		T* m_Ptr = nullptr;
+	};
+
+	template<typename To, typename From>
+	ViewRef<To> static_pointer_cast(const ViewRef<From>& from)
+	{
+		using FromPtr = decltype(from.ptr());
+		To* casted = (To*)const_cast<std::remove_const_t<std::remove_pointer_t<FromPtr>>*>(from.ptr());
+		return ViewRef<To>(casted);
+	}
+
+	template<typename To, typename From>
+	ViewRef<To> dynamic_pointer_cast(const ViewRef<From>& from)
+	{
+		using FromPtr = decltype(from.ptr());
+		To* casted = dynamic_cast<To*>(const_cast<std::remove_const_t<std::remove_pointer_t<FromPtr>>*>(from.ptr()));
+		return ViewRef<To>(casted);
+	}
+
+	template<typename T>
 	class UniqueRef {
 	public:
 		UniqueRef(void) : m_Ptr(nullptr) {}
