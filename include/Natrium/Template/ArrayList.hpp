@@ -46,7 +46,7 @@ namespace Na {
 		}
 
 		template<typename... t_Args>
-		ArrayList(initialize_t, u64 capacity, t_Args&&... __args)
+		ArrayList(init, u64 capacity, t_Args&&... __args)
 		: m_Capacity(capacity),m_Size(capacity)
 		{
 			m_Buffer = m_Capacity ? m_Allocator.allocate(m_Capacity) : nullptr;

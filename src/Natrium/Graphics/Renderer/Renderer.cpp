@@ -220,7 +220,7 @@ namespace Na {
 	}
 
 	void Renderer::set_push_constant(
-		const PushConstant& push_constant,
+		const PushConstantSpecs& specs,
 		const void* data,
 		const GraphicsPipeline& pipeline
 	)
@@ -230,9 +230,9 @@ namespace Na {
 
 		fd.cmd_buffer.pushConstants(
 			pipeline.layout(),
-			(vk::ShaderStageFlagBits)push_constant.shader_stage,
-			push_constant.offset,
-			push_constant.size,
+			Internal::EnumToVulkan(specs.shader_stage),
+			specs.offset,
+			specs.size,
 			data
 		);
 	}

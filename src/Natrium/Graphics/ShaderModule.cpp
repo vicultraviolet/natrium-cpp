@@ -6,7 +6,7 @@
 namespace Na {
 	ShaderModule::ShaderModule(
 		const ShaderBinary& binary,
-		ShaderStageBits stage,
+		ShaderStage stage,
 		const std::string_view& entry_point
 	)
 	: m_Module(Internal::g_DeviceData.logical_device
@@ -22,6 +22,16 @@ namespace Na {
 	ShaderModule::~ShaderModule(void)
 	{
 		Internal::g_DeviceData.logical_device.destroyShaderModule(m_Module);
+	}
+
+	vk::PipelineShaderStageCreateInfo ShaderModule::pipeline_shader_info(void) const
+	{
+		return vk::PipelineShaderStageCreateInfo(
+			{},
+			Internal::EnumToVulkan(m_Stage),
+			m_Module,
+			m_EntryPoint.data()
+		);
 	}
 
 	ShaderModule::ShaderModule(ShaderModule&& other)

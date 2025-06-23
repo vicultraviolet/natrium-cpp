@@ -69,7 +69,7 @@ namespace Na {
 
 	ShaderModule AssetRegistry::create_shader_module_from_src(
 		const std::string_view& src_path,
-		ShaderStageBits stage,
+		ShaderStage stage,
 		const std::string_view& entry_point
 	) const
 	{
@@ -100,7 +100,7 @@ namespace Na {
 	ShaderModule AssetRegistry::create_shader_module_from_str(
 		const std::string_view& name,
 		const std::string_view& src,
-		ShaderStageBits stage,
+		ShaderStage stage,
 		const std::string_view& entry_point
 	) const
 	{

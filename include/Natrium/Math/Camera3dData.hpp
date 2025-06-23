@@ -25,7 +25,7 @@ namespace Na {
 
 		~Camera3dData(void) = default;
 
-		[[nodiscard]] static const PushConstant& PushConstantData(void);
+		[[nodiscard]] static const PushConstantSpecs& PushConstantSpecs(void);
 
 		// vector is right, up, forward
 		void move(const glm::vec3& amount);

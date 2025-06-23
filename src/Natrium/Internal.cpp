@@ -2,6 +2,18 @@
 #include "Internal.hpp"
 
 namespace Na {
+	vk::ShaderStageFlagBits Internal::EnumToVulkan(ShaderStage stage)
+	{
+		switch (stage)
+		{
+		case ShaderStage::Vertex:   return vk::ShaderStageFlagBits::eVertex;
+		case ShaderStage::Fragment: return vk::ShaderStageFlagBits::eFragment;
+		case ShaderStage::Compute:  return vk::ShaderStageFlagBits::eCompute;
+		case ShaderStage::Geometry: return vk::ShaderStageFlagBits::eGeometry;
+		}
+		return vk::ShaderStageFlagBits(0);
+	}
+
 	vk::SurfaceKHR Internal::CreateWindowSurface(GLFWwindow* window)
 	{
 		VkSurfaceKHR surface;

@@ -9,61 +9,114 @@
 #include "Natrium/Graphics/Texture.hpp"
 
 namespace Na {
-	static std::tuple<
-		Na::ArrayList<vk::VertexInputBindingDescription>,
-		Na::ArrayList<vk::VertexInputAttributeDescription>
-	>
-		GetVertexInputInfo(
-			const ShaderAttributeLayout& vertex_buffer_layout
-		)
+	static vk::Format enumToVulkan(ShaderAttributeType type)
 	{
-		if (!vertex_buffer_layout.size())
-			return { {}, {} };
-
-		Na::ArrayList<vk::VertexInputBindingDescription> binding_descriptions(vertex_buffer_layout.size());
-		binding_descriptions.resize(binding_descriptions.capacity());
-
-		u64 attribute_count = 0;
-		for (const auto& binding : vertex_buffer_layout)
-			attribute_count += binding.attributes.size();
-
-		Na::ArrayList<vk::VertexInputAttributeDescription> attribute_descriptions(attribute_count);
-		attribute_descriptions.resize(attribute_descriptions.capacity());
-
-		for (u32 i = 0; const auto& binding : vertex_buffer_layout)
+		switch (type)
 		{
-			u32 offset = 0;
-			for (u64 j = 0; const auto& attribute : binding.attributes)
-			{
-				attribute_descriptions[i + j * binding_descriptions.size()].binding = binding.binding;
-				attribute_descriptions[i + j * binding_descriptions.size()].location = attribute.location;
-				attribute_descriptions[i + j * binding_descriptions.size()].format = (vk::Format)attribute.type;
-				attribute_descriptions[i + j * binding_descriptions.size()].offset = offset;
-
-				offset += SizeOf(attribute.type);
-				j++;
-			}
-
-			binding_descriptions[i].binding = i;
-			binding_descriptions[i].stride = offset;
-			binding_descriptions[i].inputRate = (vk::VertexInputRate)binding.input_rate;
-
-			i++;
+		case ShaderAttributeType::Float: return vk::Format::eR32Sfloat;
+		case ShaderAttributeType::Vec2:  return vk::Format::eR32G32Sfloat;
+		case ShaderAttributeType::Vec3:  return vk::Format::eR32G32B32Sfloat;
+		case ShaderAttributeType::Vec4:  return vk::Format::eR32G32B32A32Sfloat;
 		}
-
-		return { binding_descriptions, attribute_descriptions };
+		return vk::Format::eUndefined;
 	}
 
-	static vk::DescriptorSetLayout createDescriptorSetLayout(const ShaderUniformLayout& descriptor_layout)
+	static u32 sizeOf(ShaderAttributeType type)
 	{
-		Na::ArrayList<vk::DescriptorSetLayoutBinding> bindings(descriptor_layout.size());
-		bindings.resize(bindings.capacity());
+		switch (type)
+		{
+		case ShaderAttributeType::Float:  return sizeof(float);
+		case ShaderAttributeType::Vec2:   return sizeof(float) * 2;
+		case ShaderAttributeType::Vec3:   return sizeof(float) * 3;
+		case ShaderAttributeType::Vec4:   return sizeof(float) * 4;
+		}
+		return 0;
+	}
 
-		for (size_t i = 0; const auto& binding : descriptor_layout)
+	static vk::VertexInputRate enumToVulkan(ShaderAttributeInputRate input_rate)
+	{
+		switch (input_rate)
+		{
+		case ShaderAttributeInputRate::Vertex:   return vk::VertexInputRate::eVertex;
+		case ShaderAttributeInputRate::Instance: return vk::VertexInputRate::eInstance;
+		}
+		return vk::VertexInputRate::eVertex;
+	}
+
+	static vk::DescriptorType enumToVulkan(ShaderUniformType type)
+	{
+		switch (type)
+		{
+		case ShaderUniformType::UniformBuffer: return vk::DescriptorType::eUniformBufferDynamic;
+		case ShaderUniformType::StorageBuffer: return vk::DescriptorType::eStorageBufferDynamic;
+		case ShaderUniformType::Texture:       return vk::DescriptorType::eCombinedImageSampler;
+		}
+		return (vk::DescriptorType)k_I32Max;
+	}
+
+	struct VertexInputInfo {
+		Na::ArrayList<vk::VertexInputBindingDescription> bindings;
+		Na::ArrayList<vk::VertexInputAttributeDescription> attributes;
+
+		vk::PipelineVertexInputStateCreateInfo pipeline_info;
+
+		VertexInputInfo(void) = default;
+
+		VertexInputInfo(const ShaderAttributeLayout& vertex_attribute_bindings)
+		{
+			u32 binding_count = (u32)vertex_attribute_bindings.size();
+
+			if (binding_count == 0)
+				return;
+
+			bindings.reallocate(binding_count, binding_count);
+
+			u64 attribute_count = 0;
+			for (const auto& binding : vertex_attribute_bindings)
+				attribute_count += binding.attributes.size();
+
+			attributes.reallocate(attribute_count, attribute_count);
+
+			for (u32 i = 0; const auto& binding : vertex_attribute_bindings)
+			{
+				u32 offset = 0;
+				for (u64 j = 0; const auto& attribute : binding.attributes)
+				{
+					u64 index = i + j * bindings.size();
+
+					attributes[index].binding = binding.binding;
+					attributes[index].location = attribute.location;
+					attributes[index].format = enumToVulkan(attribute.type);
+					attributes[index].offset = offset;
+
+					offset += sizeOf(attribute.type);
+					j++;
+				}
+
+				bindings[i].binding = i;
+				bindings[i].stride = offset;
+				bindings[i].inputRate = enumToVulkan(binding.input_rate);
+
+				i++;
+			}
+
+			pipeline_info.vertexBindingDescriptionCount = (u32)bindings.size();
+			pipeline_info.pVertexBindingDescriptions = bindings.ptr();
+			pipeline_info.vertexAttributeDescriptionCount = (u32)attributes.size();
+			pipeline_info.pVertexAttributeDescriptions = attributes.ptr();
+		}
+	};
+
+	static vk::DescriptorSetLayout createDescriptorSetLayout(const ShaderUniformLayout& uniform_bindings)
+	{
+		u64 binding_count = uniform_bindings.size();
+		Na::ArrayList<vk::DescriptorSetLayoutBinding> bindings(binding_count, binding_count);
+
+		for (u64 i = 0; const auto& binding : uniform_bindings)
 		{
 			bindings[i].binding            = binding.binding;
-			bindings[i].descriptorType     = (vk::DescriptorType)binding.type;
-			bindings[i].stageFlags         = (vk::ShaderStageFlagBits)binding.shader_stage;
+			bindings[i].descriptorType     = enumToVulkan(binding.type);
+			bindings[i].stageFlags         = Internal::EnumToVulkan(binding.shader_stage);
 			bindings[i].descriptorCount    = 1;
 			bindings[i].pImmutableSamplers = nullptr;
 
@@ -71,33 +124,33 @@ namespace Na {
 		}
 
 		vk::DescriptorSetLayoutCreateInfo create_info;
-		create_info.bindingCount = (u32)bindings.size();
+		create_info.bindingCount = (u32)binding_count;
 		create_info.pBindings = bindings.ptr();
 
 		return Internal::g_DeviceData.logical_device.createDescriptorSetLayout(create_info);
 	}
 
-	static vk::DescriptorPool createDescriptorPool(const ShaderUniformLayout& descriptor_layout)
+	static vk::DescriptorPool createDescriptorPool(const ShaderUniformLayout& uniform_bindings)
 	{
-		Na::ArrayList<vk::DescriptorPoolSize> pool_sizes(descriptor_layout.size());
-		pool_sizes.resize(pool_sizes.capacity());
+		u64 binding_count = uniform_bindings.size();
+		Na::ArrayList<vk::DescriptorPoolSize> pool_sizes(binding_count, binding_count);
 
-		for (size_t i = 0; const ShaderUniform& uniform : descriptor_layout)
+		for (u64 i = 0; const ShaderUniform& binding : uniform_bindings)
 		{
-			pool_sizes[i].descriptorCount = 1; // 1 * uniform.count
-			pool_sizes[i].type = (vk::DescriptorType)uniform.type;
+			pool_sizes[i].descriptorCount = 1; // uniform.count
+			pool_sizes[i].type = enumToVulkan(binding.type);
 			i++;
 		}
 
 		vk::DescriptorPoolCreateInfo create_info;
 		create_info.poolSizeCount = (u32)pool_sizes.size();
 		create_info.pPoolSizes = pool_sizes.ptr();
-		create_info.maxSets = 1; // 1 * uniform.count
+		create_info.maxSets = 1; // uniform.count
 
 		return Internal::g_DeviceData.logical_device.createDescriptorPool(create_info);
 	}
 
-	static vk::DescriptorSet createDescriptorSet(vk::DescriptorSetLayout& layout, vk::DescriptorPool pool)
+	static vk::DescriptorSet createDescriptorSet(vk::DescriptorSetLayout layout, vk::DescriptorPool pool)
 	{
 		vk::DescriptorSetAllocateInfo alloc_info;
 		alloc_info.descriptorPool = pool;
@@ -119,8 +172,7 @@ namespace Na {
 		alloc_info.descriptorSetCount = count;
 		alloc_info.pSetLayouts = layouts;
 
-		Na::ArrayList<vk::DescriptorSet> descriptor_sets(count);
-		descriptor_sets.resize(descriptor_sets.capacity());
+		Na::ArrayList<vk::DescriptorSet> descriptor_sets((u64)count, (u64)count);
 
 		vk::Result result = Internal::g_DeviceData.logical_device.allocateDescriptorSets(&alloc_info, descriptor_sets.ptr());
 		NA_VERIFY_VK(result, "Failed to allocate descriptor sets!");
@@ -138,13 +190,11 @@ namespace Na {
 	{
 		for (const ShaderUniform& uniform : uniform_data_layout)
 		{
-			if (
-				uniform.type == ShaderUniformType::StorageBuffer ||
-				uniform.type == ShaderUniformType::UniformBuffer
-			)
+			if (uniform.type == ShaderUniformType::StorageBuffer ||
+				uniform.type == ShaderUniformType::UniformBuffer)
 				m_DynamicOffsetCount++;
 		}
-		m_DynamicOffsets.reallocate(u64(m_DynamicOffsetCount * renderer_core.settings()->max_frames_in_flight()));
+		m_DynamicOffsets.reallocate((u64)m_DynamicOffsetCount * renderer_core.settings()->max_frames_in_flight());
 		m_DynamicOffsets.resize(m_DynamicOffsets.capacity());
 
 		Na::ArrayList<vk::DynamicState> dynamic_states = {
@@ -152,13 +202,7 @@ namespace Na {
 			vk::DynamicState::eScissor
 		};
 
-		auto [binding_descriptions, attribute_descriptions] = GetVertexInputInfo(vertex_buffer_layout);
-
-		vk::PipelineVertexInputStateCreateInfo vertex_input_info;
-		vertex_input_info.vertexAttributeDescriptionCount = (u32)attribute_descriptions.size();
-		vertex_input_info.pVertexAttributeDescriptions = attribute_descriptions.ptr();
-		vertex_input_info.vertexBindingDescriptionCount = (u32)binding_descriptions.size();
-		vertex_input_info.pVertexBindingDescriptions = binding_descriptions.ptr();
+		VertexInputInfo vertex_input_info(vertex_buffer_layout);
 
 		auto dynamic_state_info = dynamicStateInfo(dynamic_states);
 		auto viewport_info = viewportInfo();
@@ -177,7 +221,7 @@ namespace Na {
 
 		for (u64 i = 0; const auto& push_constant : push_constant_layout)
 		{
-			push_constant_ranges[i].stageFlags = (vk::ShaderStageFlagBits)push_constant.shader_stage;
+			push_constant_ranges[i].stageFlags = Internal::EnumToVulkan(push_constant.shader_stage);
 			push_constant_ranges[i].offset = push_constant.offset;
 			push_constant_ranges[i].size = push_constant.size;
 			i++;
@@ -202,7 +246,7 @@ namespace Na {
 		create_info.pDynamicState = &dynamic_state_info;
 		create_info.pViewportState = &viewport_info;
 		create_info.pInputAssemblyState = &input_assembly_info;
-		create_info.pVertexInputState = &vertex_input_info;
+		create_info.pVertexInputState = &vertex_input_info.pipeline_info;
 		create_info.pRasterizationState = &rasterization_info;
 		create_info.pMultisampleState = &multisample_info;
 		create_info.pColorBlendState = &color_blend_info;

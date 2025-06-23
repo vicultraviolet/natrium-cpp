@@ -4,12 +4,10 @@
 #include "Natrium/Assets/Asset.hpp"
 
 namespace Na {
-	enum class ShaderStageBits : u32 {
+	enum class ShaderStage : u8 {
 		None = 0,
-		Vertex   = (u32)vk::ShaderStageFlagBits::eVertex,
-		Fragment = (u32)vk::ShaderStageFlagBits::eFragment,
-
-		All      = (u32)vk::ShaderStageFlagBits::eAll
+		Vertex, Geometry, Fragment,
+		Compute
 	};
 
 	class ShaderString : public Asset {

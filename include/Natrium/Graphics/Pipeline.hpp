@@ -8,67 +8,49 @@
 namespace Na {
 	using PipelineShaderInfos = std::initializer_list<vk::PipelineShaderStageCreateInfo>;
 
-	enum class ShaderAttributeType : u32 {
-		None  = (u32)vk::Format::eUndefined,
-		Float = (u32)vk::Format::eR32Sfloat,
-		Vec2  = (u32)vk::Format::eR32G32Sfloat,
-		Vec3  = (u32)vk::Format::eR32G32B32Sfloat,
-		Vec4  = (u32)vk::Format::eR32G32B32A32Sfloat
+	enum class ShaderAttributeType : u8 {
+		None = 0,
+		Float, Vec2, Vec3, Vec4
 	};
-	inline u32 SizeOf(ShaderAttributeType type)
-	{
-		switch (type)
-		{
-		case ShaderAttributeType::Float:  return sizeof(float);
-		case ShaderAttributeType::Vec2:   return sizeof(float) * 2;
-		case ShaderAttributeType::Vec3:   return sizeof(float) * 3;
-		case ShaderAttributeType::Vec4:   return sizeof(float) * 4;
-		}
-		return 0;
-	}
 
 	struct ShaderAttribute {
 		u32 location;
 		ShaderAttributeType type;
 	};
 
-	enum class AttributeInputRate : u32 {
-		Vertex   = (u32)vk::VertexInputRate::eVertex,
-		Instance = (u32)vk::VertexInputRate::eInstance
+	enum class ShaderAttributeInputRate : u8 {
+		Vertex = 0, Instance
 	};
 
 	struct ShaderAttributeBinding {
 		u32 binding;
-		AttributeInputRate input_rate;
+		ShaderAttributeInputRate input_rate;
 		std::initializer_list<ShaderAttribute> attributes;
 	};
 
 	using ShaderAttributeLayout = std::initializer_list<ShaderAttributeBinding>;
 
-	enum class ShaderUniformType : u32 {
-		None          = 0,
+	enum class ShaderUniformType : u8 {
+		None = 0,
+		UniformBuffer, StorageBuffer, Texture, 
 
-		UniformBuffer = (u32)vk::DescriptorType::eUniformBufferDynamic,
-		StorageBuffer = (u32)vk::DescriptorType::eStorageBufferDynamic,
-		Texture       = (u32)vk::DescriptorType::eCombinedImageSampler,
-
-		UBO           = UniformBuffer,
-		SSBO          = StorageBuffer
+		UBO = UniformBuffer,
+		SSBO = StorageBuffer
 	};
 
 	struct ShaderUniform {
 		u32 binding;
 		ShaderUniformType type;
-		ShaderStageBits shader_stage;
+		ShaderStage shader_stage;
 	};
 	using ShaderUniformLayout = std::initializer_list<ShaderUniform>;
 
-	struct PushConstant {
-		ShaderStageBits shader_stage;
+	struct PushConstantSpecs {
+		ShaderStage shader_stage;
 		u32 size;
 		u32 offset = 0;
 	};
-	using PushConstantLayout = std::initializer_list<PushConstant>;
+	using PushConstantLayout = std::initializer_list<PushConstantSpecs>;
 
 	class GraphicsPipeline {
 	public:

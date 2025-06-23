@@ -33,7 +33,7 @@ namespace Na {
 		void end_frame(void);
 
 		void bind_pipeline(const GraphicsPipeline& pipeline);
-		void set_push_constant(const PushConstant& push_constant, const void* data, const GraphicsPipeline& pipeline);
+		void set_push_constant(const PushConstantSpecs& specs, const void* data, const GraphicsPipeline& pipeline);
 
 		void draw_vertices(const VertexBuffer& vertex_buffer, u32 vertex_count, u32 instance_count = 1);
 		void draw_indexed(const VertexBuffer& vertex_buffer, const IndexBuffer& index_buffer, u32 instance_count = 1);

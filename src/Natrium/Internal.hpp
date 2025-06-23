@@ -1,10 +1,14 @@
 #if !defined(NA_INTERNAL_HPP)
 #define NA_INTERNAL_HPP
 
+#include "Natrium/Assets/ShaderAsset.hpp"
+
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
 namespace Na::Internal {
+	vk::ShaderStageFlagBits EnumToVulkan(ShaderStage stage);
+
 	struct DeviceLimits {
 		vk::SampleCountFlagBits msaa_sample_count;
 		float anisotropy;

@@ -36,7 +36,7 @@ namespace Na {
 
         void clear(void)
         {
-            ArrayList<bool> is_free(initialize, m_Capacity, false);
+            ArrayList<bool> is_free(init::init, m_Capacity, false);
             for (u64 free_index : m_FreeList)
                 is_free[free_index] = true;
 
@@ -143,7 +143,7 @@ namespace Na {
 
             u64 old_capacity = m_Capacity;
 
-            ArrayList<bool> is_free(initialize, old_capacity, false);
+            ArrayList<bool> is_free(init::init, old_capacity, false);
             for (u64 free_index : m_FreeList)
                 is_free[free_index] = true;
 

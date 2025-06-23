@@ -144,7 +144,7 @@ namespace Na {
         return (T*)realloc(buffer, count * sizeof(T));
     }
 
-    enum initialize_t { initialize };
+    enum class init { init };
 } // namespace Na
 
 #endif // NA_CORE_HPP

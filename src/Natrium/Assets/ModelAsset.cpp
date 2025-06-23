@@ -72,7 +72,7 @@ namespace Na {
     static ShaderAttributeLayout shader_layout{
         Na::ShaderAttributeBinding{
             .binding = 0,
-            .input_rate = Na::AttributeInputRate::Vertex,
+            .input_rate = Na::ShaderAttributeInputRate::Vertex,
             .attributes = {
                 Na::ShaderAttribute{
                     .location = 0,

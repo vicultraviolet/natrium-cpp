@@ -1,11 +1,19 @@
 #if !defined(NA_DEVICE_HPP)
 #define NA_DEVICE_HPP
 
+#include "Natrium/Core.hpp"
+
 namespace Na {
 	inline constexpr bool k_ValidationLayersEnabled = k_BuildConfig != BuildConfig::Distribution;
 
+	enum class RendererAPI : u8 {
+		None = 0,
+		// WebGPU,
+		Vulkan
+	};
+
 	struct DeviceInitInfo {
-		std::string_view app_name = "Natrium Application";
+		RendererAPI api;
 	};
 
 	class DeviceLimits {
@@ -35,10 +43,12 @@ namespace Na {
 
 		[[nodiscard]] static inline Device Get(void) { return Device(); }
 
-		void wait_all(void);
-		[[nodiscard]] bool initialized(void);
+		void wait_all(void) const;
+
+		[[nodiscard]] bool initialized(void) const;
+		[[nodiscard]] RendererAPI api(void) const;
 	private:
-		static void _CreateInstance(const char* app_name);
+		static void _CreateInstance(void);
 		static void _CreateDebugMessenger(void);
 		static void _PickPhysicalDevice(vk::SurfaceKHR surface, const Na::ArrayList<const char*>& extensions);
 		static void _CreateLogicalDevice(vk::SurfaceKHR surface, const Na::ArrayList<const char*>& extensions);

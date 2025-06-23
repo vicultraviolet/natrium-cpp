@@ -164,17 +164,21 @@ namespace Na {
 		return properties.limits.maxImageDimension2D;
 	}
 
+	static RendererAPI rendererAPI{};
+
 	void Device::Initialize(const DeviceInitInfo& info)
 	{
 		if (Internal::g_DeviceData)
 			Device::Shutdown();
+
+		rendererAPI = info.api;
 
 		Na::ArrayList<const char*> device_extensions = {
 			VK_KHR_SWAPCHAIN_EXTENSION_NAME,
 			VK_KHR_MAINTENANCE1_EXTENSION_NAME
 		};
 
-		Device::_CreateInstance(info.app_name.data());
+		Device::_CreateInstance();
 		Device::_CreateDebugMessenger();
 
 		GLFWwindow* temp_window = glfwCreateWindow(1, 1, "", nullptr, nullptr);
@@ -222,16 +226,23 @@ namespace Na {
 			data.instance.destroy();
 			data.instance = nullptr;
 		}
+
+		rendererAPI = RendererAPI::None;
 	}
 
-	void Device::wait_all(void)
-	{
-		Internal::g_DeviceData.logical_device.waitIdle();
-	}
-
-	bool Device::initialized(void)
+	bool Device::initialized(void) const
 	{
 		return Internal::g_DeviceData;
+	}
+
+	RendererAPI Device::api(void) const
+	{
+		return rendererAPI;
+	}
+
+	void Device::wait_all(void) const
+	{
+		Internal::g_DeviceData.logical_device.waitIdle();
 	}
 
 	vk::SampleCountFlagBits DeviceLimits::MSAASampleCount(void)
@@ -244,7 +255,7 @@ namespace Na {
 		return Internal::g_DeviceData.limits.anisotropy;
 	}
 
-	void Device::_CreateInstance(const char* app_name)
+	void Device::_CreateInstance(void)
 	{
 		const ArrayList<const char*> validation_layers = {
 			"VK_LAYER_KHRONOS_validation"
@@ -257,7 +268,7 @@ namespace Na {
 		app_info.apiVersion = VK_API_VERSION_1_0;
 
 		app_info.pEngineName = "Natrium";
-		app_info.pApplicationName = app_name;
+		app_info.pApplicationName = "Natrium Application";
 
 		vk::InstanceCreateInfo create_info;
 		create_info.pApplicationInfo = &app_info;
