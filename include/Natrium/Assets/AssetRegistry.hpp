@@ -27,7 +27,7 @@ namespace Na {
 
 			auto it = m_Assets.find(path);
 			if (it != m_Assets.end())
-				return dynamic_pointer_cast<T>(it->second);
+				return dynamic_ref_cast<T>(it->second);
 
 			AssetHandle<T> asset = T::Load(path);
 			m_Assets[path] = asset;

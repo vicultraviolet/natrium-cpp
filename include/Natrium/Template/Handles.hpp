@@ -4,9 +4,11 @@
 #include "Natrium/Core.hpp"
 
 namespace Na {
-    template<typename t_Container, typename T>
+    template<typename t_Container>
     class ViewHandle {
     public:
+		using T = typename t_Container::T_t;
+
         ViewHandle(void) = default;
         ~ViewHandle(void) = default;
 
@@ -52,7 +54,7 @@ namespace Na {
             return *this;
         }
 
-        ViewHandle(t_Container* container, u64 index = k_InvalidHandle)
+        explicit ViewHandle(t_Container* container, u64 index = k_InvalidHandle)
         : m_Container(container), m_Index(index)
         {}
 
@@ -80,12 +82,6 @@ namespace Na {
         [[nodiscard]] inline T* operator->(void) { return this->ptr(); }
         [[nodiscard]] inline const T* operator->(void) const { return this->ptr(); }
 
-        template<typename U> requires std::is_base_of_v<U, T>
-        operator ViewHandle<t_Container, U>(void) const
-        {
-            return ViewHandle<t_Container, U>(m_Container, m_Index);
-        }
-
         [[nodiscard]] auto operator==(const ViewHandle& other) const
         {
             return m_Index == other.m_Index && m_Container == other.m_Container;
@@ -100,33 +96,13 @@ namespace Na {
     private:
         t_Container* m_Container = nullptr;
         u64 m_Index = k_InvalidHandle;
-
-        template<typename To, typename C, typename From>
-        friend ViewHandle<C, To> dynamic_handle_cast(const ViewHandle<C, From>&);
     };
 
-    template<typename To, typename t_Container, typename From>
-    ViewHandle<t_Container, To> dynamic_handle_cast(const ViewHandle<t_Container, From>& handle)
-    {
-        if (!handle)
-            return nullptr;
-
-        using FromPtr = decltype(handle.ptr());
-        using ToPtr = std::conditional_t<
-            std::is_const_v<std::remove_pointer_t<FromPtr>>,
-            const To*,
-            To*
-        >;
-
-        if (auto casted = dynamic_cast<ToPtr>(handle.ptr()))
-            return ViewHandle<t_Container, To>(handle.m_Container, handle.m_Index);
-
-        return nullptr;
-    }
-
-    template<typename t_Container, typename T>
+    template<typename t_Container>
 	class UniqueHandle {
 	public:
+		using T = typename t_Container::T_t;
+
 		UniqueHandle(void) = default;
 		~UniqueHandle(void) { this->destroy(); }
 
@@ -228,12 +204,6 @@ namespace Na {
 			return m_Index == other.m_Index && m_Container == other.m_Container;
 		}
 
-        template<typename U> requires std::is_base_of_v<U, T>
-        operator UniqueHandle<t_Container, U>(void) const
-        {
-            return UniqueHandle<t_Container, U>(m_Container, this->release());
-        }
-
 		[[nodiscard]] operator bool(void) const
 		{
 			return m_Container && m_Index < m_Container->capacity();
@@ -241,29 +211,7 @@ namespace Na {
 	private:
 		t_Container* m_Container = nullptr;
 		u64 m_Index = k_InvalidHandle;
-
-        template<typename To, typename C, typename From>
-        friend UniqueHandle<C, To> dynamic_handle_cast(UniqueHandle<C, From>&&);
 	};
-
-    template<typename To, typename t_Container, typename From>
-    UniqueHandle<t_Container, To> dynamic_handle_cast(UniqueHandle<t_Container, From>&& handle)
-    {
-        if (!handle)
-            return nullptr;
-
-        using FromPtr = decltype(handle.ptr());
-        using ToPtr = std::conditional_t<
-            std::is_const_v<std::remove_pointer_t<FromPtr>>,
-            const To*,
-            To*
-        >;
-
-        if (auto casted = dynamic_cast<ToPtr>(handle.ptr()))
-            return UniqueHandle<t_Container, To>(handle.m_Container, handle.release());
-
-        return nullptr;
-    }
 
     template<typename t_Container>
     struct HandleControlBlock {
@@ -284,12 +232,13 @@ namespace Na {
         void dec_weak_count(void) { this->weak_count.fetch_sub(1, std::memory_order_relaxed); }
     };
 
-    template<typename t_Container, typename T>
+    template<typename t_Container>
     class WeakHandle;
 
-    template<typename t_Container, typename T>
+    template<typename t_Container>
     class SharedHandle {
     public:
+		using T = typename t_Container::T_t;
         using ControlBlock = HandleControlBlock<t_Container>;
 
         SharedHandle(void) = default;
@@ -397,47 +346,20 @@ namespace Na {
         [[nodiscard]] inline u64 strong_count(void) const { return m_ControlBlock ? m_ControlBlock->strong_count.load() : 0; }
         [[nodiscard]] inline u64 weak_count(void) const { return m_ControlBlock ? m_ControlBlock->weak_count.load() : 0; }
 
-        template<typename U> requires std::is_base_of_v<U, T>
-        operator SharedHandle<t_Container, U>(void) const
-        {
-            return SharedHandle<t_Container, U>(m_ControlBlock);
-        }
-
         [[nodiscard]] operator bool(void) const
         {
             return m_ControlBlock && m_ControlBlock->container && m_ControlBlock->index < m_ControlBlock->container->capacity();
         }
     private:
-        friend class WeakHandle<t_Container, T>;
+        friend class WeakHandle<t_Container>;
 
         ControlBlock* m_ControlBlock = nullptr;
-
-        template<typename To, typename C, typename From>
-        friend SharedHandle<C, To> dynamic_handle_cast(const SharedHandle<C, From>&);
     };
 
-    template<typename To, typename t_Container, typename From>
-    SharedHandle<t_Container, To> dynamic_handle_cast(const SharedHandle<t_Container, From>& handle)
-    {
-        if (!handle)
-            return nullptr;
-
-        using FromPtr = decltype(handle.ptr());
-        using ToPtr = std::conditional_t<
-            std::is_const_v<std::remove_pointer_t<FromPtr>>,
-            const To*,
-            To*
-        >;
-
-        if (auto casted = dynamic_cast<ToPtr>(handle.ptr()))
-            return SharedHandle<t_Container, To>(handle.m_ControlBlock);
-
-        return nullptr;
-    }
-
-    template<typename t_Container, typename T>
+    template<typename t_Container>
     class WeakHandle {
     public:
+		using T = typename t_Container::T_t;
         using ControlBlock = HandleControlBlock<t_Container>;
 
         WeakHandle(void) = default;
@@ -450,7 +372,7 @@ namespace Na {
             return *this;
         }
 
-        WeakHandle(const SharedHandle<t_Container, T>& shared)
+        WeakHandle(const SharedHandle<t_Container>& shared)
         : m_ControlBlock(shared.m_ControlBlock)
         {
             if (m_ControlBlock)
@@ -512,12 +434,12 @@ namespace Na {
             m_ControlBlock = nullptr;
         }
 
-        [[nodiscard]] SharedHandle<t_Container, T> lock(void) const
+        [[nodiscard]] SharedHandle<t_Container> lock(void) const
         {
             if (this->expired())
                 return nullptr;
 
-            return SharedHandle<t_Container, T>(m_ControlBlock);
+            return SharedHandle<t_Container>(m_ControlBlock);
         }
 
         [[nodiscard]] bool expired(void) const
@@ -528,40 +450,10 @@ namespace Na {
         [[nodiscard]] u64 strong_count(void) const { return m_ControlBlock ? m_ControlBlock->strong_count.load() : 0; }
         [[nodiscard]] u64 weak_count(void) const { return m_ControlBlock ? m_ControlBlock->weak_count.load() : 0; }
 
-        template<typename U> requires std::is_base_of_v<U, T>
-        operator WeakHandle<t_Container, U>(void) const
-        {
-            return WeakHandle<t_Container, U>(m_ControlBlock);
-        }
-
         [[nodiscard]] operator bool(void) const { return m_ControlBlock; }
     private:
         ControlBlock* m_ControlBlock = nullptr;
-
-        template<typename To, typename C, typename From>
-        friend WeakHandle<C, To> dynamic_handle_cast(const WeakHandle<C, From>&);
     };
-
-    template<typename To, typename t_Container, typename From>
-    WeakHandle<t_Container, To> dynamic_handle_cast(const WeakHandle<t_Container, From>& handle)
-    {
-        if (!handle)
-            return nullptr;
-
-        auto locked = handle.lock();
-
-        using FromPtr = decltype(locked.ptr());
-        using ToPtr = std::conditional_t<
-            std::is_const_v<std::remove_pointer_t<FromPtr>>,
-            const To*,
-            To*
-        >;
-
-        if (auto casted = dynamic_cast<ToPtr>(locked.ptr()))
-            return WeakHandle<t_Container, To>(handle.m_ControlBlock);
-
-        return nullptr;
-    }
 } // namespace Na
 
 #endif // NA_HANDLES_HPP

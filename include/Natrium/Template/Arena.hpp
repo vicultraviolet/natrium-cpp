@@ -10,17 +10,10 @@ namespace Na {
     public:
         using T_t = T;
 
-        template<typename U = T>
-        using ViewHandle = Na::ViewHandle<Arena<T, t_Allocator>, U>;
-
-        template<typename U = T>
-        using UniqueHandle = Na::UniqueHandle<Arena<T, t_Allocator>, U>;
-
-        template<typename U = T>
-        using SharedHandle = Na::SharedHandle<Arena<T, t_Allocator>, U>;
-
-        template<typename U = T>
-        using WeakHandle = Na::WeakHandle<Arena<T, t_Allocator>, U>;
+        using ViewHandle   = Na::ViewHandle  <Arena<T, t_Allocator>>;
+        using UniqueHandle = Na::UniqueHandle<Arena<T, t_Allocator>>;
+        using SharedHandle = Na::SharedHandle<Arena<T, t_Allocator>>;
+        using WeakHandle   = Na::WeakHandle  <Arena<T, t_Allocator>>;
 
         Arena(void) = default;
         ~Arena(void) { this->destroy(); }
@@ -119,21 +112,21 @@ namespace Na {
         }
 
         template<typename... t_Args>
-        [[nodiscard]] ViewHandle<T> make_view(t_Args&&... args)
+        [[nodiscard]] ViewHandle make_view(t_Args&&... args)
         {
-            return ViewHandle<T>(static_cast<Arena<T, t_Allocator>*>(this), this->emplace(std::forward<t_Args>(args)...));
+            return ViewHandle(this, this->emplace(std::forward<t_Args>(args)...));
         }
 
         template<typename... t_Args>
-        [[nodiscard]] UniqueHandle<T> make_unique(t_Args&&... args)
+        [[nodiscard]] UniqueHandle make_unique(t_Args&&... args)
         {
-            return UniqueHandle<T>(static_cast<Arena<T, t_Allocator>*>(this), this->emplace(std::forward<t_Args>(args)...));
+            return UniqueHandle(this, this->emplace(std::forward<t_Args>(args)...));
         }
 
         template<typename... t_Args>
-        [[nodiscard]] SharedHandle<T> make_shared(t_Args&&... args)
+        [[nodiscard]] SharedHandle make_shared(t_Args&&... args)
         {
-            return SharedHandle<T>(static_cast<Arena<T, t_Allocator>*>(this), this->emplace(std::forward<t_Args>(args)...));
+            return SharedHandle(this, this->emplace(std::forward<t_Args>(args)...));
         }
 
         void reallocate(u64 new_capacity)
