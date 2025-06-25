@@ -92,6 +92,9 @@ namespace Na {
 		T* m_Ptr = nullptr;
 	};
 
+	template<typename T>
+	using ConstUniqueRef = UniqueRef<const T>;
+
 	template<typename To, typename From>
 	UniqueRef<To> static_ref_cast(UniqueRef<From>&& from)
 	{
@@ -263,7 +266,13 @@ namespace Na {
 	};
 	
 	template<typename T>
+	using ConstRef = Ref<const T>;
+
+	template<typename T>
 	using SharedRef = Ref<T>;
+
+	template<typename T>
+	using ConstSharedRef = SharedRef<const T>;
 
 	template<typename To, typename From>
 	Ref<To> static_ref_cast(const Ref<From>& from)
@@ -398,6 +407,9 @@ namespace Na {
 		ControlBlock* m_ControlBlock = nullptr;
 	};
 
+	template<typename T>
+	using ConstWeakRef = WeakRef<const T>;
+
 	template<typename To, typename From>
 	WeakRef<To> static_ref_cast(const WeakRef<From>& from)
 	{
@@ -523,6 +535,15 @@ namespace Na {
 
 		T* m_Ptr = nullptr;
 	};
+
+	template<typename T>
+	using ConstViewRef = ViewRef<const T>;
+
+	template<typename T>
+	using View = ViewRef<T>;
+
+	template<typename T>
+	using ConstView = View<const T>;
 
 	template<typename To, typename From>
 	ViewRef<To> static_ref_cast(const ViewRef<From>& from)
