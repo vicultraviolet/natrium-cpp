@@ -6,14 +6,14 @@
 namespace Na {
 	inline constexpr bool k_ValidationLayersEnabled = k_BuildConfig != BuildConfig::Distribution;
 
-	enum class RendererAPI : u8 {
+	enum class DeviceBackend : u8 {
 		None = 0,
 		// WebGPU,
 		Vulkan
 	};
 
 	struct DeviceInitInfo {
-		RendererAPI api;
+		DeviceBackend backend;
 	};
 
 	class DeviceLimits {
@@ -33,20 +33,20 @@ namespace Na {
 		Device(void) = default;
 		~Device(void) { if (m_Valid) Device::Shutdown(); }
 
-		Device(const DeviceInitInfo& info) : m_Valid(true) { Device::Initialize(info); }
+		explicit Device(const DeviceInitInfo& info) : m_Valid(true) { Device::Initialize(info); }
 
 		Device(const Device& other) = delete;
 		Device& operator=(const Device& other) = delete;
 
-		Device(Device&& other) = default;
-		Device& operator=(Device&& other) = default;
+		Device(Device&& other) : m_Valid(std::exchange(other.m_Valid, false)) {}
+		Device& operator=(Device&& other) { m_Valid = std::exchange(other.m_Valid, false); return *this; }
 
 		[[nodiscard]] static inline Device Get(void) { return Device(); }
 
 		void wait_all(void) const;
 
 		[[nodiscard]] bool initialized(void) const;
-		[[nodiscard]] RendererAPI api(void) const;
+		[[nodiscard]] DeviceBackend backend(void) const;
 	private:
 		static void _CreateInstance(void);
 		static void _CreateDebugMessenger(void);

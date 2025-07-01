@@ -44,6 +44,8 @@
 
 #include <nlohmann/json.hpp>
 
+#include <uuid.h>
+
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #define GLM_ENABLE_EXPERIMENTAL
 

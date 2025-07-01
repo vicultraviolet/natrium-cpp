@@ -2,17 +2,6 @@
 #include "Natrium/Math/Camera3dData.hpp"
 
 namespace Na {
-	static PushConstantSpecs pushConstantSpecs{
-		.shader_stage = ShaderStage::Vertex,
-		.size = sizeof(glm::mat4) * 2,
-		.offset = 0
-	};
-
-	[[nodiscard]] const PushConstantSpecs& Camera3dData::PushConstantSpecs(void)
-	{
-		return pushConstantSpecs;
-	}
-
 	Camera3dData::Camera3dData(
 		const glm::vec3& pos,
 		const glm::vec3& eye,

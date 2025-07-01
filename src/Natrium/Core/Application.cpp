@@ -4,29 +4,25 @@
 #include "Natrium/Core/DeltaTime.hpp"
 
 namespace Na {
-	Application::Application(
-		u32 window_width,
-		u32 window_height,
-		const std::string_view& window_title,
-		const std::filesystem::path& engine_asset_dir,
-		const std::filesystem::path& shader_output_dir,
-		const std::string& renderer_settings_path
-	)
+	Application::Application(const ApplicationSettings& settings)
 	{
 		NA_VERIFY(!Application::s_Application, "Failed to create Application: Cannot create more than one Application instance!");
 		Application::s_Application = this;
 
-		m_AssetRegistry = AssetRegistry(engine_asset_dir, shader_output_dir);
+		m_AssetManager = AssetManager(settings.engine_assets_directory, settings.shader_output_directory);
 
-		auto renderer_settings = m_AssetRegistry.load_renderer_settings(renderer_settings_path);
+		auto renderer_settings = m_AssetManager.load_asset<RendererSettingsAsset>(settings.renderer_settings_path.data());
 		renderer_settings->set_max_anisotropy(Device::Limits::Anisotropy());
 
-		m_Window = Window(window_width, window_height, window_title);
-		m_Renderer = Renderer(m_Window, renderer_settings);
+		m_Window = Window(settings.window_width, settings.window_height, settings.window_title);
+		m_Renderer = Graphics::Renderer::Make(m_Window, renderer_settings);
 	}
 
 	void Application::destroy(void)
 	{
+		if (!Application::s_Application)
+			return;
+
 		Device::Get().wait_all();
 
 		m_LayerManager.detach_all();
@@ -35,17 +31,15 @@ namespace Na {
 		m_Window.destroy();
 
 		m_LayerManager.destroy();
-		m_AssetRegistry.destroy();
+		m_AssetManager.destroy();
 
-		s_Application = nullptr;
+		Application::s_Application = nullptr;
 	}
 
 	void Application::run(void)
 	{
 		Na::DeltaTime dt;
-
-		this->running = true;
-		while (this->running)
+		while ((this->running = true))
 		{
 			//g_Logger.printf(Na::Trace, "average fps: {}", (u32)(1.0 / dt));
 
@@ -82,7 +76,7 @@ namespace Na {
 			if (m_Window.minimized())
 				continue;
 
-			if (!m_Renderer.begin_frame())
+			if (!m_Renderer->begin_frame())
 				continue;
 
 			for (Na::LayerHandle<>& layer : m_LayerManager)
@@ -110,7 +104,7 @@ namespace Na {
 			} 
 		#endif // NA_DISABLE_IMGUI
 
-			m_Renderer.end_frame();
+			m_Renderer->end_frame();
 		}
 	}
 
@@ -118,29 +112,5 @@ namespace Na {
 	{
 		m_LayerManager.attach_layer(layer);
 		m_ImGuiLayer = layer;
-	}
-
-	Application::Application(Application&& other) noexcept
-	: running(std::exchange(other.running, false)),
-	m_AssetRegistry(std::move(other.m_AssetRegistry)),
-	m_LayerManager(std::move(other.m_LayerManager)),
-	m_Window(std::move(other.m_Window)),
-	m_Renderer(std::move(other.m_Renderer)) 
-	{
-		Application::s_Application = this;
-	}
-
-	Application& Application::operator=(Application&& other) noexcept
-	{
-		this->destroy();
-
-		running = std::exchange(other.running, false);
-		m_AssetRegistry = std::move(other.m_AssetRegistry);
-		m_LayerManager = std::move(other.m_LayerManager);
-		m_Window = std::move(other.m_Window);
-		m_Renderer = std::move(other.m_Renderer);
-
-		Application::s_Application = this;
-		return *this;
 	}
 } // namespace Na

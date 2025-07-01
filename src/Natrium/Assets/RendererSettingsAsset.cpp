@@ -12,16 +12,13 @@
 #endif
 
 namespace Na {
-	AssetHandle<RendererSettingsAsset> RendererSettingsAsset::Load(const std::filesystem::path& path)
+	void RendererSettingsAsset::load(const std::filesystem::path& path)
 	{
 		std::ifstream file(path);
-		NA_ASSERT(file, "Failed to Load RendererSettingsAsset: Error in loading {}!", path.C_STR());
+		NA_ASSERT(file, "Failed to Load RendererSettingsAsset: Could not open {}!", path.C_STR());
 
-		AssetHandle<RendererSettingsAsset> asset = Ref<RendererSettingsAsset>::Make(nlohmann::json::parse(file));
-
-		asset->m_Path = path;
-
-		return asset;
+		m_Path = path;
+		m_Json = nlohmann::json::parse(file);
 	}
 
 	void RendererSettingsAsset::set_all(const RendererSettingsAsset& other)

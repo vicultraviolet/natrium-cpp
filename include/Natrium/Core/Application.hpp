@@ -4,33 +4,32 @@
 #include "Natrium/Core/Context.hpp"
 #include "Natrium/Core/Window.hpp"
 #include "Natrium/Layers/LayerManager.hpp"
-#include "Natrium/Assets/AssetRegistry.hpp"
-#include "Natrium/Graphics/Renderer/Renderer.hpp"
+#include "Natrium/Assets/AssetManager.hpp"
+#include "Natrium/Graphics/Renderer.hpp"
 #include "Natrium/Layers/ImGuiLayer.hpp"
 
 namespace Na {
+	struct ApplicationSettings {
+		u32 window_width = 1280;
+		u32 window_height = 720;
+		std::string_view window_title = "Natrium Application";
+		std::filesystem::path engine_assets_directory = "assets/engine";
+		std::filesystem::path shader_output_directory = "bin/shaders";
+		std::string_view renderer_settings_path = "renderer_settings.json";
+	};
+
 	class Application {
 	public:
 		bool running = false;
 
 		Application(void) = default;
-		Application(
-			u32 window_width,
-			u32 window_height,
-			const std::string_view& window_title,
-			const std::filesystem::path& engine_asset_dir,
-			const std::filesystem::path& shader_output_dir,
-			const std::string& renderer_settings_path
-		);
-		~Application(void) { this->destroy(); }
+		explicit Application(const ApplicationSettings& settings);
 
+		~Application(void) { this->destroy(); }
 		void destroy(void);
 
 		Application(const Application& other) = delete;
 		Application& operator=(const Application& other) = delete;
-
-		Application(Application&& other) noexcept;
-		Application& operator=(Application&& other) noexcept;
 
 		void run(void);
 
@@ -50,8 +49,8 @@ namespace Na {
 		[[nodiscard]] static inline Application& Get(void) { return *s_Application; }
 		[[nodiscard]] static inline bool Exists(void) { return s_Application; }
 
-		[[nodiscard]] inline AssetRegistry& asset_registry(void) { return m_AssetRegistry; }
-		[[nodiscard]] inline const AssetRegistry& asset_registry(void) const { return m_AssetRegistry; }
+		[[nodiscard]] inline AssetManager& asset_manager(void) { return m_AssetManager; }
+		[[nodiscard]] inline const AssetManager& asset_manager(void) const { return m_AssetManager; }
 
 		[[nodiscard]] inline LayerManager& layer_manager(void) { return m_LayerManager; }
 		[[nodiscard]] inline const LayerManager& layer_manager(void) const { return m_LayerManager; }
@@ -59,18 +58,18 @@ namespace Na {
 		[[nodiscard]] inline Window& window(void) { return m_Window; }
 		[[nodiscard]] inline const Window& window(void) const { return m_Window; }
 
-		[[nodiscard]] inline Renderer& renderer(void) { return m_Renderer; }
-		[[nodiscard]] inline const Renderer& renderer(void) const { return m_Renderer; }
+		[[nodiscard]] inline View<Graphics::Renderer> renderer(void) { return m_Renderer; }
+		[[nodiscard]] inline View<const Graphics::Renderer> renderer(void) const { return m_Renderer; }
 
 		[[nodiscard]] inline WeakLayerHandle<ImGuiLayer> imgui_layer(void) const { return m_ImGuiLayer; }
 
 		[[nodiscard]] inline u64 average_fps(void) const { return m_AverageFPS; }
 	private:
-		AssetRegistry m_AssetRegistry;
+		AssetManager m_AssetManager;
 		LayerManager m_LayerManager;
 
 		Window m_Window;
-		Renderer m_Renderer;
+		UniqueRef<Graphics::Renderer> m_Renderer;
 
 		WeakLayerHandle<ImGuiLayer> m_ImGuiLayer;
 

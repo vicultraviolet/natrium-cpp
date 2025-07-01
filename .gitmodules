@@ -13,3 +13,6 @@
 [submodule "dependencies/imgui"]
 	path = dependencies/imgui
 	url = https://github.com/ocornut/imgui.git
+[submodule "dependencies/stduuid"]
+	path = dependencies/stduuid
+	url = https://github.com/mariusbancila/stduuid.git

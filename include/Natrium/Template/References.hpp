@@ -458,15 +458,39 @@ namespace Na {
 			return *this;
 		}
 
-		template<typename t_Ref>
-		ViewRef(t_Ref& ref)
-		: ViewRef(ref ? ref.ptr() : nullptr)
+		template<typename U, std::enable_if_t<std::is_convertible_v<U*, T*>, int> = 0>
+		ViewRef(const UniqueRef<U>& ref)
+		: m_Ptr((T*)ref.ptr())
 		{}
 
-		template<typename t_Ref>
-		ViewRef& operator=(t_Ref& ref)
+		template<typename U, std::enable_if_t<std::is_convertible_v<U*, T*>, int> = 0>
+		ViewRef(const Ref<U>& ref)
+		: m_Ptr(ref ? (T*)ref.ptr() : nullptr)
+		{}
+
+		template<typename U, std::enable_if_t<std::is_convertible_v<U*, T*>, int> = 0>
+		ViewRef(const WeakRef<U>& ref)
+		: m_Ptr(ref ? (T*)ref.lock().ptr() : nullptr)
+		{}
+
+		template<typename U, std::enable_if_t<std::is_convertible_v<U*, T*>, int> = 0>
+		ViewRef& operator=(const UniqueRef<U>& ref)
 		{
-			m_Ptr = ref ? ref.ptr() : nullptr;
+			m_Ptr = (T*)ref.ptr();
+			return *this;
+		}
+
+		template<typename U, std::enable_if_t<std::is_convertible_v<U*, T*>, int> = 0>
+		ViewRef& operator=(const Ref<U>& ref)
+		{
+			m_Ptr = ref ? (T*)ref.ptr() : nullptr;
+			return *this;
+		}
+
+		template<typename U, std::enable_if_t<std::is_convertible_v<U*, T*>, int> = 0>
+		ViewRef& operator=(const WeakRef<U>& ref)
+		{
+			m_Ptr = ref ? (T*)ref.lock().ptr() : nullptr;
 			return *this;
 		}
 

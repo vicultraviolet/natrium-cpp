@@ -1,33 +1,23 @@
 #if !defined(NA_ASSET_HPP)
 #define NA_ASSET_HPP
 
-#include "Natrium/Core.hpp"
+#include "Natrium/Core/UUID.hpp"
 
 namespace Na {
 	class Asset {
 	public:
 		Asset(void) = default;
+		Asset(const UUID_t& uuid) : m_UUID(uuid) {}
+
 		virtual ~Asset(void) = default;
 
-		[[nodiscard]] virtual inline operator bool(void) const = 0;
+		virtual void load(const std::filesystem::path& path) {}
+
+		[[nodiscard]] const UUID_t& uuid(void) const { return m_UUID; }
+		[[nodiscard]] virtual operator bool(void) const = 0;
+	private:
+		UUID_t m_UUID;
 	};
-
-	template<typename t_Asset = Asset>
-	using AssetHandle = Ref<t_Asset>;
-
-	template<typename t_Asset = Asset>
-	using WeakAssetHandle = WeakRef<t_Asset>;
-
-	template<typename T>
-	concept DerivedAsset = std::is_base_of<Asset, T>::value && !std::is_same<Asset, T>::value;
-
-	template<typename T>
-	concept LoadableAsset =
-		DerivedAsset<T> &&
-		requires(const std::filesystem::path& path)
-		{
-			{ T::Load(path) } -> std::same_as<AssetHandle<T>>;
-		};
 } // namespace Na
 
 #endif // NA_ASSET_HPP

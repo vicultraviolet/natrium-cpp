@@ -2,13 +2,14 @@
 #define NA_CAMERA3D_DATA_HPP
 
 #include "Natrium/Core.hpp"
-#include "Natrium/Graphics/Pipeline.hpp"
 
 namespace Na {
 	struct CameraMatrices {
 		glm::mat4 view{ 1.0f };
 		glm::mat4 proj{ 1.0f };
-	};;
+
+		[[nodiscard]] constexpr inline u64 size(void) const { return sizeof(glm::mat4) * 2; }
+	};
 
 	class Camera3dData {
 	public:
@@ -24,8 +25,6 @@ namespace Na {
 		);
 
 		~Camera3dData(void) = default;
-
-		[[nodiscard]] static const PushConstantSpecs& PushConstantSpecs(void);
 
 		// vector is right, up, forward
 		void move(const glm::vec3& amount);

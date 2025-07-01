@@ -3,14 +3,6 @@
 
 #include <tiny_obj_loader/tiny_obj_loader.h>
 
-#if defined(NA_PLATFORM_WINDOWS)
-#define C_STR string().c_str
-#elif defined(NA_PLATFORM_LINUX)
-#define C_STR c_str
-#else
-#define C_STR c_str
-#endif
-
 namespace Na {
     static void loadObj(const std::filesystem::path& path, Na::ArrayList<Vertex>& vertices, Na::ArrayList<u32>& indices)
     {
@@ -19,8 +11,8 @@ namespace Na {
         std::vector<tinyobj::material_t> materials;
         std::string warn, err;
 
-        bool result = tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, path.C_STR());
-        NA_ASSERT(result, "Failed to load {}: {} {}", path.C_STR(), warn, err);
+        bool result = tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, path.string().c_str());
+        NA_ASSERT(result, "Failed to load {}: {} {}", path.string().c_str(), warn, err);
 
         u64 index_count = 0;
         for (const auto& shape : shapes)
@@ -57,37 +49,17 @@ namespace Na {
         }
     }
 
-	AssetHandle<ModelAsset> ModelAsset::Load(const std::filesystem::path& path)
-	{
-        AssetHandle<ModelAsset> asset = Ref<ModelAsset>::Make();
-
-        if (path.extension() == ".obj")
-            loadObj(path, asset->m_Vertices, asset->m_Indices);
-        else
-            throw std::runtime_error(NA_FORMAT("{} is an unknown or unsupported 3d model file format!", path.extension().C_STR()));
-
-        return asset;
-	}
-
-    static ShaderAttributeLayout shader_layout{
-        Na::ShaderAttributeBinding{
-            .binding = 0,
-            .input_rate = Na::ShaderAttributeInputRate::Vertex,
-            .attributes = {
-                Na::ShaderAttribute{
-                    .location = 0,
-                    .type = Na::ShaderAttributeType::Vec3
-                },
-                Na::ShaderAttribute{
-                    .location = 1,
-                    .type = Na::ShaderAttributeType::Vec2
-                }
-            }
-        }
-    };
-    const ShaderAttributeLayout& ModelAsset::ShaderLayout(void) 
+    void ModelAsset::load(const std::filesystem::path& path)
     {
-        return shader_layout;
-	}
+		loadObj(path, m_Vertices, m_Indices);
+    }
 
+    static const Graphics::VertexAttributes vertexAttributes = {
+        Graphics::VertexAttribute(Graphics::VertexAttributeType::Vec3),
+        Graphics::VertexAttribute(Graphics::VertexAttributeType::Vec2)
+    };
+    const Graphics::VertexAttributes& ModelAsset::VertexAttributes(void)
+    {
+        return vertexAttributes;
+    }
 } // namespace Na

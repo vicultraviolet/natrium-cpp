@@ -6,10 +6,12 @@
 namespace Na {
 	class RendererSettingsAsset : public Asset {
 	public:
-		RendererSettingsAsset(const nlohmann::json& json) : m_Json(json) {}
-		~RendererSettingsAsset(void) override = default;
+		RendererSettingsAsset(void) = default;
+		RendererSettingsAsset(const UUID_t& uuid) : Asset(uuid) {}
 
-		static AssetHandle<RendererSettingsAsset> Load(const std::filesystem::path& path);
+		~RendererSettingsAsset(void) = default;
+
+		void load(const std::filesystem::path& path) override;
 
 		void set_all(const RendererSettingsAsset& other);
 
@@ -30,7 +32,6 @@ namespace Na {
 		nlohmann::json m_Json;
 		std::filesystem::path m_Path;
 	};
-	using RendererSettings = RendererSettingsAsset;
 } // namespace Na
 
 #endif // NA_RENDERER_SETTINGS_ASSET_HPP

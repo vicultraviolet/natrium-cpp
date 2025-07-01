@@ -6,6 +6,8 @@
 #include "Natrium/Graphics/Device.hpp"
 #include "Internal.hpp"
 
+#include "Natrium/Graphics/VulkanImpl/vRenderer.hpp"
+
 namespace Na {
     static ImGuiKey translateToImGuiKey(Key key)
     {
@@ -143,11 +145,13 @@ namespace Na {
         return ImGuiKey_None;
     }
 
-	ImGuiLayer::ImGuiLayer(const Renderer& renderer, i64 priority, bool demo_window_shown)
+	ImGuiLayer::ImGuiLayer(View<const Graphics::Renderer> _renderer, i64 priority, bool demo_window_shown)
 	: Layer(priority),
-    m_Renderer(&renderer),
+    m_Renderer(_renderer),
     m_DemoWindowShown(demo_window_shown)
 	{
+		auto renderer = static_ref_cast<const VulkanImpl::Renderer>(_renderer);
+
         vk::DescriptorPoolSize pool_size;
         pool_size.type = vk::DescriptorType::eCombinedImageSampler;
         pool_size.descriptorCount = IMGUI_IMPL_VULKAN_MINIMUM_IMAGE_SAMPLER_POOL_SIZE;
@@ -169,7 +173,7 @@ namespace Na {
 
         ImGui::StyleColorsDark();
 
-        ImGui_ImplGlfw_InitForVulkan(renderer.core().window().native(), false);
+        ImGui_ImplGlfw_InitForVulkan(renderer->window().window().native(), false);
 
         ImGui_ImplVulkan_InitInfo init_info{};
 		init_info.ApiVersion = VK_API_VERSION_1_0; 
@@ -180,11 +184,11 @@ namespace Na {
         init_info.Queue = Internal::g_DeviceData.graphics_queue;
         init_info.PipelineCache = nullptr;
         init_info.DescriptorPool = m_DescriptorPool;
-        init_info.RenderPass = renderer.core().render_pass();
+        init_info.RenderPass = renderer->window().render_pass();
         init_info.Subpass = 0;
         init_info.MinImageCount = 2;
-        init_info.ImageCount = (u32)renderer.core().images().size();
-        init_info.MSAASamples = (VkSampleCountFlagBits)Device::Limits::MSAASampleCount(renderer.core().settings()->multisampling_enabled());
+        init_info.ImageCount = (u32)renderer->window().images().size();
+        init_info.MSAASamples = (VkSampleCountFlagBits)Device::Limits::MSAASampleCount(renderer->window().settings()->multisampling_enabled());
         init_info.Allocator = nullptr;
         init_info.CheckVkResultFn = nullptr;
         ImGui_ImplVulkan_Init(&init_info);
@@ -205,8 +209,10 @@ namespace Na {
 
     void ImGuiLayer::begin(void)
     {
+        auto renderer = static_ref_cast<const VulkanImpl::Renderer>(m_Renderer);
+
         ImGuiIO& io = ImGui::GetIO();
-        const Window& window = m_Renderer->core().window();
+        const Window& window = renderer->window().window();
 
         ImGui_ImplVulkan_NewFrame();
         ImGui_ImplGlfw_NewFrame();
@@ -234,9 +240,11 @@ namespace Na {
 
     void ImGuiLayer::end(void) const
     {
+        auto renderer = static_ref_cast<const VulkanImpl::Renderer>(m_Renderer);
+
         ImGui::Render();
 		ImDrawData* draw_data = ImGui::GetDrawData();
-        ImGui_ImplVulkan_RenderDrawData(draw_data, m_Renderer->current_frame().cmd_buffer);
+        ImGui_ImplVulkan_RenderDrawData(draw_data, renderer->current_frame().cmd_buffer);
 	}
 
     void ImGuiLayer::on_event(Event& e)

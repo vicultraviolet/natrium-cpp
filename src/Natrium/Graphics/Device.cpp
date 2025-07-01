@@ -164,14 +164,14 @@ namespace Na {
 		return properties.limits.maxImageDimension2D;
 	}
 
-	static RendererAPI rendererAPI{};
+	static DeviceBackend deviceBackend{};
 
 	void Device::Initialize(const DeviceInitInfo& info)
 	{
 		if (Internal::g_DeviceData)
 			Device::Shutdown();
 
-		rendererAPI = info.api;
+		deviceBackend = info.backend;
 
 		Na::ArrayList<const char*> device_extensions = {
 			VK_KHR_SWAPCHAIN_EXTENSION_NAME,
@@ -227,7 +227,7 @@ namespace Na {
 			data.instance = nullptr;
 		}
 
-		rendererAPI = RendererAPI::None;
+		deviceBackend = DeviceBackend::None;
 	}
 
 	bool Device::initialized(void) const
@@ -235,9 +235,9 @@ namespace Na {
 		return Internal::g_DeviceData;
 	}
 
-	RendererAPI Device::api(void) const
+	DeviceBackend Device::backend(void) const
 	{
-		return rendererAPI;
+		return deviceBackend;
 	}
 
 	void Device::wait_all(void) const
