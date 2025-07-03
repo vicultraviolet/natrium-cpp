@@ -56,6 +56,7 @@ namespace Na::Graphics {
 			const void* data
 		) const = 0;
 
+		[[nodiscard]] virtual const Window& window(void) const = 0;
 		[[nodiscard]] virtual Ref<const RendererSettingsAsset> settings(void) const = 0;
 		[[nodiscard]] virtual operator bool(void) const = 0;
 	};

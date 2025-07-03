@@ -46,8 +46,16 @@ namespace Na {
 			return layer;
 		}
 
-		[[nodiscard]] static inline Application& Get(void) { return *s_Application; }
-		[[nodiscard]] static inline bool Exists(void) { return s_Application; }
+		template<typename... t_Args>
+		LayerHandle<ImGuiLayer> create_imgui_layer(t_Args&&... __args)
+		{
+			LayerHandle<ImGuiLayer> layer = ImGuiLayer::Make(std::forward<t_Args>(__args)...);
+			this->attach_layer(layer);
+			return layer;
+		}
+
+		[[nodiscard]] static inline Application& Get(void) { return *Application::s_Application; }
+		[[nodiscard]] static inline bool Exists(void) { return Application::s_Application; }
 
 		[[nodiscard]] inline AssetManager& asset_manager(void) { return m_AssetManager; }
 		[[nodiscard]] inline const AssetManager& asset_manager(void) const { return m_AssetManager; }

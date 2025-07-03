@@ -91,6 +91,8 @@ namespace Na {
 				return UniqueRef<VulkanImpl::Shader>::Make(spv, stage, entry_point);
 			}
 		}
+
+		return nullptr;
 	}
 
 	Ref<RendererSettingsAsset> AssetManager::load_asset(

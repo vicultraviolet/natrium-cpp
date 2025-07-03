@@ -64,10 +64,11 @@ namespace Na::VulkanImpl {
 			const void* data
 		) const override;
 
+		[[nodiscard]] inline const Window& window(void) const override { return m_Window.window(); }
 		[[nodiscard]] inline Ref<const RendererSettingsAsset> settings(void) const override { return m_Window.settings(); }
 
-		[[nodiscard]] inline RendererWindow& window(void) { return m_Window; }
-		[[nodiscard]] inline const RendererWindow& window(void) const { return m_Window; }
+		[[nodiscard]] inline RendererWindow& window_data(void) { return m_Window; }
+		[[nodiscard]] inline const RendererWindow& window_data(void) const { return m_Window; }
 
 		[[nodiscard]] inline FrameData& current_frame(void) { return m_Frames[m_FrameIndex]; }
 		[[nodiscard]] inline const FrameData& current_frame(void) const { return m_Frames[m_FrameIndex]; }

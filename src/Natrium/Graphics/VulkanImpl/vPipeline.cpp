@@ -135,12 +135,12 @@ namespace Na::VulkanImpl {
 	}
 
 	Pipeline::Pipeline(
-		View<const Graphics::Renderer> renderer,
+		View<const Graphics::Renderer> _renderer,
 		const Graphics::VertexAttributes& vertex_shader_layout,
 		const Shaders& shaders
 	)
 	{
-		auto vk_renderer = static_ref_cast<const VulkanImpl::Renderer>(renderer);
+		auto renderer = static_ref_cast<const VulkanImpl::Renderer>(_renderer);
 
 		const Na::ArrayList<vk::DynamicState> dynamic_states = {
 			vk::DynamicState::eViewport,
@@ -232,7 +232,7 @@ namespace Na::VulkanImpl {
 		create_info.stageCount = (u32)shader_infos.size();
 		create_info.pStages = shader_infos.ptr();
 
-		create_info.renderPass = vk_renderer->window().render_pass();
+		create_info.renderPass = renderer->window_data().render_pass();
 		create_info.layout = m_Layout;
 
 		create_info.pDynamicState = &dynamic_state_info;
