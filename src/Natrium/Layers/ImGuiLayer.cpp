@@ -150,9 +150,10 @@ namespace Na {
 		bool demo_window_shown
 	)
 	{
-		switch (Device::Get().backend())
+		switch (Graphics::Device::Get()->backend())
 		{
-		case DeviceBackend::Vulkan: return UniqueRef<VulkanImpl::ImGuiLayer>::Make(renderer, priority, demo_window_shown);
+        case Graphics::DeviceBackend::Vulkan:
+            return UniqueRef<VulkanImpl::ImGuiLayer>::Make(renderer, priority, demo_window_shown);
 		}
         return nullptr;
 	}

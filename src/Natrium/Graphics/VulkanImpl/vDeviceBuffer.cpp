@@ -2,11 +2,12 @@
 #include "Natrium/Graphics/VulkanImpl/vDeviceBuffer.hpp"
 
 #include "Internal.hpp"
+#include "Natrium/Graphics/VulkanImpl/vDevice.hpp"
 
 namespace Na::VulkanImpl {
 	u32 FindMemoryType(u32 typeFilter, vk::MemoryPropertyFlags properties)
 	{
-		vk::PhysicalDeviceMemoryProperties memory_properties = Internal::g_DeviceData.physical_device.getMemoryProperties();
+		vk::PhysicalDeviceMemoryProperties memory_properties = Device::Get()->physical_device().getMemoryProperties();
 
 		for (u32 i = 0; i < memory_properties.memoryTypeCount; i++)
 			if ((typeFilter & (1 << i)) && (memory_properties.memoryTypes[i].propertyFlags & properties) == properties)
@@ -23,7 +24,7 @@ namespace Na::VulkanImpl {
 	)
 	: size(size)
 	{
-		vk::Device logical_device = Internal::g_DeviceData.logical_device;
+		const auto& logical_device = Device::Get()->logical_device();
 
 		vk::BufferCreateInfo buffer_info;
 		buffer_info.size = size;
@@ -44,7 +45,7 @@ namespace Na::VulkanImpl {
 
 	void DeviceBuffer::destroy(void)
 	{
-		vk::Device logical_device = Internal::g_DeviceData.logical_device;
+		const auto& logical_device = Device::Get()->logical_device();
 
 		this->size = 0;
 
@@ -77,7 +78,7 @@ namespace Na::VulkanImpl {
 
 	DeviceBuffer& DeviceBuffer::operator=(DeviceBuffer&& other)
 	{
-		vk::Device logical_device = Internal::g_DeviceData.logical_device;
+		const auto& logical_device = Device::Get()->logical_device();
 
 		logical_device.destroyBuffer(this->buffer);
 		logical_device.freeMemory(this->memory);

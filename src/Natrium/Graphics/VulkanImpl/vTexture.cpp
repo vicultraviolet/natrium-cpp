@@ -3,6 +3,7 @@
 
 #include "Natrium/Graphics/VulkanImpl/vDeviceBuffer.hpp"
 #include "Internal.hpp"
+#include "Natrium/Graphics/VulkanImpl/vDevice.hpp"
 
 namespace Na::VulkanImpl {
 	Texture::Texture(
@@ -13,7 +14,7 @@ namespace Na::VulkanImpl {
 	{
 		NA_ASSERT(imgs, "Failed to create TextureArray: imgs is null!");
 		NA_ASSERT(count, "Failed to create TextureArray: count is 0!");
-		NA_ASSERT(count <= Internal::g_DeviceData.physical_device.getProperties().limits.maxImageArrayLayers,
+		NA_ASSERT(count <= Device::Get()->physical_device().getProperties().limits.maxImageArrayLayers,
 				  "Failed to create TextureArray: image count exceeded gpu limit!");
 
 		const Ref<const ImageAsset>& first_img = imgs[0];
@@ -30,7 +31,7 @@ namespace Na::VulkanImpl {
 		}
 	}
 
-		vk::Device logical_device = Internal::g_DeviceData.logical_device;
+		const auto& logical_device = Device::Get()->logical_device();
 
 		DeviceBuffer buffer(
 			first_img->size() * count,
@@ -80,7 +81,7 @@ namespace Na::VulkanImpl {
 		if (!m_Image)
 			return;
 
-		vk::Device logical_device = Internal::g_DeviceData.logical_device;
+		const auto& logical_device = Device::Get()->logical_device();
 
 		logical_device.destroySampler(m_Sampler);
 		m_Sampler = nullptr;

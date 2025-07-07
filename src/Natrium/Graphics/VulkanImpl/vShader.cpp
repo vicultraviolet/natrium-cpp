@@ -1,7 +1,8 @@
 #include "Pch.hpp"
 #include "Natrium/Graphics/VulkanImpl/vShader.hpp"
 
-#include "Internal.hpp"
+#include "Natrium/Graphics/VulkanImpl/vDevice.hpp"
+
 #include <shaderc/shaderc.hpp>
 
 namespace Na::VulkanImpl {
@@ -132,14 +133,14 @@ namespace Na::VulkanImpl {
 		create_info.codeSize = spv.size() * sizeof(u32);
 		create_info.pCode = spv.ptr();
 		
-		m_Module = Internal::g_DeviceData.logical_device.createShaderModule(create_info);
+		m_Module = Device::Get()->logical_device().createShaderModule(create_info);
 	}
 
 	void Shader::destroy(void) {
 		if (!m_Module)
 			return;
 
-		Internal::g_DeviceData.logical_device.destroyShaderModule(m_Module);
+		Device::Get()->logical_device().destroyShaderModule(m_Module);
 		m_Module = nullptr;
 	}
 

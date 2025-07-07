@@ -12,7 +12,7 @@ namespace Na {
 		m_AssetManager = AssetManager(settings.engine_assets_directory, settings.shader_output_directory);
 
 		auto renderer_settings = m_AssetManager.load_asset<RendererSettingsAsset>(settings.renderer_settings_path.data());
-		renderer_settings->set_max_anisotropy(Device::Limits::Anisotropy());
+		renderer_settings->set_max_anisotropy(Graphics::Device::Get()->limits()->max_anisotropy());
 
 		m_Window = Window(settings.window_width, settings.window_height, settings.window_title);
 		m_Renderer = Graphics::Renderer::Make(m_Window, renderer_settings);
@@ -23,7 +23,7 @@ namespace Na {
 		if (!Application::s_Application)
 			return;
 
-		Device::Get().wait_all();
+		Graphics::Device::Get()->wait_all();
 
 		m_LayerManager.detach_all();
 

@@ -7,7 +7,7 @@
 namespace Na::Graphics {
 	UniqueRef<VertexBuffer> VertexBuffer::Make(u64 size, const void* data)
 	{
-		switch (Device::Get().backend())
+		switch (Device::Get()->backend())
 		{
 		case DeviceBackend::Vulkan: return UniqueRef<VulkanImpl::VertexBuffer>::Make(size, data);
 		}
@@ -16,7 +16,7 @@ namespace Na::Graphics {
 
 	UniqueRef<IndexBuffer> IndexBuffer::Make(u32 count, const u32* data)
 	{
-		switch (Device::Get().backend())
+		switch (Device::Get()->backend())
 		{
 		case DeviceBackend::Vulkan: return UniqueRef<VulkanImpl::IndexBuffer>::Make(count, data);
 		}

@@ -1,7 +1,7 @@
 #include "Pch.hpp"
 #include "Natrium/Graphics/VulkanImpl/vVertexBuffer.hpp"
 
-#include "Internal.hpp"
+#include "Natrium/Graphics/VulkanImpl/vDevice.hpp"
 
 namespace Na::VulkanImpl {
 	VertexBuffer::VertexBuffer(u64 size, const void* data)
@@ -26,7 +26,7 @@ namespace Na::VulkanImpl {
 
 		NA_ASSERT(m_Buffer.size, "Failed to set VertexBuffer data: Buffer size must be greater than 0");
 
-		vk::Device logical_device = Internal::g_DeviceData.logical_device;
+		const auto& logical_device = Device::Get()->logical_device();
 
 		DeviceBuffer stage_buffer(
 			m_Buffer.size,

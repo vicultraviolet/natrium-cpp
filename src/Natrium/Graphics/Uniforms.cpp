@@ -8,7 +8,7 @@
 namespace Na::Graphics {
 	UniqueRef<UniformBuffer> UniformBuffer::Make(u64 size, Ref<const RendererSettingsAsset> renderer_settings)
 	{
-		switch (Device::Get().backend())
+		switch (Device::Get()->backend())
 		{
 		case DeviceBackend::Vulkan:
 			return UniqueRef<VulkanImpl::UniformBuffer>::Make(size, renderer_settings);
@@ -18,7 +18,7 @@ namespace Na::Graphics {
 
 	UniqueRef<StorageBuffer> StorageBuffer::Make(u64 size, Ref<const RendererSettingsAsset> renderer_settings)
 	{
-		switch (Device::Get().backend())
+		switch (Device::Get()->backend())
 		{
 		case DeviceBackend::Vulkan:
 			return UniqueRef<VulkanImpl::StorageBuffer>::Make(size, renderer_settings);
@@ -32,7 +32,7 @@ namespace Na::Graphics {
 		Ref<const RendererSettingsAsset> renderer_settings
 	)
 	{
-		switch (Device::Get().backend())
+		switch (Device::Get()->backend())
 		{
 		case DeviceBackend::Vulkan:
 			return UniqueRef<VulkanImpl::Texture>::Make(imgs, count, renderer_settings);

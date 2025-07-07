@@ -1,13 +1,13 @@
 #include "Pch.hpp"
 #include "Natrium/Graphics/VulkanImpl/vStorageBuffer.hpp"
 
-#include "Internal.hpp"
+#include "Natrium/Graphics/VulkanImpl/vDevice.hpp"
 
 namespace Na::VulkanImpl {
 	StorageBuffer::StorageBuffer(u64 size, Ref<const RendererSettingsAsset> renderer_settings)
 	: m_PerFrameSize(size)
 	{
-		const vk::DeviceSize alignment = Internal::g_DeviceData.physical_device.getProperties().limits.minUniformBufferOffsetAlignment;
+		const vk::DeviceSize alignment = Device::Get()->physical_device().getProperties().limits.minUniformBufferOffsetAlignment;
 
 		m_AlignedSize = (size + alignment - 1) & ~(alignment - 1);
 
@@ -17,7 +17,7 @@ namespace Na::VulkanImpl {
 			vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent
 		);
 
-		m_Mapped = Internal::g_DeviceData.logical_device.mapMemory(m_Buffer.memory, 0, size);
+		m_Mapped = Device::Get()->logical_device().mapMemory(m_Buffer.memory, 0, size);
 	}
 
 	void StorageBuffer::destroy(void)

@@ -1,6 +1,8 @@
 #include "Pch.hpp"
 #include "Natrium/Graphics/VulkanImpl/vPipeline.hpp"
 
+#include "Natrium/Graphics/VulkanImpl/vDevice.hpp"
+
 #include "./vPipelineStates.hpp"
 
 #include "Internal.hpp"
@@ -73,7 +75,7 @@ namespace Na::VulkanImpl {
 		create_info.bindingCount = (u32)binding_count;
 		create_info.pBindings = bindings.ptr();
 
-		return Internal::g_DeviceData.logical_device.createDescriptorSetLayout(create_info);
+		return Device::Get()->logical_device().createDescriptorSetLayout(create_info);
 	}
 
 	static vk::DescriptorPool createDescriptorPool(const Shaders& shaders)
@@ -101,7 +103,7 @@ namespace Na::VulkanImpl {
 		create_info.pPoolSizes = pool_sizes.ptr();
 		create_info.maxSets = 1;
 
-		return Internal::g_DeviceData.logical_device.createDescriptorPool(create_info);
+		return Device::Get()->logical_device().createDescriptorPool(create_info);
 	}
 
 	static vk::DescriptorSet createDescriptorSet(vk::DescriptorSetLayout layout, vk::DescriptorPool pool)
@@ -113,7 +115,7 @@ namespace Na::VulkanImpl {
 
 		vk::DescriptorSet descriptor_set;
 
-		vk::Result result = Internal::g_DeviceData.logical_device.allocateDescriptorSets(&alloc_info, &descriptor_set);
+		vk::Result result = Device::Get()->logical_device().allocateDescriptorSets(&alloc_info, &descriptor_set);
 		NA_VERIFY_VK(result, "Failed to allocate descriptor set!");
 
 		return descriptor_set;
@@ -128,7 +130,7 @@ namespace Na::VulkanImpl {
 
 		Na::ArrayList<vk::DescriptorSet> descriptor_sets((u64)count, (u64)count);
 
-		vk::Result result = Internal::g_DeviceData.logical_device.allocateDescriptorSets(&alloc_info, descriptor_sets.ptr());
+		vk::Result result = Device::Get()->logical_device().allocateDescriptorSets(&alloc_info, descriptor_sets.ptr());
 		NA_VERIFY_VK(result, "Failed to allocate descriptor sets!");
 
 		return descriptor_sets;
@@ -218,7 +220,7 @@ namespace Na::VulkanImpl {
 			i++;
 		}
 
-		m_Layout = Internal::g_DeviceData.logical_device.createPipelineLayout(
+		m_Layout = Device::Get()->logical_device().createPipelineLayout(
 			vk::PipelineLayoutCreateInfo()
 				.setSetLayoutCount(m_DescriptorLayout ? 1 : 0)
 				.setPSetLayouts(m_DescriptorLayout ? &m_DescriptorLayout : nullptr)
@@ -244,12 +246,12 @@ namespace Na::VulkanImpl {
 		create_info.pColorBlendState = &color_blend_info;
 		create_info.pDepthStencilState = &depth_stencil_info;
 
-		m_Pipeline = Internal::g_DeviceData.logical_device.createGraphicsPipeline(nullptr, create_info).value;
+		m_Pipeline = Device::Get()->logical_device().createGraphicsPipeline(nullptr, create_info).value;
 	}
 
 	void Pipeline::destroy(void)
 	{
-		vk::Device logical_device = Internal::g_DeviceData.logical_device;
+		const auto& logical_device = Device::Get()->logical_device();
 
 		logical_device.destroyDescriptorPool(m_DescriptorPool);
 		logical_device.destroyPipeline(m_Pipeline);

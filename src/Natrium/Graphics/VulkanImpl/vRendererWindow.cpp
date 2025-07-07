@@ -5,12 +5,7 @@
 #include "Internal.hpp"
 #include "Natrium/Graphics/Pipeline.hpp"
 
-#if defined(NA_PLATFORM_WINDOWS) || defined(NA_PLATFORM_LINUX)
-
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
-
-#endif // NA_PLATFORM
+#include "Natrium/Graphics/VulkanImpl/vDevice.hpp"
 
 namespace Na::VulkanImpl {
 	static vk::SurfaceFormatKHR pickSurfaceFormat(const Na::ArrayList<vk::SurfaceFormatKHR>& formats)
@@ -55,7 +50,7 @@ namespace Na::VulkanImpl {
 
 	void RendererWindow::destroy(void)
 	{
-		vk::Device logical_device = Internal::g_DeviceData.logical_device;
+		const auto& logical_device = Device::Get()->logical_device();
 
 		for (vk::Framebuffer framebuffer : m_Framebuffers)
 			logical_device.destroyFramebuffer(framebuffer);
@@ -95,7 +90,7 @@ namespace Na::VulkanImpl {
 
 		if (m_Surface)
 		{
-			Internal::g_DeviceData.instance.destroySurfaceKHR(m_Surface);
+			Device::Get()->instance().destroySurfaceKHR(m_Surface);
 			m_Surface = nullptr;
 		}
 
@@ -104,7 +99,7 @@ namespace Na::VulkanImpl {
 
 	void RendererWindow::recreate_swapchain(void)
 	{
-		vk::Device logical_device = Internal::g_DeviceData.logical_device;
+		const auto& logical_device = Device::Get()->logical_device();
 
 		m_Width = m_Window->width();
 		m_Height = m_Window->height();
@@ -171,9 +166,9 @@ namespace Na::VulkanImpl {
 
 	void RendererWindow::_create_swapchain(void)
 	{
-		vk::Device logical_device = Internal::g_DeviceData.logical_device;
+		const auto& logical_device = Device::Get()->logical_device();
 
-		Internal::SurfaceSupport support(Internal::g_DeviceData.physical_device, m_Surface);
+		Internal::SurfaceSupport support(Device::Get()->physical_device(), m_Surface);
 		NA_VERIFY(support, "Failed to create RendererWindow: Swapchain not supported!");
 
 		m_Width = support.capabilities().currentExtent.width;
@@ -228,6 +223,9 @@ namespace Na::VulkanImpl {
 		if (!m_Settings->multisampling_enabled())
 			return;
 
+		bool msaa_enabled = m_Settings->multisampling_enabled();
+		vk::SampleCountFlagBits sample_count = Device::Get()->vk_limits().vk_msaa_sample_count_if(msaa_enabled);
+
 		m_ColorImage = DeviceImage(
 			vk::Extent3D(m_Width, m_Height, 1),
 			1, // layer count
@@ -236,7 +234,7 @@ namespace Na::VulkanImpl {
 			vk::ImageTiling::eOptimal,
 			vk::ImageUsageFlagBits::eTransientAttachment | vk::ImageUsageFlagBits::eColorAttachment,
 			vk::SharingMode::eExclusive,
-			Device::Limits::MSAASampleCount(m_Settings->multisampling_enabled()),
+			sample_count,
 			vk::MemoryPropertyFlagBits::eDeviceLocal
 		);
 		m_ColorImageView = VulkanImpl::CreateImageView(
@@ -255,6 +253,9 @@ namespace Na::VulkanImpl {
 			vk::FormatFeatureFlagBits::eDepthStencilAttachment
 		);
 
+		bool msaa_enabled = m_Settings->multisampling_enabled();
+		vk::SampleCountFlagBits sample_count = Device::Get()->vk_limits().vk_msaa_sample_count_if(msaa_enabled);
+
 		m_DepthImage = DeviceImage(
 			vk::Extent3D(m_Width, m_Height, 1),
 			1, // layer count
@@ -263,7 +264,7 @@ namespace Na::VulkanImpl {
 			vk::ImageTiling::eOptimal,
 			vk::ImageUsageFlagBits::eDepthStencilAttachment,
 			vk::SharingMode::eExclusive,
-			Device::Limits::MSAASampleCount(m_Settings->multisampling_enabled()),
+			sample_count,
 			vk::MemoryPropertyFlagBits::eDeviceLocal
 		);
 		m_DepthImageView = CreateImageView(
@@ -277,6 +278,7 @@ namespace Na::VulkanImpl {
 	void RendererWindow::_create_render_pass(void)
 	{
 		bool msaa_enabled = m_Settings->multisampling_enabled();
+		vk::SampleCountFlagBits sample_count = Device::Get()->vk_limits().vk_msaa_sample_count_if(msaa_enabled);
 
 		std::array<vk::AttachmentDescription, 3> attachments{};
 		attachments.fill({});
@@ -299,7 +301,7 @@ namespace Na::VulkanImpl {
 		vk::SubpassDependency dependency;
 
 		color_attachment.format         = m_SwapchainFormat.format;
-		color_attachment.samples        = Device::Limits::MSAASampleCount(msaa_enabled);
+		color_attachment.samples        = sample_count;
 		color_attachment.loadOp         = vk::AttachmentLoadOp::eClear;
 		color_attachment.storeOp        = vk::AttachmentStoreOp::eStore;
 		color_attachment.stencilLoadOp  = vk::AttachmentLoadOp::eDontCare;
@@ -313,7 +315,7 @@ namespace Na::VulkanImpl {
 		color_attachment_ref.layout     = vk::ImageLayout::eColorAttachmentOptimal;
 										        
 		depth_attachment.format         = depth_format;
-		depth_attachment.samples        = Device::Limits::MSAASampleCount(msaa_enabled);
+		depth_attachment.samples        = sample_count;
 		depth_attachment.loadOp         = vk::AttachmentLoadOp::eClear;
 		depth_attachment.storeOp        = vk::AttachmentStoreOp::eDontCare;
 		depth_attachment.stencilLoadOp  = vk::AttachmentLoadOp::eDontCare;
@@ -370,7 +372,7 @@ namespace Na::VulkanImpl {
 		create_info.dependencyCount = 1;
 		create_info.pDependencies = &dependency;
 
-		m_RenderPass = Internal::g_DeviceData.logical_device.createRenderPass(create_info);
+		m_RenderPass = Device::Get()->logical_device().createRenderPass(create_info);
 	}
 
 	void RendererWindow::_create_framebuffers(void)
@@ -397,7 +399,7 @@ namespace Na::VulkanImpl {
 			create_info.height = m_Height;
 			create_info.layers = 1;
 
-			m_Framebuffers[i] = Internal::g_DeviceData.logical_device.createFramebuffer(create_info);
+			m_Framebuffers[i] = Device::Get()->logical_device().createFramebuffer(create_info);
 		}
 	}
 

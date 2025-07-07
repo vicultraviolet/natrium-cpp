@@ -11,6 +11,8 @@
 #include "Natrium/Graphics/VulkanImpl/vUniformBuffer.hpp"
 #include "Natrium/Graphics/VulkanImpl/vStorageBuffer.hpp"
 
+#include "Natrium/Graphics/VulkanImpl/vDevice.hpp"
+
 namespace Na::VulkanImpl {
 	Renderer::Renderer(const Window& window, Ref<const RendererSettingsAsset> settings)
 	: m_Window(window, settings),
@@ -27,10 +29,10 @@ namespace Na::VulkanImpl {
 
 	void Renderer::destroy(void)
 	{
-		if (!Device::Get().initialized())
+		if (!Device::Get())
 			return;
 
-		vk::Device logical_device = Internal::g_DeviceData.logical_device;
+		const auto& logical_device = Device::Get()->logical_device();
 
 		for (FrameData& fd : m_Frames)
 		{
@@ -54,7 +56,7 @@ namespace Na::VulkanImpl {
 	{
 		//g_Logger.fmt(Na::Info, "Frame #{}, Image #{}", m_FrameIndex, m_ImageIndex);
 
-		vk::Device logical_device = Internal::g_DeviceData.logical_device;
+		const auto& logical_device = Device::Get()->logical_device();
 		FrameData& fd = m_Frames[m_FrameIndex];
 
 		fd.valid = true;
@@ -141,7 +143,7 @@ namespace Na::VulkanImpl {
 
 	void Renderer::end_frame(void)
 	{
-		vk::Device logical_device = Internal::g_DeviceData.logical_device;
+		const auto& logical_device = Device::Get()->logical_device();
 		FrameData& fd = m_Frames[m_FrameIndex];
 
 		vk::Result result = vk::Result::eSuccess;
@@ -165,7 +167,7 @@ namespace Na::VulkanImpl {
 		submit_info.commandBufferCount = 1;
 		submit_info.pCommandBuffers = &fd.cmd_buffer;
 
-		result = Internal::g_DeviceData.graphics_queue.submit(1, &submit_info, fd.in_flight_fence);
+		result = Device::Get()->graphics_queue().submit(1, &submit_info, fd.in_flight_fence);
 
 		NA_VERIFY_VK(
 			result,
@@ -185,7 +187,7 @@ namespace Na::VulkanImpl {
 
 		try
 		{
-			result = Internal::g_DeviceData.graphics_queue.presentKHR(present_info);
+			result = Device::Get()->graphics_queue().presentKHR(present_info);
 			switch (result)
 			{
 			case vk::Result::eSuboptimalKHR:
@@ -211,7 +213,7 @@ namespace Na::VulkanImpl {
 
 	void Renderer::bind_pipeline(View<const Graphics::Pipeline> _pipeline)
 	{
-		vk::Device logical_device = Internal::g_DeviceData.logical_device;
+		const auto& logical_device = Device::Get()->logical_device();
 		FrameData& fd = m_Frames[m_FrameIndex];
 
 		auto pipeline = static_ref_cast<const VulkanImpl::Pipeline>(_pipeline);
@@ -236,7 +238,7 @@ namespace Na::VulkanImpl {
 		View<const Graphics::Pipeline> _pipeline
 	) const
 	{
-		vk::Device logical_device = Internal::g_DeviceData.logical_device;
+		const auto& logical_device = Device::Get()->logical_device();
 		const FrameData& fd = m_Frames[m_FrameIndex];
 
 		auto pipeline = static_ref_cast<const VulkanImpl::Pipeline>(_pipeline);
@@ -333,10 +335,10 @@ namespace Na::VulkanImpl {
 
 	void Renderer::_create_command_objects(void)
 	{
-		vk::Device logical_device = Internal::g_DeviceData.logical_device;
+		const auto& logical_device = Device::Get()->logical_device();
 
 		vk::CommandPoolCreateInfo graphics_pool_info;
-		graphics_pool_info.queueFamilyIndex = Internal::g_DeviceData.graphics_queue_index;
+		graphics_pool_info.queueFamilyIndex = Device::Get()->graphics_queue_index();
 		graphics_pool_info.flags = vk::CommandPoolCreateFlagBits::eResetCommandBuffer;
 
 		m_GraphicsCmdPool = logical_device.createCommandPool(graphics_pool_info);
@@ -352,7 +354,7 @@ namespace Na::VulkanImpl {
 
 	void Renderer::_create_sync_objects(void)
 	{
-		vk::Device logical_device = Internal::g_DeviceData.logical_device;
+		const auto& logical_device = Device::Get()->logical_device();
 
 		vk::SemaphoreCreateInfo semaphore_info;
 

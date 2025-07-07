@@ -71,9 +71,9 @@ namespace Na {
 			std::filesystem::last_write_time(input_path) > std::filesystem::last_write_time(output_path)
 		);
 
-		switch (Device::Get().backend())
+		switch (Graphics::Device::Get()->backend())
 		{
-			case DeviceBackend::Vulkan:
+			case Graphics::DeviceBackend::Vulkan:
 			{
 				if (!should_compile)
 					return UniqueRef<VulkanImpl::Shader>::Make(

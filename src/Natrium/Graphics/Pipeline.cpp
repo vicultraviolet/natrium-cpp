@@ -10,7 +10,7 @@ namespace Na::Graphics {
 		const std::initializer_list<View<const Shader>>& shaders
 	)
 	{
-		switch (Device::Get().backend())
+		switch (Device::Get()->backend())
 		{
 			case DeviceBackend::Vulkan: return UniqueRef<VulkanImpl::Pipeline>::Make(renderer, vertex_shader_layout, shaders);
 		}

@@ -22,7 +22,7 @@ namespace Na::VulkanImpl {
 			};
 		};
 		vk::Format format = vk::Format::eUndefined;
-		vk::ImageSubresourceRange subresource_range;
+		vk::ImageSubresourceRange subresource_range{};
 
 		DeviceImage(void) {};
 		DeviceImage(

@@ -41,7 +41,7 @@ namespace Na {
 
 	void RendererSettingsAsset::set_max_anisotropy(float max_anisotropy)
 	{
-		m_Json["max_anisotropy"] = std::min(max_anisotropy, Device::Limits::Anisotropy());
+		m_Json["max_anisotropy"] = std::min(max_anisotropy, Graphics::Device::Get()->limits()->max_anisotropy());
 		this->_update_file();
 	}
 

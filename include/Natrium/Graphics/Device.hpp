@@ -3,9 +3,7 @@
 
 #include "Natrium/Core.hpp"
 
-namespace Na {
-	inline constexpr bool k_ValidationLayersEnabled = k_BuildConfig != BuildConfig::Distribution;
-
+namespace Na::Graphics {
 	enum class DeviceBackend : u8 {
 		None = 0,
 		// WebGPU,
@@ -15,47 +13,47 @@ namespace Na {
 	struct DeviceInitInfo {
 		DeviceBackend backend;
 	};
+	
+	enum class MSAASampleCount : u8 {
+		None = 0,
+		x1 = 1,
+		x2 = 2,
+		x4 = 4,
+		x8 = 8,
+		x16 = 16,
+		x32 = 32,
+		x64 = 64
+	};
 
 	class DeviceLimits {
 	public:
-		[[nodiscard]] static vk::SampleCountFlagBits MSAASampleCount(void);
-		[[nodiscard]] static inline vk::SampleCountFlagBits MSAASampleCount(bool enabled) { return enabled ? DeviceLimits::MSAASampleCount() : vk::SampleCountFlagBits::e1; }
-		[[nodiscard]] static float Anisotropy(void);
+		[[nodiscard]] virtual MSAASampleCount msaa_sample_count(void) const = 0;
+		[[nodiscard]] virtual float max_anisotropy(void) const = 0;
 	};
 
 	class Device {
 	public:
-		using Limits = DeviceLimits;
-
-		static void Initialize(const DeviceInitInfo& info = DeviceInitInfo{});
-		static void Shutdown(void);
+		[[nodiscard]] static UniqueRef<Device> Make(const DeviceInitInfo& info);
 
 		Device(void) = default;
-		~Device(void) { if (m_Valid) Device::Shutdown(); }
+		Device(const DeviceInitInfo& info);
 
-		explicit Device(const DeviceInitInfo& info) : m_Valid(true) { Device::Initialize(info); }
+		virtual ~Device(void) { this->destroy(); }
+		virtual void destroy(void);
 
-		Device(const Device& other) = delete;
-		Device& operator=(const Device& other) = delete;
+		virtual void wait_all(void) const = 0;
 
-		Device(Device&& other) : m_Valid(std::exchange(other.m_Valid, false)) {}
-		Device& operator=(Device&& other) { m_Valid = std::exchange(other.m_Valid, false); return *this; }
+		[[nodiscard]] virtual operator bool(void) const = 0;
 
-		[[nodiscard]] static inline Device Get(void) { return Device(); }
+		[[nodiscard]] static inline View<Device> Get(void) { return s_Instance; }
+		[[nodiscard]] inline DeviceBackend backend(void) const { return m_Backend; }
 
-		void wait_all(void) const;
-
-		[[nodiscard]] bool initialized(void) const;
-		[[nodiscard]] DeviceBackend backend(void) const;
+		[[nodiscard]] virtual View<DeviceLimits> limits(void) { return nullptr; }
+		[[nodiscard]] virtual View<const DeviceLimits> limits(void) const = 0;
 	private:
-		static void _CreateInstance(void);
-		static void _CreateDebugMessenger(void);
-		static void _PickPhysicalDevice(vk::SurfaceKHR surface, const Na::ArrayList<const char*>& extensions);
-		static void _CreateLogicalDevice(vk::SurfaceKHR surface, const Na::ArrayList<const char*>& extensions);
-		static void _CreateSingleTimeCommandPool(void);
-		static void _GetLimits(void);
-	private:
-		bool m_Valid = false;
+		DeviceBackend m_Backend = DeviceBackend::None;
+
+		static inline View<Device> s_Instance = nullptr;
 	};
 } // namespace Na
 

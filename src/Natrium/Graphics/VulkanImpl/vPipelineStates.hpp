@@ -1,7 +1,7 @@
 #include "Pch.hpp"
 #include "Natrium/Graphics/VulkanImpl/vPipeline.hpp"
 
-namespace Na {
+namespace Na::VulkanImpl {
 	static vk::PipelineDynamicStateCreateInfo dynamicStateInfo(const Na::ArrayList<vk::DynamicState>& states)
 	{
 		vk::PipelineDynamicStateCreateInfo dynamic_state_info;
@@ -51,7 +51,7 @@ namespace Na {
 	{
 		vk::PipelineMultisampleStateCreateInfo multisample_info;
 
-		multisample_info.rasterizationSamples = Device::Limits::MSAASampleCount(enabled);
+		multisample_info.rasterizationSamples = Device::Get()->vk_limits().vk_msaa_sample_count_if(enabled);
 
 		multisample_info.sampleShadingEnable = enabled;
 		multisample_info.minSampleShading = enabled ? 0.2f : 0.0f;

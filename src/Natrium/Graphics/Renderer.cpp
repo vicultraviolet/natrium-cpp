@@ -9,7 +9,7 @@ namespace Na::Graphics {
 		Ref<const RendererSettingsAsset> settings
 	)
 	{
-		switch (Device::Get().backend())
+		switch (Device::Get()->backend())
 		{
 			case DeviceBackend::Vulkan: return UniqueRef<VulkanImpl::Renderer>::Make(window, settings);
 		}

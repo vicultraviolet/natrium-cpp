@@ -4,6 +4,8 @@
 #include "Internal.hpp"
 #include "Natrium/Graphics/VulkanImpl/vDeviceBuffer.hpp"
 
+#include "Natrium/Graphics/VulkanImpl/vDevice.hpp"
+
 namespace Na::VulkanImpl {
 	vk::Format FindSupportedFormat(
 		const std::initializer_list<vk::Format>& candidates,
@@ -13,7 +15,7 @@ namespace Na::VulkanImpl {
 	{
 		for (vk::Format format : candidates)
 		{
-			vk::FormatProperties properties = Internal::g_DeviceData.physical_device.getFormatProperties(format);
+			vk::FormatProperties properties = Device::Get()->physical_device().getFormatProperties(format);
 
 			if (tiling == vk::ImageTiling::eLinear && (properties.linearTilingFeatures & features) == features)
 				return format;
@@ -48,7 +50,7 @@ namespace Na::VulkanImpl {
 	{
 		NA_ASSERT(layer_count > 0, "Failed to create DeviceImage: Invalid layer count!");
 
-		vk::Device logical_device = Internal::g_DeviceData.logical_device;
+		const auto& logical_device = Device::Get()->logical_device();
 
 		vk::ImageCreateInfo create_info;
 
@@ -90,7 +92,7 @@ namespace Na::VulkanImpl {
 
 	void DeviceImage::destroy(void)
 	{
-		vk::Device logical_device = Internal::g_DeviceData.logical_device;
+		const auto& logical_device = Device::Get()->logical_device();
 
 		if (this->img)
 			logical_device.destroyImage(this->img);
@@ -103,7 +105,7 @@ namespace Na::VulkanImpl {
 
 	void DeviceImage::transition_layout(vk::ImageLayout old_layout, vk::ImageLayout new_layout)
 	{
-		vk::Device logical_device = Internal::g_DeviceData.logical_device;
+		const auto& logical_device = Device::Get()->logical_device();
 
 		vk::ImageMemoryBarrier barrier;
 
@@ -303,6 +305,6 @@ namespace Na::VulkanImpl {
 		create_info.subresourceRange.baseArrayLayer = 0;
 		create_info.subresourceRange.layerCount = layer_count;
 
-		return Internal::g_DeviceData.logical_device.createImageView(create_info);
+		return Device::Get()->logical_device().createImageView(create_info);
 	}
 } // namespace Na

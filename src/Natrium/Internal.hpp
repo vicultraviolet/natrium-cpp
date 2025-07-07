@@ -1,43 +1,10 @@
-#if !defined(NA_INTERNAL_HPP)
-#define NA_INTERNAL_HPP
+#if !defined(NA_VULKAN_IMPL_INTERNAL_HPP)
+#define NA_VULKAN_IMPL_INTERNAL_HPP
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
-namespace Na::Internal {
-	struct DeviceLimits {
-		vk::SampleCountFlagBits msaa_sample_count;
-		float anisotropy;
-	};
-
-	struct DeviceData {
-		vk::Instance instance = nullptr;
-		vk::DebugUtilsMessengerEXT dbg_messenger = nullptr;
-		vk::PhysicalDevice physical_device = nullptr;
-
-		vk::Device logical_device = nullptr;
-
-		vk::Queue graphics_queue = nullptr;
-		u32 graphics_queue_index = k_U32Max;
-
-		vk::CommandPool single_time_cmd_pool = nullptr;
-
-		DeviceLimits limits{};
-
-		[[nodiscard]] operator bool(void) const
-		{
-			return (
-				instance &&
-				physical_device &&
-				logical_device &&
-				graphics_queue &&
-				graphics_queue_index != k_U32Max &&
-				single_time_cmd_pool
-			);
-		}
-	};
-	inline DeviceData g_DeviceData{};
-
+namespace Na::VulkanImpl::Internal {
 	vk::SurfaceKHR CreateWindowSurface(GLFWwindow* window);
 
 	class QueueFamilyIndices {
@@ -87,6 +54,6 @@ namespace Na::Internal {
 		bool anisotropy_enabled,
 		float max_anisotropy
 	);
-} // namespace Na::Internal
+} // namespace Na::VulkanImpl::Internal
 
-#endif // NA_RENDERER_INTERNAL_HPP
+#endif // NA_VULKAN_IMPL_INTERNAL_HPP

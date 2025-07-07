@@ -1,13 +1,17 @@
 #include "Pch.hpp"
 #include "Internal.hpp"
 
-namespace Na {
+#include "Natrium/Graphics/VulkanImpl/vDevice.hpp"
+
+namespace Na::VulkanImpl {
 	vk::SurfaceKHR Internal::CreateWindowSurface(GLFWwindow* window)
 	{
 		VkSurfaceKHR surface;
-		VkResult result = glfwCreateWindowSurface(g_DeviceData.instance, window, nullptr, &surface);
+		VkResult result = glfwCreateWindowSurface(Device::Get()->instance(), window, nullptr, &surface);
+
 		if (result != VK_SUCCESS)
 			throw std::runtime_error("Failed to create window surface!");
+
 		return surface;
 	}
 
@@ -47,11 +51,11 @@ namespace Na {
 	{
 		vk::CommandBufferAllocateInfo alloc_info;
 		alloc_info.level = vk::CommandBufferLevel::ePrimary;
-		alloc_info.commandPool = g_DeviceData.single_time_cmd_pool;
+		alloc_info.commandPool = Device::Get()->single_time_cmd_pool();
 		alloc_info.commandBufferCount = 1;
 
 		vk::CommandBuffer cmd_buffer;
-		(void)g_DeviceData.logical_device.allocateCommandBuffers(&alloc_info, &cmd_buffer);
+		(void)Device::Get()->logical_device().allocateCommandBuffers(&alloc_info, &cmd_buffer);
 
 		vk::CommandBufferBeginInfo begin_info;
 		begin_info.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
@@ -69,10 +73,10 @@ namespace Na {
 		submit_info.commandBufferCount = 1;
 		submit_info.pCommandBuffers = &cmd_buffer;
 
-		(void)g_DeviceData.graphics_queue.submit(1, &submit_info, nullptr);
-		g_DeviceData.graphics_queue.waitIdle();
+		(void)Device::Get()->graphics_queue().submit(1, &submit_info, nullptr);
+		Device::Get()->graphics_queue().waitIdle();
 
-		g_DeviceData.logical_device.freeCommandBuffers(g_DeviceData.single_time_cmd_pool, 1, &cmd_buffer);
+		Device::Get()->logical_device().freeCommandBuffers(Device::Get()->single_time_cmd_pool(), 1, &cmd_buffer);
 	}
 
 	void Internal::WriteToDescriptorSet(
@@ -97,7 +101,7 @@ namespace Na {
 		descriptor_write.pImageInfo = image_info;
 		descriptor_write.pTexelBufferView = texel_buffer_view;
 
-		g_DeviceData.logical_device.updateDescriptorSets(
+		Device::Get()->logical_device().updateDescriptorSets(
 			1, &descriptor_write,
 			0, nullptr // descriptor copy
 		);
@@ -134,6 +138,6 @@ namespace Na {
 		create_info.minLod = 0.0f;
 		create_info.maxLod = 0.0f;
 
-		return g_DeviceData.logical_device.createSampler(create_info);
+		return Device::Get()->logical_device().createSampler(create_info);
 	}
-} // namespace Na
+} // namespace Na::VulkanImpl
