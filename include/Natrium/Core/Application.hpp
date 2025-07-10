@@ -33,23 +33,23 @@ namespace Na {
 
 		void run(void);
 
-		inline void attach_layer(LayerHandle<> layer) { m_LayerManager.attach_layer(layer); }
-		inline void detach_layer(LayerHandle<> layer) { m_LayerManager.detach_layer(layer); }
+		inline void attach_layer(Ref<Layer> layer) { m_LayerManager.attach_layer(layer); }
+		inline void detach_layer(Ref<Layer> layer) { m_LayerManager.detach_layer(layer); }
 
-		void attach_layer(LayerHandle<ImGuiLayer> layer);
+		void attach_layer(Ref<ImGuiLayer> layer);
 
-		template<typename T, typename... t_Args>
-		LayerHandle<T> create_layer(t_Args&&... __args)
+		template<DerivedLayer t_Layer, typename... t_Args>
+		Ref<t_Layer> create_layer(t_Args&&... __args)
 		{
-			LayerHandle<T> layer = CreateLayer<T>(std::forward<t_Args>(__args)...);
+			Ref<t_Layer> layer = CreateLayer<t_Layer>(std::forward<t_Args>(__args)...);
 			this->attach_layer(layer);
 			return layer;
 		}
 
 		template<typename... t_Args>
-		LayerHandle<ImGuiLayer> create_imgui_layer(t_Args&&... __args)
+		Ref<ImGuiLayer> create_imgui_layer(t_Args&&... __args)
 		{
-			LayerHandle<ImGuiLayer> layer = ImGuiLayer::Make(std::forward<t_Args>(__args)...);
+			Ref<ImGuiLayer> layer = ImGuiLayer::Make(std::forward<t_Args>(__args)...);
 			this->attach_layer(layer);
 			return layer;
 		}
@@ -69,7 +69,7 @@ namespace Na {
 		[[nodiscard]] inline View<Graphics::Renderer> renderer(void) { return m_Renderer; }
 		[[nodiscard]] inline View<const Graphics::Renderer> renderer(void) const { return m_Renderer; }
 
-		[[nodiscard]] inline WeakLayerHandle<ImGuiLayer> imgui_layer(void) const { return m_ImGuiLayer; }
+		[[nodiscard]] inline WeakRef<ImGuiLayer> imgui_layer(void) const { return m_ImGuiLayer; }
 
 		[[nodiscard]] inline u64 average_fps(void) const { return m_AverageFPS; }
 	private:
@@ -79,11 +79,11 @@ namespace Na {
 		Window m_Window;
 		UniqueRef<Graphics::Renderer> m_Renderer;
 
-		WeakLayerHandle<ImGuiLayer> m_ImGuiLayer;
+		WeakRef<ImGuiLayer> m_ImGuiLayer;
 
 		u64 m_AverageFPS = 0;
 
-		static inline Application* s_Application = nullptr;
+		static inline View<Application> s_Application = nullptr;
 	};
 	using App = Application;
 } // namespace Na

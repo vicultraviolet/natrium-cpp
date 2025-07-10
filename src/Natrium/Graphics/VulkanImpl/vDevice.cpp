@@ -196,7 +196,7 @@ namespace Na::VulkanImpl {
 			m_SingleTimeCommandPool = nullptr;
 		}
 
-		m_GraphicsQueueIndex = k_U32Max;
+		m_GraphicsQueueIndex = u32max;
 		m_GraphicsQueue = nullptr;
 
 		if (m_LogicalDevice)

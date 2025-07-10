@@ -47,17 +47,11 @@ namespace Na {
 		LayerStateBits m_State = LayerStateBits::All;
 	};
 
-	template<typename t_Layer = Layer>
-	using LayerHandle = Ref<t_Layer>;
-
-	template<typename t_Layer = Layer>
-	using WeakLayerHandle = WeakRef<t_Layer>;
-
 	template<typename T>
 	concept DerivedLayer = std::is_base_of<Layer, T>::value && !std::is_same<Layer, T>::value;
 
 	template<DerivedLayer T, typename... t_Args>
-	inline LayerHandle<T> CreateLayer(t_Args&&... __args) { return Ref<T>::Make(std::forward<t_Args>(__args)...); }
+	inline Ref<T> CreateLayer(t_Args&&... __args) { return Ref<T>::Make(std::forward<t_Args>(__args)...); }
 
 	inline LayerStateBits operator|(LayerStateBits lhs, LayerStateBits rhs) { return (LayerStateBits)((u8)lhs | (u8)rhs); }
 	inline LayerStateBits operator&(LayerStateBits lhs, LayerStateBits rhs) { return (LayerStateBits)((u8)lhs & (u8)rhs); }

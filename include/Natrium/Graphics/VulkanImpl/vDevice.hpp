@@ -77,7 +77,7 @@ namespace Na::VulkanImpl {
 		vk::Device m_LogicalDevice = nullptr;
 
 		vk::Queue m_GraphicsQueue = nullptr;
-		u32 m_GraphicsQueueIndex = k_U32Max;
+		u32 m_GraphicsQueueIndex = u32max;
 
 		bool m_Initialized = false;
 

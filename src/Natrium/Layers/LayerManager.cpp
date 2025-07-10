@@ -16,7 +16,7 @@ namespace Na {
 		}
 	}
 
-	void LayerManager::attach_layer(LayerHandle<> layer)
+	void LayerManager::attach_layer(Ref<Layer> layer)
 	{
 		layer->on_attach();
 
@@ -24,7 +24,7 @@ namespace Na {
 		this->resort();
 	}
 
-	void LayerManager::detach_layer(LayerHandle<> layer)
+	void LayerManager::detach_layer(Ref<Layer> layer)
 	{
 		layer->on_detach();
 
@@ -62,7 +62,7 @@ namespace Na {
 		m_Layers.resize(0);
 	}
 
-	void LayerManager::set_layer_priority(LayerHandle<> layer, i64 new_priority)
+	void LayerManager::set_layer_priority(Ref<Layer> layer, i64 new_priority)
 	{
 		layer->m_Priority = new_priority;
 		this->resort();

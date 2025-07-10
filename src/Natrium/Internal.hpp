@@ -14,9 +14,9 @@ namespace Na::VulkanImpl::Internal {
 
 		[[nodiscard]] inline u32 graphics(void) const { return m_Graphics; }
 
-		[[nodiscard]] inline operator bool(void) const { return m_Graphics != k_U32Max; }
+		[[nodiscard]] inline operator bool(void) const { return m_Graphics != u32max; }
 	private:
-		u32 m_Graphics = k_U32Max;
+		u32 m_Graphics = u32max;
 	};
 
 	class SurfaceSupport {

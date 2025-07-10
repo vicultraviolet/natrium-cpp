@@ -1,8 +1,6 @@
 #if !defined(NA_CORE_HPP)
 #define NA_CORE_HPP
 
-#include <stdint.h>
-
 #define NA_BIT(x) (1u << x)
 #define NA_GET_FROM_OFFSET(t, p) (t*)((Na::Byte*)p - offsetof(t, p))
 
@@ -33,35 +31,6 @@
     #define NA_WINDOWED_APP
 #endif
 
-// signed integers
-using i8  = int8_t;
-using i16 = int16_t;
-using i32 = int32_t;
-using i64 = int64_t;
-
-constexpr i8  k_I8Max  = INT8_MAX;
-constexpr i16 k_I16Max = INT16_MAX;
-constexpr i32 k_I32Max = INT32_MAX;
-constexpr i64 k_I64Max = INT64_MAX;
-
-// unsigned integers
-using u8  = uint8_t;
-using u16 = uint16_t;
-using u32 = uint32_t;
-using u64 = uint64_t;
-
-constexpr u8  k_U8Max  = UINT8_MAX;
-constexpr u16 k_U16Max = UINT16_MAX;
-constexpr u32 k_U32Max = UINT32_MAX;
-constexpr u64 k_U64Max = UINT64_MAX;
-
-// booleans
-using b8  = i8;
-using b32 = i32;
-
-constexpr b8 k_False = 0;
-constexpr b8 k_True = 1;
-
 using namespace std::literals::chrono_literals;
 using namespace std::literals::string_literals;
 using namespace std::literals::string_view_literals;
@@ -69,9 +38,52 @@ using namespace std::literals::string_view_literals;
 #define NA_CONCAT_STR_VIEW(sv1, sv2) StringViewCat<sv1, sv2>::data
 
 namespace Na {
-    using Byte = unsigned char;
+    namespace Primitives {
+        using i8  = char;
+        using i16 = short;
+        using i32 = int;
+        using i64 = long long;
 
-    constexpr u64 k_InvalidHandle = k_U64Max;
+        constexpr i8  i8max  = INT8_MAX;
+        constexpr i16 i16max = INT16_MAX;
+        constexpr i32 i32max = INT32_MAX;
+        constexpr i64 i64max = INT64_MAX;
+
+        using s8  = signed char;
+        using s16 = signed short;
+        using s32 = signed int;
+        using s64 = signed long long;
+
+        constexpr s8  s8max  = INT8_MAX;
+        constexpr s16 s16max = INT16_MAX;
+        constexpr s32 s32max = INT32_MAX;
+        constexpr s64 s64max = INT64_MAX;
+
+        using u8  = unsigned char;
+        using u16 = unsigned short;
+        using u32 = unsigned int;
+        using u64 = unsigned long long;
+
+        constexpr u8  u8max  = UINT8_MAX;
+        constexpr u16 u16max = UINT16_MAX;
+        constexpr u32 u32max = UINT32_MAX;
+        constexpr u64 u64max = UINT64_MAX;
+
+        using f32 = float;
+        using f64 = double;
+
+        using b8 = i8;
+        using b32 = i32;
+
+        constexpr b8 k_False = 0;
+        constexpr b8 k_True  = 1;
+
+        using Byte = unsigned char;
+
+        using handle_t = u64;
+        constexpr u64 k_InvalidHandle = u64max;
+    } // namespace Primitives
+    using namespace Primitives;
 
     enum class BuildConfig : u8 {
         None = 0, Debug, Release, Distribution
@@ -122,9 +134,6 @@ namespace Na {
     public:
         constexpr static std::string_view data{ s_Array.data(), s_Array.size() };
     };
-
-    [[nodiscard]] inline i32 Round32(float num) { return (i32)floor(num + 0.5f); }
-    [[nodiscard]] inline i64 Round64(double num) { return (i64)floor(num + 0.5); }
 
     template<typename T>
     [[nodiscard]] inline T* tmalloc(u64 count = 1)

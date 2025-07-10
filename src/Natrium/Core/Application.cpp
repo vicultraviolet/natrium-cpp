@@ -38,12 +38,12 @@ namespace Na {
 
 	void Application::run(void)
 	{
-		Na::DeltaTime dt;
+		DeltaTime dt;
 		while ((this->running = true))
 		{
 			//g_Logger.printf(Na::Trace, "average fps: {}", (u32)(1.0 / dt));
 
-			for (Na::Event& e : Na::PollEvents())
+			for (Event& e : Na::PollEvents())
 			{
 				if (e.type == Na::EventType::WindowClosed)
 				{
@@ -51,7 +51,7 @@ namespace Na {
 					return;
 				}
 
-				for (Na::LayerHandle<>& layer : m_LayerManager)
+				for (Ref<Layer>& layer : m_LayerManager)
 				{
 					if (!layer->enabled())
 						continue;
@@ -65,7 +65,7 @@ namespace Na {
 			dt.calculate();
 			m_AverageFPS = (u64)(1.0f / dt);
 
-			for (Na::LayerHandle<>& layer : m_LayerManager)
+			for (Ref<Layer>& layer : m_LayerManager)
 			{
 				if (!layer->updatable())
 					continue;
@@ -79,7 +79,7 @@ namespace Na {
 			if (!m_Renderer->begin_frame())
 				continue;
 
-			for (Na::LayerHandle<>& layer : m_LayerManager)
+			for (Ref<Layer>& layer : m_LayerManager)
 			{
 				if (!layer->visible())
 					continue;
@@ -92,7 +92,7 @@ namespace Na {
 			{
 				imgui_layer->begin();
 
-				for (Na::LayerHandle<>& layer : m_LayerManager)
+				for (Ref<Layer>& layer : m_LayerManager)
 				{
 					if (!layer->visible())
 						continue;
@@ -108,7 +108,7 @@ namespace Na {
 		}
 	}
 
-	void Application::attach_layer(LayerHandle<ImGuiLayer> layer)
+	void Application::attach_layer(Ref<ImGuiLayer> layer)
 	{
 		m_LayerManager.attach_layer(layer);
 		m_ImGuiLayer = layer;

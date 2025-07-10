@@ -7,10 +7,10 @@
 namespace Na {
 	class LayerManager {
 	public:
-		using iterator = ArrayList<LayerHandle<>>::iterator;
-		using reverse_iterator = ArrayList<LayerHandle<>>::reverse_iterator;
-		using const_iterator = ArrayList<LayerHandle<>>::const_iterator;
-		using const_reverse_iterator = ArrayList<LayerHandle<>>::const_reverse_iterator;
+		using iterator = ArrayList<Ref<Layer>>::iterator;
+		using reverse_iterator = ArrayList<Ref<Layer>>::reverse_iterator;
+		using const_iterator = ArrayList<Ref<Layer>>::const_iterator;
+		using const_reverse_iterator = ArrayList<Ref<Layer>>::const_reverse_iterator;
 	public:
 		LayerManager(u64 capacity = 2) : m_Layers(capacity) {}
 		~LayerManager(void) = default;
@@ -18,12 +18,12 @@ namespace Na {
 
 		inline void reserve(u64 extra_capacity) { m_Layers.reallocate(m_Layers.capacity() + extra_capacity); }
 
-		void attach_layer(LayerHandle<> layer);
-		void detach_layer(LayerHandle<> layer);
+		void attach_layer(Ref<Layer> layer);
+		void detach_layer(Ref<Layer> layer);
 
 		void detach_all(void);
 
-		void set_layer_priority(LayerHandle<> layer, i64 new_priority);
+		void set_layer_priority(Ref<Layer> layer, i64 new_priority);
 
 		void resort(void);
 
@@ -46,7 +46,7 @@ namespace Na {
 		[[nodiscard]] inline const_reverse_iterator rend(void) const { return m_Layers.rend(); }
 		[[nodiscard]] inline const_reverse_iterator crend(void) const { return m_Layers.crend(); }
 	private:
-		ArrayList<LayerHandle<>> m_Layers;
+		ArrayList<Ref<Layer>> m_Layers;
 	};
 } // namespace Na
 
