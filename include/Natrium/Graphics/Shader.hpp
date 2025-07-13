@@ -25,7 +25,7 @@ namespace Na::Graphics {
 		Shader(Shader&& other) noexcept;
 		Shader& operator=(Shader&& other) noexcept;
 
-		void add_uniform(u32 binding, View<const Uniform> uniform);
+		void bind_uniform(u32 binding, View<const Uniform> uniform);
 		[[nodiscard]] inline View<const Uniform> get_uniform(u32 binding) const { return m_Uniforms.find(binding) != m_Uniforms.end() ? m_Uniforms.at(binding) : nullptr; }
 
 		inline void set_push_constant_size(u32 size) { m_PushConstantSize = size; }

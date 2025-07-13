@@ -20,7 +20,7 @@ namespace Na::Graphics {
 		return *this;
 	}
 
-	void Shader::add_uniform(u32 binding, View<const Uniform> uniform)
+	void Shader::bind_uniform(u32 binding, View<const Uniform> uniform)
 	{
 		if (!uniform)
 		{
