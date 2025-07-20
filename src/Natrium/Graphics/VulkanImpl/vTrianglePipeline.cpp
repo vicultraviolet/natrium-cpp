@@ -1,5 +1,5 @@
 #include "Pch.hpp"
-#include "Natrium/Graphics/VulkanImpl/vPipeline.hpp"
+#include "Natrium/Graphics/VulkanImpl/vTrianglePipeline.hpp"
 
 #include "Natrium/Graphics/VulkanImpl/vDevice.hpp"
 
@@ -49,7 +49,7 @@ namespace Na::VulkanImpl {
 		}
 	};
 
-	Pipeline::Pipeline(
+	TrianglePipeline::TrianglePipeline(
 		View<const Graphics::Renderer> _renderer,
 		const Graphics::VertexAttributes& vertex_layout,
 		const View<const Graphics::UniformSetLayout>* uniform_set_layouts,
@@ -83,7 +83,7 @@ namespace Na::VulkanImpl {
 
 		for (u64 i = 0; i < shader_count; i++)
 		{
-			auto shader = static_ref_cast<const VulkanImpl::Shader>(shaders[i]);
+			auto shader = static_ref_cast<const Shader>(shaders[i]);
 
 			shader_infos[i].sType = vk::StructureType::ePipelineShaderStageCreateInfo;
 			shader_infos[i].stage = ShaderStageToVk(shader->stage());
@@ -144,7 +144,7 @@ namespace Na::VulkanImpl {
 		m_Pipeline = logical_device.createGraphicsPipeline(nullptr, create_info).value;
 	}
 
-	void Pipeline::destroy(void)
+	void TrianglePipeline::destroy(void)
 	{
 		const auto& logical_device = Device::Get()->logical_device();
 
@@ -161,88 +161,12 @@ namespace Na::VulkanImpl {
 		}
 	}
 
-	/*
-	void Pipeline::bind_uniform(u32 binding, View<const Graphics::Uniform> uniform)
-	{
-		Graphics::UniformType type = uniform->type();
-
-		switch (type)
-		{
-			case Graphics::UniformType::Texture:
-			{
-				auto texture = static_ref_cast<const VulkanImpl::Texture>(uniform);
-
-				vk::DescriptorImageInfo image_info;
-				image_info.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
-				image_info.imageView = texture->img_view();
-				image_info.sampler = texture->sampler();
-
-				Internal::WriteToDescriptorSet(
-					m_DescriptorSet,
-					binding,
-					vk::DescriptorType::eCombinedImageSampler,
-					1,
-					nullptr, // buffer info
-					&image_info,
-					nullptr // texel buffer view
-				);
-
-				break;
-			}
-			case Graphics::UniformType::UniformBuffer:
-			{
-				auto ubo = static_ref_cast<const VulkanImpl::UniformBuffer>(uniform);
-
-				vk::DescriptorBufferInfo buffer_info(ubo->buffer().buffer, 0, ubo->aligned_size());
-
-				Internal::WriteToDescriptorSet(
-					m_DescriptorSet,
-					binding,
-					vk::DescriptorType::eUniformBufferDynamic,
-					1, // count
-					&buffer_info,
-					nullptr, // image info
-					nullptr // texel buffer view
-				);
-
-				for (u64 i = m_DynamicOffsetIndex++; i < m_DynamicOffsets.size(); i += m_DynamicOffsetCount)
-					m_DynamicOffsets[i] = (u32)(ubo->aligned_size() * i);
-
-				break;
-			}
-			case Graphics::UniformType::StorageBuffer:
-			{
-				auto ssbo = static_ref_cast<const VulkanImpl::StorageBuffer>(uniform);
-
-				vk::DescriptorBufferInfo buffer_info(ssbo->buffer().buffer, 0, ssbo->aligned_size());
-
-				Internal::WriteToDescriptorSet(
-					m_DescriptorSet,
-					binding,
-					vk::DescriptorType::eStorageBufferDynamic,
-					1, // count
-					&buffer_info,
-					nullptr, // image info
-					nullptr // texel buffer view
-				);
-
-				for (u64 i = m_DynamicOffsetIndex++; i < m_DynamicOffsets.size(); i += m_DynamicOffsetCount)
-					m_DynamicOffsets[i] = (u32)(ssbo->aligned_size() * i);
-
-				break;
-			}
-			default:
-				throw std::runtime_error("Failed to bind uniform to pipeline: Uniform object of unknown descriptor type!");
-		}
-	}
-	*/
-
-	Pipeline::Pipeline(Pipeline&& other)
+	TrianglePipeline::TrianglePipeline(TrianglePipeline&& other)
 	: m_Pipeline(std::exchange(other.m_Pipeline, nullptr)),
 	m_Layout(std::exchange(other.m_Layout, nullptr))
 	{}
 
-	Pipeline& Pipeline::operator=(Pipeline&& other)
+	TrianglePipeline& TrianglePipeline::operator=(TrianglePipeline&& other)
 	{
 		if (this == &other)
 			return *this;

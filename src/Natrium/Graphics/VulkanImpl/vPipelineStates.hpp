@@ -1,5 +1,4 @@
 #include "Pch.hpp"
-#include "Natrium/Graphics/VulkanImpl/vPipeline.hpp"
 
 namespace Na::VulkanImpl {
 	static vk::PipelineDynamicStateCreateInfo dynamicStateInfo(const Na::ArrayList<vk::DynamicState>& states)

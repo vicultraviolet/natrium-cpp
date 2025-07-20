@@ -1,10 +1,10 @@
 #include "Pch.hpp"
-#include "Natrium/Graphics/Pipeline.hpp"
+#include "Natrium/Graphics/Pipelines.hpp"
 
-#include "Natrium/Graphics/VulkanImpl/vPipeline.hpp"
+#include "Natrium/Graphics/VulkanImpl/vTrianglePipeline.hpp"
 
 namespace Na::Graphics {
-	UniqueRef<Pipeline> Pipeline::Make(
+	UniqueRef<TrianglePipeline> TrianglePipeline::Make(
 		View<const Renderer> renderer,
 		const VertexAttributes& vertex_layout,
 		const View<const UniformSetLayout>* uniform_set_layouts,
@@ -15,19 +15,19 @@ namespace Na::Graphics {
 	{
 		switch (Device::Get()->backend())
 		{
-		case DeviceBackend::Vulkan: return UniqueRef<VulkanImpl::Pipeline>::Make(renderer, vertex_layout, uniform_set_layouts, uniform_set_layout_count, shaders, shader_count);
+		case DeviceBackend::Vulkan: return UniqueRef<VulkanImpl::TrianglePipeline>::Make(renderer, vertex_layout, uniform_set_layouts, uniform_set_layout_count, shaders, shader_count);
 		}
 		return nullptr;
 	}
 
-	UniqueRef<Pipeline> Pipeline::Make(
+	UniqueRef<TrianglePipeline> TrianglePipeline::Make(
 		View<const Renderer> renderer,
 		const VertexAttributes& vertex_layout,
 		const UniformLayout& uniform_layout,
 		const Shaders& shaders
 	)
 	{
-		return Pipeline::Make(
+		return TrianglePipeline::Make(
 			renderer,
 			vertex_layout,
 			uniform_layout.begin(), uniform_layout.size(),
