@@ -6,6 +6,7 @@
 #include "Natrium/Graphics/Device.hpp"
 #include "Natrium/Graphics/Buffers.hpp"
 #include "Natrium/Graphics/Uniforms.hpp"
+#include "Natrium/Graphics/UniformSet.hpp"
 #include "Natrium/Assets/RendererSettingsAsset.hpp"
 #include "Natrium/Graphics/Shader.hpp"
 
@@ -26,6 +27,25 @@ namespace Na::Graphics {
 		virtual void end_frame(void) = 0;
 
 		virtual void bind_pipeline(View<const Pipeline> pipeline) = 0;
+
+		virtual void bind_uniform_set(
+			View<const UniformSet> uniform_set,
+			View<const Pipeline> pipeline,
+			u32 set_index = 0
+		) = 0;
+
+		virtual void bind_uniform_sets(
+			const View<const UniformSet>* uniform_sets,
+			u64 set_count,
+			View<const Pipeline> pipeline,
+			u32 starting_index = 0
+		) = 0;
+
+		void bind_uniform_sets(
+			const std::initializer_list<View<const UniformSet>>& uniform_sets,
+			View<const Pipeline> pipeline,
+			u32 starting_index = 0
+		);
 
 		virtual void set_push_constant(
 			u32 size,

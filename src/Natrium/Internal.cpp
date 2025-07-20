@@ -79,6 +79,21 @@ namespace Na::VulkanImpl {
 		Device::Get()->logical_device().freeCommandBuffers(Device::Get()->single_time_cmd_pool(), 1, &cmd_buffer);
 	}
 
+	vk::DescriptorSet Internal::CreateDescriptorSet(vk::DescriptorSetLayout layout, vk::DescriptorPool pool)
+	{
+		vk::DescriptorSetAllocateInfo alloc_info;
+		alloc_info.descriptorPool = pool;
+		alloc_info.descriptorSetCount = 1;
+		alloc_info.pSetLayouts = &layout;
+
+		vk::DescriptorSet descriptor_set;
+
+		vk::Result result = Device::Get()->logical_device().allocateDescriptorSets(&alloc_info, &descriptor_set);
+		NA_VERIFY_VK(result, "Failed to allocate descriptor set!");
+
+		return descriptor_set;
+	}
+
 	void Internal::WriteToDescriptorSet(
 		vk::DescriptorSet set,
 		u32 binding,

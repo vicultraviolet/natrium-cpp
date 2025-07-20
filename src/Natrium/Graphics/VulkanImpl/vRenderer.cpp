@@ -11,6 +11,8 @@
 #include "Natrium/Graphics/VulkanImpl/vUniformBuffer.hpp"
 #include "Natrium/Graphics/VulkanImpl/vStorageBuffer.hpp"
 
+#include "Natrium/Graphics/VulkanImpl/vUniformSet.hpp"
+
 #include "Natrium/Graphics/VulkanImpl/vDevice.hpp"
 
 namespace Na::VulkanImpl {
@@ -25,6 +27,7 @@ namespace Na::VulkanImpl {
 
 		this->_create_command_objects();
 		this->_create_sync_objects();
+		this->_create_descriptor_pool();
 	}
 
 	void Renderer::destroy(void)
@@ -33,6 +36,12 @@ namespace Na::VulkanImpl {
 			return;
 
 		const auto& logical_device = Device::Get()->logical_device();
+
+		if (m_DescriptorPool)
+		{
+			logical_device.destroyDescriptorPool(m_DescriptorPool);
+			m_DescriptorPool = nullptr;
+		}
 
 		for (FrameData& fd : m_Frames)
 		{
@@ -219,15 +228,74 @@ namespace Na::VulkanImpl {
 		auto pipeline = static_ref_cast<const VulkanImpl::Pipeline>(_pipeline);
 
 		fd.cmd_buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline->pipeline());
+	}
 
-		if (pipeline->descriptor_set())
-			fd.cmd_buffer.bindDescriptorSets(
-				vk::PipelineBindPoint::eGraphics,
-				pipeline->layout(),
-				0, // first set
-				1, &pipeline->descriptor_set(),
-				pipeline->dynamic_offset_count(), pipeline->dynamic_offsets().ptr() + (m_FrameIndex * pipeline->dynamic_offset_count())
+	void Renderer::bind_uniform_set(
+		View<const Graphics::UniformSet> _uniform_set,
+		View<const Graphics::Pipeline> _pipeline,
+		u32 set_index
+	)
+	{
+		const auto& logical_device = Device::Get()->logical_device();
+		FrameData& fd = m_Frames[m_FrameIndex];
+
+		auto pipeline = static_ref_cast<const Pipeline>(_pipeline);
+		auto uniform_set = static_ref_cast<const UniformSet>(_uniform_set);
+
+		u64 stride = (u64)m_FrameIndex * (u64)uniform_set->dynamic_offset_count();
+		const u32* dynamic_offsets = uniform_set->dynamic_offsets().ptr() + stride;
+
+		fd.cmd_buffer.bindDescriptorSets(
+			vk::PipelineBindPoint::eGraphics,
+			pipeline->layout(),
+			set_index,
+			1, &uniform_set->descriptor_set(),
+			uniform_set->dynamic_offset_count(), dynamic_offsets
+		);
+	}
+
+	void Renderer::bind_uniform_sets(
+		const View<const Graphics::UniformSet>* uniform_sets,
+		u64 set_count,
+		View<const Graphics::Pipeline> _pipeline,
+		u32 starting_index
+	)
+	{
+		const auto& logical_device = Device::Get()->logical_device();
+		FrameData& fd = m_Frames[m_FrameIndex];
+
+		auto pipeline = static_ref_cast<const Pipeline>(_pipeline);
+
+		u64 dynamic_offset_index = 0;
+		u64 dynamic_offset_count = 0;
+
+		for (u64 i = 0; i < set_count; i++)
+		{
+			auto uniform_set = static_ref_cast<const UniformSet>(uniform_sets[i]);
+
+			m_DescriptorSets[i] = uniform_set->descriptor_set();
+
+			if (uniform_set->dynamic_offsets().empty())
+				continue;
+
+			dynamic_offset_count += uniform_set->dynamic_offset_count();
+
+			memcpy(
+				m_DynamicOffsets.data() + dynamic_offset_index,
+				uniform_set->dynamic_offsets().ptr() + (u64)m_FrameIndex * (u64)uniform_set->dynamic_offset_count(),
+				uniform_set->dynamic_offset_count() * sizeof(u32)
 			);
+
+			dynamic_offset_index += uniform_set->dynamic_offset_count() * sizeof(u32);
+		}
+
+		fd.cmd_buffer.bindDescriptorSets(
+			vk::PipelineBindPoint::eGraphics,
+			pipeline->layout(),
+			starting_index,
+			(u32)set_count, m_DescriptorSets.data(),
+			(u32)dynamic_offset_count, m_DynamicOffsets.data()
+		);
 	}
 
 	void Renderer::set_push_constant(
@@ -371,7 +439,35 @@ namespace Na::VulkanImpl {
 
 	}
 
-	Renderer::Renderer(Renderer&& other)
+	void Renderer::_create_descriptor_pool(void)
+	{
+		constexpr u32 k_Count = 3;
+
+		constexpr u32 k_MaxUniformBuffers = 16;
+		constexpr u32 k_MaxStorageBuffers = 16;
+		constexpr u32 k_MaxTextures = 32;
+
+		std::array<vk::DescriptorPoolSize, k_Count> descriptor_pool_sizes{};
+
+		descriptor_pool_sizes[0].type = vk::DescriptorType::eUniformBufferDynamic;
+		descriptor_pool_sizes[0].descriptorCount = k_MaxUniformBuffers;
+
+		descriptor_pool_sizes[1].type = vk::DescriptorType::eStorageBufferDynamic;
+		descriptor_pool_sizes[1].descriptorCount = k_MaxStorageBuffers;
+
+		descriptor_pool_sizes[2].type = vk::DescriptorType::eCombinedImageSampler;
+		descriptor_pool_sizes[2].descriptorCount = k_MaxTextures;
+
+		vk::DescriptorPoolCreateInfo create_info;
+
+		create_info.maxSets = k_MaxUniformBuffers + k_MaxStorageBuffers + k_MaxTextures;
+		create_info.poolSizeCount = k_Count;
+		create_info.pPoolSizes = descriptor_pool_sizes.data();
+
+		m_DescriptorPool = Device::Get()->logical_device().createDescriptorPool(create_info);
+	}
+
+	Renderer::Renderer(Renderer&& other) noexcept
 	: m_Window(std::move(other.m_Window)),
 
 	m_GraphicsCmdPool(std::exchange(other.m_GraphicsCmdPool, nullptr)),
@@ -380,10 +476,12 @@ namespace Na::VulkanImpl {
 	m_FrameIndex(other.m_FrameIndex),
 
 	m_ImageInFlightFences(std::move(other.m_ImageInFlightFences)),
-	m_ImageIndex(other.m_ImageIndex)
+	m_ImageIndex(other.m_ImageIndex),
+
+	m_DescriptorPool(std::exchange(other.m_DescriptorPool, nullptr))
 	{}
 
-	Renderer& Renderer::operator=(Renderer&& other)
+	Renderer& Renderer::operator=(Renderer&& other) noexcept
 	{
 		this->destroy();
 
@@ -396,6 +494,8 @@ namespace Na::VulkanImpl {
 
 		m_ImageInFlightFences = std::move(other.m_ImageInFlightFences);
 		m_ImageIndex = other.m_ImageIndex;
+		
+		m_DescriptorPool = std::exchange(other.m_DescriptorPool, nullptr);
 
 		return *this;
 	}

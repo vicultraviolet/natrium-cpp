@@ -3,17 +3,19 @@
 
 #include "Natrium/Graphics/Pipeline.hpp"
 #include "Natrium/Graphics/Renderer.hpp"
+#include "Natrium/Graphics/UniformSetLayout.hpp"
 
 namespace Na::VulkanImpl {
-	using Shaders = std::initializer_list<View<const Graphics::Shader>>;
-
 	class Pipeline : public Graphics::Pipeline {
 	public:
 		Pipeline(void) = default;
 		Pipeline(
 			View<const Graphics::Renderer> renderer,
-			const Graphics::VertexAttributes& vertex_shader_layout = {},
-			const Shaders& shaders = {}
+			const Graphics::VertexAttributes& vertex_layout = {},
+			const View<const Graphics::UniformSetLayout>* uniform_set_layouts = nullptr,
+			u64 uniform_set_layout_count = 0,
+			const View<const Graphics::Shader>* shaders = nullptr,
+			u64 shader_count = 0
 		);
 
 		~Pipeline(void) { this->destroy(); }
@@ -25,35 +27,16 @@ namespace Na::VulkanImpl {
 		Pipeline(Pipeline&& other);
 		Pipeline& operator=(Pipeline&& other);
 
-		[[nodiscard]] inline vk::Pipeline pipeline(void) const { return m_Pipeline; }
+		[[nodiscard]] inline vk::Pipeline& pipeline(void) { return m_Pipeline; }
+		[[nodiscard]] inline const vk::Pipeline& pipeline(void) const { return m_Pipeline; }
 
-		[[nodiscard]] inline vk::DescriptorSetLayout descriptor_layout(void) const { return m_DescriptorLayout; }
-		[[nodiscard]] inline vk::PipelineLayout layout(void) const { return m_Layout; }
-
-		[[nodiscard]] inline vk::DescriptorPool descriptor_pool(void) const { return m_DescriptorPool; }
-		[[nodiscard]] inline const vk::DescriptorSet& descriptor_set(void) const { return m_DescriptorSet; }
-
-		[[nodiscard]] inline ArrayList<u32>& dynamic_offsets(void) { return m_DynamicOffsets; }
-		[[nodiscard]] inline const ArrayList<u32>& dynamic_offsets(void) const { return m_DynamicOffsets; }
-		[[nodiscard]] inline u32 dynamic_offset_count(void) const { return m_DynamicOffsetCount; }
-		[[nodiscard]] inline u32 dynamic_offset_index(void) const { return m_DynamicOffsetIndex; }
-		inline void increment_dynamic_offset_index(void) { m_DynamicOffsetIndex++; }
+		[[nodiscard]] inline vk::PipelineLayout& layout(void) { return m_Layout; }
+		[[nodiscard]] inline const vk::PipelineLayout& layout(void) const { return m_Layout; }
 
 		[[nodiscard]] inline operator bool(void) const { return m_Pipeline; }
 	private:
-		void _set_descriptor_set(const Shaders& shaders, u32 max_frames_in_flight);
-	private:
 		vk::Pipeline m_Pipeline;
-
-		vk::DescriptorSetLayout m_DescriptorLayout;
 		vk::PipelineLayout m_Layout;
-
-		vk::DescriptorPool m_DescriptorPool;
-		vk::DescriptorSet m_DescriptorSet;
-
-		ArrayList<u32> m_DynamicOffsets;
-		u32 m_DynamicOffsetCount = 0;
-		u32 m_DynamicOffsetIndex = 0;
 	};
 } // namespace Na
 

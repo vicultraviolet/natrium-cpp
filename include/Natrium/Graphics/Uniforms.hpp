@@ -32,9 +32,6 @@ namespace Na::Graphics {
 	public:
 		static UniqueRef<StorageBuffer> Make(u64 size, Ref<const RendererSettingsAsset> renderer_settings);
 
-		virtual ~StorageBuffer(void) { this->destroy(); }
-		virtual void destroy(void) override {}
-
 		[[nodiscard]] virtual u64 size(void) const = 0;
 		[[nodiscard]] inline UniformType type(void) const override { return UniformType::StorageBuffer; }
 	};

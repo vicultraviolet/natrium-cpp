@@ -11,8 +11,17 @@ namespace Na::Graphics {
 	{
 		switch (Device::Get()->backend())
 		{
-			case DeviceBackend::Vulkan: return UniqueRef<VulkanImpl::Renderer>::Make(window, settings);
+		case DeviceBackend::Vulkan: return UniqueRef<VulkanImpl::Renderer>::Make(window, settings);
 		}
 		return nullptr;
+	}
+
+	void Renderer::bind_uniform_sets(
+		const std::initializer_list<View<const UniformSet>>& uniform_sets,
+		View<const Pipeline> pipeline,
+		u32 starting_index
+	)
+	{
+		return this->bind_uniform_sets(uniform_sets.begin(), uniform_sets.size(), pipeline, starting_index);
 	}
 } // namespace Na::Graphics

@@ -38,6 +38,8 @@ namespace Na::VulkanImpl::Internal {
 	vk::CommandBuffer BeginSingleTimeCommands(void);
 	void EndSingleTimeCommands(vk::CommandBuffer cmd_buffer);
 
+	vk::DescriptorSet CreateDescriptorSet(vk::DescriptorSetLayout layout, vk::DescriptorPool pool);
+
 	void WriteToDescriptorSet(
 		vk::DescriptorSet set,
 		u32 binding,
