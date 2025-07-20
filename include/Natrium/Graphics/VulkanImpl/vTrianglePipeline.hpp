@@ -1,14 +1,13 @@
-#if !defined(NA_VULKAN_IMPL_PIPELINE_HPP)
-#define NA_VULKAN_IMPL_PIPELINE_HPP
+#if !defined(NA_VULKAN_IMPL_TRIANGLE_PIPELINE_HPP)
+#define NA_VULKAN_IMPL_TRIANGLE_PIPELINE_HPP
 
-#include "Natrium/Graphics/Pipelines.hpp"
+#include "Natrium/Graphics/VulkanImpl/vPipeline.hpp"
 #include "Natrium/Graphics/Renderer.hpp"
 #include "Natrium/Graphics/UniformSetLayout.hpp"
 
 namespace Na::VulkanImpl {
 	class TrianglePipeline : public Graphics::TrianglePipeline {
 	public:
-		TrianglePipeline(void) = default;
 		TrianglePipeline(
 			View<const Graphics::Renderer> renderer,
 			const Graphics::VertexAttributes& vertex_layout = {},
@@ -19,25 +18,18 @@ namespace Na::VulkanImpl {
 		);
 
 		~TrianglePipeline(void) { this->destroy(); }
-		void destroy(void) override;
+		void destroy(void) { m_Pipeline.destroy(); }
 
-		TrianglePipeline(const TrianglePipeline& other) = delete;
-		TrianglePipeline& operator=(const TrianglePipeline& other) = delete;
+		[[nodiscard]] vk::Pipeline& pipeline(void) { return m_Pipeline.pipeline; }
+		[[nodiscard]] const vk::Pipeline& pipeline(void) const { return m_Pipeline.pipeline; }
 
-		TrianglePipeline(TrianglePipeline&& other);
-		TrianglePipeline& operator=(TrianglePipeline&& other);
-
-		[[nodiscard]] inline vk::Pipeline& pipeline(void) { return m_Pipeline; }
-		[[nodiscard]] inline const vk::Pipeline& pipeline(void) const { return m_Pipeline; }
-
-		[[nodiscard]] inline vk::PipelineLayout& layout(void) { return m_Layout; }
-		[[nodiscard]] inline const vk::PipelineLayout& layout(void) const { return m_Layout; }
+		[[nodiscard]] vk::PipelineLayout& layout(void) { return m_Pipeline.layout; }
+		[[nodiscard]] const vk::PipelineLayout& layout(void) const { return m_Pipeline.layout; }
 
 		[[nodiscard]] inline operator bool(void) const override { return m_Pipeline; }
 	private:
-		vk::Pipeline m_Pipeline;
-		vk::PipelineLayout m_Layout;
+		VulkanImpl::Pipeline m_Pipeline;
 	};
 } // namespace Na
 
-#endif // NA_VULKAN_IMPL_PIPELINE_HPP
+#endif // NA_VULKAN_IMPL_TRIANGLE_PIPELINE_HPP

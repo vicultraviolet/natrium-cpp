@@ -122,7 +122,7 @@ namespace Na::VulkanImpl {
 		layout_info.setLayoutCount = (u32)uniform_set_layout_count;
 		layout_info.pSetLayouts = descriptor_set_layouts.ptr();
 
-		m_Layout = logical_device.createPipelineLayout(layout_info);
+		m_Pipeline.layout = logical_device.createPipelineLayout(layout_info);
 
 		vk::GraphicsPipelineCreateInfo create_info;
 
@@ -130,7 +130,7 @@ namespace Na::VulkanImpl {
 		create_info.pStages = shader_infos.ptr();
 
 		create_info.renderPass = renderer->window_data().render_pass();
-		create_info.layout = m_Layout;
+		create_info.layout = m_Pipeline.layout;
 
 		create_info.pDynamicState = &dynamic_state_info;
 		create_info.pViewportState = &viewport_info;
@@ -141,41 +141,6 @@ namespace Na::VulkanImpl {
 		create_info.pColorBlendState = &color_blend_info;
 		create_info.pDepthStencilState = &depth_stencil_info;
 
-		m_Pipeline = logical_device.createGraphicsPipeline(nullptr, create_info).value;
-	}
-
-	void TrianglePipeline::destroy(void)
-	{
-		const auto& logical_device = Device::Get()->logical_device();
-
-		if (m_Pipeline)
-		{
-			logical_device.destroyPipeline(m_Pipeline);
-			m_Pipeline = nullptr;
-		}
-
-		if (m_Layout)
-		{
-			logical_device.destroyPipelineLayout(m_Layout);
-			m_Layout = nullptr;
-		}
-	}
-
-	TrianglePipeline::TrianglePipeline(TrianglePipeline&& other)
-	: m_Pipeline(std::exchange(other.m_Pipeline, nullptr)),
-	m_Layout(std::exchange(other.m_Layout, nullptr))
-	{}
-
-	TrianglePipeline& TrianglePipeline::operator=(TrianglePipeline&& other)
-	{
-		if (this == &other)
-			return *this;
-
-		this->destroy();
-
-		m_Pipeline = std::exchange(other.m_Pipeline, nullptr);
-		m_Layout = std::exchange(other.m_Layout, nullptr);
-
-		return *this;
+		m_Pipeline.pipeline = logical_device.createGraphicsPipeline(nullptr, create_info).value;
 	}
 } // namespace Na

@@ -119,8 +119,8 @@ namespace Na::VulkanImpl {
 		
 		vk::DescriptorPool m_DescriptorPool = nullptr;
 
-		std::array<vk::DescriptorSet, 64> m_DescriptorSets;
-		std::array<u32, 32> m_DynamicOffsets;
+		std::array<vk::DescriptorSet, 4> m_DescriptorSets{};
+		std::array<u32, 32> m_DynamicOffsets{};
 	};
 } // namespace Na
 

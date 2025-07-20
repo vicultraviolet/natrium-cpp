@@ -225,9 +225,14 @@ namespace Na::VulkanImpl {
 		const auto& logical_device = Device::Get()->logical_device();
 		FrameData& fd = m_Frames[m_FrameIndex];
 
-		auto pipeline = static_ref_cast<const TrianglePipeline>(_pipeline);
-
-		fd.cmd_buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline->pipeline());
+		switch (_pipeline->type())
+		{
+			case PipelineType::Triangle:
+			{
+				auto pipeline = static_ref_cast<const TrianglePipeline>(_pipeline);
+				fd.cmd_buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline->pipeline());
+			}
+		}
 	}
 
 	void Renderer::bind_uniform_set(
@@ -239,19 +244,25 @@ namespace Na::VulkanImpl {
 		const auto& logical_device = Device::Get()->logical_device();
 		FrameData& fd = m_Frames[m_FrameIndex];
 
-		auto pipeline = static_ref_cast<const TrianglePipeline>(_pipeline);
 		auto uniform_set = static_ref_cast<const UniformSet>(_uniform_set);
 
 		u64 stride = (u64)m_FrameIndex * (u64)uniform_set->dynamic_offset_count();
 		const u32* dynamic_offsets = uniform_set->dynamic_offsets().ptr() + stride;
 
-		fd.cmd_buffer.bindDescriptorSets(
-			vk::PipelineBindPoint::eGraphics,
-			pipeline->layout(),
-			set_index,
-			1, &uniform_set->descriptor_set(),
-			uniform_set->dynamic_offset_count(), dynamic_offsets
-		);
+		switch (_pipeline->type())
+		{
+			case PipelineType::Triangle:
+			{
+				auto pipeline = static_ref_cast<const TrianglePipeline>(_pipeline);
+				fd.cmd_buffer.bindDescriptorSets(
+					vk::PipelineBindPoint::eGraphics,
+					pipeline->layout(),
+					set_index,
+					1, &uniform_set->descriptor_set(),
+					uniform_set->dynamic_offset_count(), dynamic_offsets
+				);
+			}
+		}
 	}
 
 	void Renderer::bind_uniform_sets(
@@ -263,8 +274,6 @@ namespace Na::VulkanImpl {
 	{
 		const auto& logical_device = Device::Get()->logical_device();
 		FrameData& fd = m_Frames[m_FrameIndex];
-
-		auto pipeline = static_ref_cast<const TrianglePipeline>(_pipeline);
 
 		u64 dynamic_offset_index = 0;
 		u64 dynamic_offset_count = 0;
@@ -289,13 +298,20 @@ namespace Na::VulkanImpl {
 			dynamic_offset_index += uniform_set->dynamic_offset_count() * sizeof(u32);
 		}
 
-		fd.cmd_buffer.bindDescriptorSets(
-			vk::PipelineBindPoint::eGraphics,
-			pipeline->layout(),
-			starting_index,
-			(u32)set_count, m_DescriptorSets.data(),
-			(u32)dynamic_offset_count, m_DynamicOffsets.data()
-		);
+		switch (_pipeline->type())
+		{
+			case PipelineType::Triangle:
+			{
+				auto pipeline = static_ref_cast<const TrianglePipeline>(_pipeline);
+				fd.cmd_buffer.bindDescriptorSets(
+					vk::PipelineBindPoint::eGraphics,
+					pipeline->layout(),
+					starting_index,
+					(u32)set_count, m_DescriptorSets.data(),
+					(u32)dynamic_offset_count, m_DynamicOffsets.data()
+				);
+			}
+		}
 	}
 
 	void Renderer::set_push_constant(
@@ -309,10 +325,11 @@ namespace Na::VulkanImpl {
 		const auto& logical_device = Device::Get()->logical_device();
 		const FrameData& fd = m_Frames[m_FrameIndex];
 
-		auto pipeline = static_ref_cast<const TrianglePipeline>(_pipeline);
+		constexpr u64 k_Offset = 8;
+		auto pipeline = (const Pipeline*)(((Byte*)_pipeline.ptr()) + k_Offset);
 
 		fd.cmd_buffer.pushConstants(
-			pipeline->layout(),
+			pipeline->layout,
 			ShaderStageToVk(stage),
 			offset,
 			size,
@@ -478,7 +495,10 @@ namespace Na::VulkanImpl {
 	m_ImageInFlightFences(std::move(other.m_ImageInFlightFences)),
 	m_ImageIndex(other.m_ImageIndex),
 
-	m_DescriptorPool(std::exchange(other.m_DescriptorPool, nullptr))
+	m_DescriptorPool(std::exchange(other.m_DescriptorPool, nullptr)),
+
+	m_DescriptorSets(std::move(other.m_DescriptorSets)),
+	m_DynamicOffsets(std::move(other.m_DynamicOffsets))
 	{}
 
 	Renderer& Renderer::operator=(Renderer&& other) noexcept
@@ -496,6 +516,9 @@ namespace Na::VulkanImpl {
 		m_ImageIndex = other.m_ImageIndex;
 		
 		m_DescriptorPool = std::exchange(other.m_DescriptorPool, nullptr);
+
+		m_DescriptorSets = std::move(other.m_DescriptorSets);
+		m_DynamicOffsets = std::move(other.m_DynamicOffsets);
 
 		return *this;
 	}
