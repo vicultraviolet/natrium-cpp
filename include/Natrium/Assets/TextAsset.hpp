@@ -9,7 +9,7 @@ namespace Na {
 		TextAsset(void) = default;
 		TextAsset(const UUID_t& uuid) : Asset(uuid) {}
 
-		void load(const std::filesystem::path& path) override;
+		FileErrorCode load(const std::filesystem::path& path) override;
 
 		[[nodiscard]] inline std::string& str(void) { return m_String; }
 		[[nodiscard]] inline const std::string& str(void) const { return m_String; }

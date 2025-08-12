@@ -72,4 +72,6 @@
 #include "./Template/DoubleList.hpp"
 #include "./Template/Arena.hpp"
 
+#include "./Template/Expected.hpp"
+
 #endif // NA_PCH_BASE_HPP

@@ -2,6 +2,7 @@
 #define NA_ASSET_HPP
 
 #include "Natrium/Core/UUID.hpp"
+#include "Natrium/Core/ErrorCodes.hpp"
 
 namespace Na {
 	class Asset {
@@ -11,7 +12,20 @@ namespace Na {
 
 		virtual ~Asset(void) = default;
 
-		virtual void load(const std::filesystem::path& path) {}
+		virtual inline FileErrorCode load(const std::filesystem::path& path)
+		{
+			if (!std::filesystem::exists(path))
+			{
+				return FileErrorCode::NotFound;
+			}
+
+			if (!std::filesystem::is_regular_file(path))
+			{
+				return FileErrorCode::InvalidFormat;
+			}
+
+			return FileErrorCode::None;
+		}
 
 		[[nodiscard]] const UUID_t& uuid(void) const { return m_UUID; }
 		[[nodiscard]] virtual operator bool(void) const = 0;

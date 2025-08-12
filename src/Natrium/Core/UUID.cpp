@@ -23,9 +23,9 @@ namespace Na {
 	{
 		try {
 			return UUID_t::from_string(uuid_string).value();
-		} catch (const std::exception& e) {
-			g_Logger.printf(Error, "Failed to parse UUID from string '{}': {}", uuid_string, e.what());
-			throw;
+		} catch (...)
+		{
+			return UUID_t();
 		}
 	}
 

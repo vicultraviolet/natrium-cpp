@@ -13,13 +13,13 @@ namespace Na::VulkanImpl {
 	vk::Format VertexAttributeTypeToVk(VertexAttributeType type);
 	vk::DescriptorType UniformTypeToVk(UniformType type);
 
-	ArrayList<u32> CompileToSpirV(
+	Expected<ArrayList<u32>, ShaderErrorCode> CompileToSpirV(
 		const std::string_view& glsl,
 		const std::string_view& name,
 		const std::string_view& entry_point = "main"
 	);
 
-	ArrayList<u32> LoadSpirV(const std::filesystem::path& path);
+	Expected<ArrayList<u32>, FileErrorCode> LoadSpirV(const std::filesystem::path& path);
 
 	class Shader : public Graphics::Shader {
 	public:

@@ -19,7 +19,7 @@ namespace Na {
 
 		~ModelAsset(void) = default;
 
-		void load(const std::filesystem::path& path) override;
+		FileErrorCode load(const std::filesystem::path& path) override;
 
 		[[nodiscard]] static const Graphics::VertexAttributes& VertexAttributes(void);
 

@@ -6,6 +6,18 @@
 #include <shaderc/shaderc.hpp>
 
 namespace Na::VulkanImpl {
+	static ShaderErrorCode shadercStatusToNative(shaderc_compilation_status status)
+	{
+		switch (status)
+		{
+
+		case shaderc_compilation_status_success:           return ShaderErrorCode::None;
+		case shaderc_compilation_status_invalid_stage:     return ShaderErrorCode::InvalidStage;
+		case shaderc_compilation_status_compilation_error: return ShaderErrorCode::CompilationFailed;
+		}
+		return ShaderErrorCode::Unknown;
+	}
+
 	vk::ShaderStageFlagBits ShaderStageToVk(ShaderStage stage) {
 		switch (stage)
 		{
@@ -45,7 +57,7 @@ namespace Na::VulkanImpl {
 		}
 	}
 
-	ArrayList<u32> CompileToSpirV(
+	Expected<ArrayList<u32>, ShaderErrorCode> CompileToSpirV(
 		const std::string_view& glsl,
 		const std::string_view& name,
 		const std::string_view& entry_point
@@ -97,7 +109,10 @@ namespace Na::VulkanImpl {
 					spv.GetNumWarnings()
 				);
 				g_Logger.print(Na::Error, spv.GetErrorMessage());
-				throw std::runtime_error("Failed to compile shader!");
+
+				return Unexpected(
+					shadercStatusToNative(spv.GetCompilationStatus())
+				);
 			}
 		}
 
@@ -106,13 +121,31 @@ namespace Na::VulkanImpl {
 		return ArrayList<u32>(spv.begin(), spv.end());
 	}
 
-	ArrayList<u32> LoadSpirV(const std::filesystem::path& path)
+	Expected<ArrayList<u32>, FileErrorCode>LoadSpirV(const std::filesystem::path& path)
 	{
+		if (!std::filesystem::exists(path))
+		{
+			return Unexpected(FileErrorCode::NotFound);
+		}
+
+		if (!std::filesystem::is_regular_file(path))
+		{
+			return Unexpected(FileErrorCode::InvalidFormat);
+		}
+
 		std::ifstream file(path, std::ios::ate | std::ios::binary);
-		NA_ASSERT(file, "Failed to load SPIR-V: Could not open {}!", path.string());
+		
+		if (!file)
+		{
+			return Unexpected(FileErrorCode::Unknown);
+		}
 
 		u64 size = file.tellg();
-		NA_ASSERT(size % 4 == 0, "Failed to Load SPIR-V: {} File size wasn't a multiple of 4!", path.string());
+		if (size % 4 != 0)
+		{
+			file.close();
+			return Unexpected(FileErrorCode::InvalidFormat);
+		}
 
 		ArrayList<u32> file_data(size / 4);
 		file_data.resize(file_data.capacity());

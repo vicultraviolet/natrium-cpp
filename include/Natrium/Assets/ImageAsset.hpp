@@ -10,7 +10,7 @@ namespace Na {
 		ImageAsset(void) = default;
 		ImageAsset(const UUID_t& uuid) : Asset(uuid) {}
 
-		void load(const std::filesystem::path& path) override;
+		FileErrorCode load(const std::filesystem::path& path) override;
 
 		~ImageAsset(void) { this->destroy(); }
 		inline void destroy(void) { free(m_Data); m_Data = nullptr; }
