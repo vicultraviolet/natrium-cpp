@@ -16,6 +16,8 @@ namespace Na::VulkanImpl {
 
 		[[nodiscard]] inline operator bool(void) const { return this->pipeline && this->layout; }
 	};
+
+	constexpr u64 k_PipelineOffset = 8;
 } // namespace Na::VulkanImpl
 
 #endif // NA_VULKAN_IMPL_PIPELINE_HPP

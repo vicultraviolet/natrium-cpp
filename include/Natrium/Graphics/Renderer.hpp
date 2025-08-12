@@ -71,6 +71,10 @@ namespace Na::Graphics {
 			u32 first_instance = 0
 		) = 0;
 
+		virtual void dispatch_compute(
+			glm::uvec3 workgroup_count
+		) = 0;
+
 		virtual void set_descriptor_buffer(
 			View<const Uniform> buffer,
 			const void* data

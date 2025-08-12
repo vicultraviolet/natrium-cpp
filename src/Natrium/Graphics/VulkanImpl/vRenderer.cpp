@@ -4,6 +4,7 @@
 #include "Internal.hpp"
 #include "Natrium/Graphics/VulkanImpl/vShader.hpp"
 #include "Natrium/Graphics/VulkanImpl/vTrianglePipeline.hpp"
+#include "Natrium/Graphics/VulkanImpl/vComputePipeline.hpp"
 
 #include "Natrium/Graphics/VulkanImpl/vVertexBuffer.hpp"
 #include "Natrium/Graphics/VulkanImpl/vIndexBuffer.hpp"
@@ -158,6 +159,7 @@ namespace Na::VulkanImpl {
 		vk::Result result = vk::Result::eSuccess;
 
 		fd.cmd_buffer.endRenderPass();
+
 		fd.cmd_buffer.end();
 
 		vk::SubmitInfo submit_info;
@@ -225,14 +227,9 @@ namespace Na::VulkanImpl {
 		const auto& logical_device = Device::Get()->logical_device();
 		FrameData& fd = m_Frames[m_FrameIndex];
 
-		switch (_pipeline->type())
-		{
-			case PipelineType::Triangle:
-			{
-				auto pipeline = static_ref_cast<const TrianglePipeline>(_pipeline);
-				fd.cmd_buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline->pipeline());
-			}
-		}
+		auto pipeline = (const Pipeline*)(((Byte*)_pipeline.ptr()) + k_PipelineOffset);
+
+		fd.cmd_buffer.bindPipeline(PipelineTypeToVk(_pipeline->type()), pipeline->pipeline);
 	}
 
 	void Renderer::bind_uniform_set(
@@ -249,20 +246,15 @@ namespace Na::VulkanImpl {
 		u64 stride = (u64)m_FrameIndex * (u64)uniform_set->dynamic_offset_count();
 		const u32* dynamic_offsets = uniform_set->dynamic_offsets().ptr() + stride;
 
-		switch (_pipeline->type())
-		{
-			case PipelineType::Triangle:
-			{
-				auto pipeline = static_ref_cast<const TrianglePipeline>(_pipeline);
-				fd.cmd_buffer.bindDescriptorSets(
-					vk::PipelineBindPoint::eGraphics,
-					pipeline->layout(),
-					set_index,
-					1, &uniform_set->descriptor_set(),
-					uniform_set->dynamic_offset_count(), dynamic_offsets
-				);
-			}
-		}
+		auto pipeline = (const Pipeline*)(((Byte*)_pipeline.ptr()) + k_PipelineOffset);
+
+		fd.cmd_buffer.bindDescriptorSets(
+			PipelineTypeToVk(_pipeline->type()),
+			pipeline->layout,
+			set_index,
+			1, &uniform_set->descriptor_set(),
+			uniform_set->dynamic_offset_count(), dynamic_offsets
+		);
 	}
 
 	void Renderer::bind_uniform_sets(
@@ -298,20 +290,15 @@ namespace Na::VulkanImpl {
 			dynamic_offset_index += uniform_set->dynamic_offset_count() * sizeof(u32);
 		}
 
-		switch (_pipeline->type())
-		{
-			case PipelineType::Triangle:
-			{
-				auto pipeline = static_ref_cast<const TrianglePipeline>(_pipeline);
-				fd.cmd_buffer.bindDescriptorSets(
-					vk::PipelineBindPoint::eGraphics,
-					pipeline->layout(),
-					starting_index,
-					(u32)set_count, m_DescriptorSets.data(),
-					(u32)dynamic_offset_count, m_DynamicOffsets.data()
-				);
-			}
-		}
+		auto pipeline = (const Pipeline*)(((Byte*)_pipeline.ptr()) + k_PipelineOffset);
+
+		fd.cmd_buffer.bindDescriptorSets(
+			PipelineTypeToVk(_pipeline->type()),
+			pipeline->layout,
+			starting_index,
+			(u32)set_count, m_DescriptorSets.data(),
+			(u32)dynamic_offset_count, m_DynamicOffsets.data()
+		);
 	}
 
 	void Renderer::set_push_constant(
@@ -325,8 +312,7 @@ namespace Na::VulkanImpl {
 		const auto& logical_device = Device::Get()->logical_device();
 		const FrameData& fd = m_Frames[m_FrameIndex];
 
-		constexpr u64 k_Offset = 8;
-		auto pipeline = (const Pipeline*)(((Byte*)_pipeline.ptr()) + k_Offset);
+		auto pipeline = (const Pipeline*)(((Byte*)_pipeline.ptr()) + k_PipelineOffset);
 
 		fd.cmd_buffer.pushConstants(
 			pipeline->layout,
@@ -416,6 +402,13 @@ namespace Na::VulkanImpl {
 				break;
 			}
 		}
+	}
+
+	void Renderer::dispatch_compute(glm::uvec3 workgroup_count)
+	{
+		FrameData& fd = m_Frames[m_FrameIndex];
+
+		fd.cmd_buffer.dispatch(workgroup_count.x, workgroup_count.y, workgroup_count.z);
 	}
 
 	void Renderer::_create_command_objects(void)

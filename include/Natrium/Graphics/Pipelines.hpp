@@ -33,11 +33,11 @@ namespace Na::Graphics {
 	public:
 		[[nodiscard]] static UniqueRef<TrianglePipeline> Make(
 			View<const Renderer> renderer,
-			const VertexAttributes& vertex_layout = {},
-			const View<const UniformSetLayout>* uniform_set_layouts = nullptr,
-			u64 uniform_set_layout_count = 0,
-			const View<const Shader>* shaders = nullptr,
-			u64 shader_count = 0
+			const VertexAttributes& vertex_layout,
+			const View<const UniformSetLayout>* uniform_set_layouts,
+			u64 uniform_set_layout_count,
+			const View<const Shader>* shaders,
+			u64 shader_count
 		);
 
 		[[nodiscard]] static UniqueRef<TrianglePipeline> Make(
@@ -53,7 +53,16 @@ namespace Na::Graphics {
 
 	class ComputePipeline : public Pipeline {
 	public:
+		[[nodiscard]] static UniqueRef<ComputePipeline> Make(
+			View<const Shader> shader,
+			const View<const UniformSetLayout>* uniform_set_layouts,
+			u64 uniform_set_layout_count
+		);
 
+		[[nodiscard]] static UniqueRef<ComputePipeline> Make(
+			View<const Shader> shader,
+			const UniformLayout& uniform_layout = {}
+		);
 
 		[[nodiscard]] inline PipelineType type(void) const override { return PipelineType::Compute; }
 	};

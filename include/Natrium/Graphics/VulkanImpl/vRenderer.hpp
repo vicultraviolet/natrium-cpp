@@ -84,6 +84,10 @@ namespace Na::VulkanImpl {
 			const void* data
 		) const override;
 
+		void dispatch_compute(
+			glm::uvec3 workgroup_count
+		) override;
+
 		[[nodiscard]] inline const Window& window(void) const override { return m_Window.window(); }
 		[[nodiscard]] inline Ref<const RendererSettingsAsset> settings(void) const override { return m_Window.settings(); }
 

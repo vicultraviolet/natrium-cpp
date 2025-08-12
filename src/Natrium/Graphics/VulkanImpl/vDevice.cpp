@@ -12,7 +12,7 @@ namespace Na::VulkanImpl {
 	)
 	{
 		if (!k_ValidationLayersEnabled)
-			return vk::False;
+			return VK_FALSE;
 
 		if (severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT)
 		{
@@ -33,7 +33,7 @@ namespace Na::VulkanImpl {
 			g_Logger.print(Trace, data->pMessage);
 		}
 
-		return vk::False;
+		return VK_FALSE;
 	}
 
 	static vk::DebugUtilsMessengerEXT createDbgMessenger(
