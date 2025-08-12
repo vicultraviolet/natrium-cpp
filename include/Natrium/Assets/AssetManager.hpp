@@ -6,7 +6,20 @@
 
 #include "Natrium/Assets/RendererSettingsAsset.hpp"
 
+#include "Natrium/Core/ErrorCodes.hpp"
+
 namespace Na {
+	struct ShaderLoadingError {
+		FileErrorCode file_err_code = FileErrorCode::None;
+		ShaderErrorCode shader_err_code = ShaderErrorCode::None;
+
+		ShaderLoadingError(FileErrorCode file_err_code) : file_err_code(file_err_code) {}
+		ShaderLoadingError(ShaderErrorCode shader_err_code) : shader_err_code(shader_err_code) {}
+		ShaderLoadingError(FileErrorCode file_err_code, ShaderErrorCode shader_err_code)
+		: file_err_code(file_err_code), shader_err_code(shader_err_code)
+		{}
+	};
+
 	class AssetManager {
 	public:
 		AssetManager(void) = default;
@@ -18,14 +31,14 @@ namespace Na {
 		~AssetManager(void) { this->destroy(); }
 		void destroy(void);
 
-		[[nodiscard]] UniqueRef<Graphics::Shader> load_shader(
+		[[nodiscard]] auto load_shader(
 			const std::filesystem::path& path_to_glsl,
 			Graphics::ShaderStage stage,
 			const std::string_view& entry_point = "main"
-		) const;
+		) const -> Expected<UniqueRef<Graphics::Shader>, ShaderLoadingError>;
 
 		template<typename T>
-		Ref<T> load_asset(const std::string& path)
+		[[nodiscard]] auto load_asset(const std::string& path) -> Expected<Ref<T>, FileErrorCode>
 		{
 			static_assert(std::is_base_of<Asset, T>::value, "Failed to load asset: T must inherit from FileAsset!");
 
@@ -36,16 +49,22 @@ namespace Na {
 			}
 
 			Ref<T> asset = Ref<T>::Make(uuid);
-			asset->load(path);
+
+			FileErrorCode err_code = asset->load(path);
+			if (err_code != FileErrorCode::None)
+			{
+				return Unexpected(err_code);
+			}
+
 			m_Assets[uuid] = asset;
 
 			return asset;
 		}
 
-		Ref<RendererSettingsAsset> load_asset(const std::string& path);
+		[[nodiscard]] auto load_asset(const std::string& path) -> Expected<Ref<RendererSettingsAsset>, FileErrorCode>;
 
 		template<typename T>
-		inline Ref<T> load_asset_p(const std::filesystem::path& path) { return this->load_asset<T>(path.string()); }
+		[[nodiscard]] inline Expected<Ref<T>, FileErrorCode> load_asset_p(const std::filesystem::path& path) { return this->load_asset<T>(path.string()); }
 
 		void free_asset(const UUID_t& uuid);
 

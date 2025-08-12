@@ -11,7 +11,7 @@ namespace Na {
 
 		~RendererSettingsAsset(void) = default;
 
-		void load(const std::filesystem::path& path) override;
+		FileErrorCode load(const std::filesystem::path& path) override;
 
 		void set_all(const RendererSettingsAsset& other);
 
@@ -24,6 +24,9 @@ namespace Na {
 		[[nodiscard]] bool anisotropy_enabled(void) const;
 		[[nodiscard]] float max_anisotropy(void) const;
 		[[nodiscard]] bool multisampling_enabled(void) const;
+
+		bool set_json_with_str(std::string_view json_str);
+		[[nodiscard]] std::string json_as_str(void) const;
 
 		[[nodiscard]] inline operator bool(void) const override { return m_Json; }
 	private:

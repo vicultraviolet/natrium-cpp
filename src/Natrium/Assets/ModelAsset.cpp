@@ -4,21 +4,28 @@
 #include <tiny_obj_loader/tiny_obj_loader.h>
 
 namespace Na {
-    static void loadObj(const std::filesystem::path& path, Na::ArrayList<Vertex>& vertices, Na::ArrayList<u32>& indices)
+    FileErrorCode ModelAsset::load(const std::filesystem::path& path)
     {
+        if (!std::filesystem::exists(path))
+        {
+            return FileErrorCode::NotFound;
+		}
+
         tinyobj::attrib_t attrib;
         std::vector<tinyobj::shape_t> shapes;
         std::vector<tinyobj::material_t> materials;
         std::string warn, err;
 
-        bool result = tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, path.string().c_str());
-        NA_ASSERT(result, "Failed to load {}: {} {}", path.string().c_str(), warn, err);
+        if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, path.string().c_str()))
+        {
+            return FileErrorCode::InvalidFormat;
+        }
 
         u64 index_count = 0;
         for (const auto& shape : shapes)
             index_count += shape.mesh.indices.size();
 
-        indices.reallocate(index_count);
+        m_Indices.reallocate(index_count);
 
         std::unordered_map<Vertex, u32> unique_vertices{};
 
@@ -40,18 +47,15 @@ namespace Na {
 
                 if (unique_vertices.count(vertex) == 0)
                 {
-                    unique_vertices[vertex] = (u32)(vertices.size());
-                    vertices.emplace(vertex);
+                    unique_vertices[vertex] = (u32)(m_Vertices.size());
+                    m_Vertices.emplace(vertex);
                 }
 
-                indices.emplace(unique_vertices[vertex]);
+                m_Indices.emplace(unique_vertices[vertex]);
             }
         }
-    }
 
-    void ModelAsset::load(const std::filesystem::path& path)
-    {
-		loadObj(path, m_Vertices, m_Indices);
+		return FileErrorCode::None;
     }
 
     static const Graphics::VertexAttributes vertexAttributes = {

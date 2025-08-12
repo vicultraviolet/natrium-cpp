@@ -43,19 +43,18 @@ namespace Na {
 		return nullptr;
 	}
 
-	UniqueRef<Graphics::Shader> AssetManager::load_shader(
+	auto AssetManager::load_shader(
 		const std::filesystem::path& path_to_glsl,
 		Graphics::ShaderStage stage,
 		const std::string_view& entry_point
-	) const
+	) const -> Expected<UniqueRef<Graphics::Shader>, ShaderLoadingError>
 	{
 		TextAsset glsl;
-		glsl.load(path_to_glsl);
 
-		if (!glsl)
+		FileErrorCode file_err_code = glsl.load(path_to_glsl);
+		if (file_err_code != FileErrorCode::None)
 		{
-			g_Logger.printf(Error, "Failed to load shader: Could not load GLSL file at {}", path_to_glsl.string());
-			return nullptr;
+			return Unexpected(ShaderLoadingError(file_err_code));
 		}
 
 		const std::filesystem::path& input_path = path_to_glsl;
@@ -71,33 +70,57 @@ namespace Na {
 			std::filesystem::last_write_time(input_path) > std::filesystem::last_write_time(output_path)
 		);
 
+		UniqueRef<Graphics::Shader> shader;
+
 		switch (Graphics::Device::Get()->backend())
 		{
 			case Graphics::DeviceBackend::Vulkan:
 			{
 				if (!should_compile)
-					return UniqueRef<VulkanImpl::Shader>::Make(
-						VulkanImpl::LoadSpirV(output_path),
-						stage,
+				{
+					if (auto expected = VulkanImpl::LoadSpirV(output_path))
+					{
+						shader = UniqueRef<VulkanImpl::Shader>::Make(
+							expected.value(),
+							stage,
+							entry_point
+						);
+					} else
+					{
+						return Unexpected(ShaderLoadingError(expected.error()));
+					}
+				} else
+				{
+					if (auto expected = VulkanImpl::CompileToSpirV(
+						glsl.str(),
+						input_path.filename().string(),
 						entry_point
-					);
+					))
+					{
+						const ArrayList<u32>& spv = expected.value();
 
-				ArrayList<u32> spv = VulkanImpl::CompileToSpirV(
-					glsl.str(),
-					input_path.filename().string(),
-					entry_point
-				);
+						std::ofstream output_file(output_path, std::ios::binary);
+						if (!output_file)
+						{
+							return Unexpected(ShaderLoadingError(FileErrorCode::Unknown));
+						}
 
-				return UniqueRef<VulkanImpl::Shader>::Make(spv, stage, entry_point);
+						output_file.write((const char*)spv.ptr(), spv.size() * sizeof(u32));
+						output_file.close();
+
+						shader = UniqueRef<VulkanImpl::Shader>::Make(spv, stage, entry_point);
+					} else
+					{
+						return Unexpected(ShaderLoadingError(expected.error()));
+					}
+				}
 			}
 		}
 
-		return nullptr;
+		return shader;
 	}
 
-	Ref<RendererSettingsAsset> AssetManager::load_asset(
-		const std::string& path
-	)
+	auto AssetManager::load_asset(const std::string& path) -> Expected<Ref<RendererSettingsAsset>, FileErrorCode>
 	{
 		UUID_t uuid = UUID::Generate(path);
 		if (auto it = m_Assets.find(uuid); it != m_Assets.end())
@@ -105,7 +128,11 @@ namespace Na {
 			return dynamic_ref_cast<RendererSettingsAsset>(it->second);
 		}
 
-		if (!std::filesystem::exists(path))
+		auto asset = Ref<RendererSettingsAsset>::Make(uuid);
+
+		FileErrorCode err_code = asset->load(path);
+
+		if (err_code != FileErrorCode::None)
 		{
 			g_Logger.printf(Info, "{} doesn't exist, creating using default values!", path);
 
@@ -119,10 +146,14 @@ namespace Na {
 
 			settings_file.write(default_settings.str().c_str(), default_settings.str().size());
 			settings_file.close();
+
+			err_code = asset->load(path);
+			if (err_code != FileErrorCode::None)
+			{
+				return Unexpected(err_code);
+			}
 		}
 
-		auto asset = Ref<RendererSettingsAsset>::Make(uuid);
-		asset->load(path);
 		m_Assets[uuid] = asset;
 
 		return asset;

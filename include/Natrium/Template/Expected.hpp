@@ -124,19 +124,25 @@ namespace Na {
 			return *this;
 		}
 
-		[[nodiscard]] const T& value(void) const
+		[[nodiscard]] const T& value(void) const &
 		{
 			NA_ASSERT(m_HasValue, "Failed to access Expected value: no value present!");
 			return m_Data.value;
 		}
 
-		[[nodiscard]] T& value(void)
+		[[nodiscard]] T& value(void) &
 		{
 			NA_ASSERT(m_HasValue, "Failed to access Expected value: no value present!");
 			return m_Data.value;
 		}
 
-		[[nodiscard]] const T& value_or(const T& default_value) const
+		[[nodiscard]] T&& value(void) &&
+		{
+			NA_ASSERT(m_HasValue, "Failed to access Expected value: no value present!");
+			return std::move(m_Data.value);
+		}
+
+		[[nodiscard]] T value_or(const T& default_value) const
 		{
 			return m_HasValue ? m_Data.value : default_value;
 		}

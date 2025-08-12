@@ -4,8 +4,18 @@
 #include <stb/stb_image.h>
 
 namespace Na {
-	void ImageAsset::load(const std::filesystem::path& path)
+	FileErrorCode ImageAsset::load(const std::filesystem::path& path)
 	{
+		if (!std::filesystem::exists(path))
+		{
+			return FileErrorCode::NotFound;
+		}
+
+		if (!std::filesystem::is_regular_file(path))
+		{
+			return FileErrorCode::InvalidFormat;
+		}
+
 		int channels;
 		m_Data = stbi_load(
 			path.string().c_str(),
@@ -15,5 +25,13 @@ namespace Na {
 			STBI_rgb_alpha
 		);
 		m_Size = (u64)m_Width * (u64)m_Height * 4;
+
+		if (!m_Data)
+		{
+			//stbi_failure_reason();
+			return FileErrorCode::Unknown;
+		}
+
+		return FileErrorCode::None;
 	}
 } // namespace Na

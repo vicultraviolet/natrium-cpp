@@ -12,13 +12,32 @@
 #endif
 
 namespace Na {
-	void RendererSettingsAsset::load(const std::filesystem::path& path)
+	FileErrorCode RendererSettingsAsset::load(const std::filesystem::path& path)
 	{
+		if (!std::filesystem::exists(path))
+		{
+			return FileErrorCode::NotFound;
+		}
+
 		std::ifstream file(path);
-		NA_ASSERT(file, "Failed to Load RendererSettingsAsset: Could not open {}!", path.C_STR());
+
+		if (!file)
+		{
+			return FileErrorCode::Unknown;
+		}
 
 		m_Path = path;
-		m_Json = nlohmann::json::parse(file);
+
+		try
+		{
+			m_Json = nlohmann::json::parse(file);
+		} catch (const nlohmann::json::parse_error& e)
+		{
+			g_Logger.printf(Error, "Failed to parse renderer settings file {}: {}", path.C_STR(), e.what());
+			return FileErrorCode::InvalidFormat;
+		}
+
+		return FileErrorCode::None;
 	}
 
 	void RendererSettingsAsset::set_all(const RendererSettingsAsset& other)
@@ -69,6 +88,24 @@ namespace Na {
 	bool RendererSettingsAsset::multisampling_enabled(void) const
 	{
 		return m_Json["multisampling_enabled"];
+	}
+
+	bool RendererSettingsAsset::set_json_with_str(std::string_view json_str)
+	{
+		if (!nlohmann::json::accept(json_str))
+		{
+			return false;
+		}
+
+		m_Json = nlohmann::json::parse(json_str);
+		this->_update_file();
+
+		return true;
+	}
+
+	std::string RendererSettingsAsset::json_as_str(void) const
+	{
+		return m_Json.dump(4);
 	}
 
 	void RendererSettingsAsset::_update_file(void) const
