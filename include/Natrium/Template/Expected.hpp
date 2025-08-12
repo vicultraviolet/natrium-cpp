@@ -136,6 +136,16 @@ namespace Na {
 			return m_Data.value;
 		}
 
+		[[nodiscard]] const T& value_or(const T& default_value) const
+		{
+			return m_HasValue ? m_Data.value : default_value;
+		}
+
+		[[nodiscard]] T& value_or(T& default_value)
+		{
+			return m_HasValue ? m_Data.value : default_value;
+		}
+
 		[[nodiscard]] const E& error(void) const
 		{
 			NA_ASSERT(!m_HasValue, "Failed to access Expected error: no error present!");
