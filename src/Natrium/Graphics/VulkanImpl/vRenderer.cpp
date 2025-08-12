@@ -3,7 +3,8 @@
 
 #include "Internal.hpp"
 #include "Natrium/Graphics/VulkanImpl/vShader.hpp"
-#include "Natrium/Graphics/VulkanImpl/vPipeline.hpp"
+#include "Natrium/Graphics/VulkanImpl/vTrianglePipeline.hpp"
+#include "Natrium/Graphics/VulkanImpl/vComputePipeline.hpp"
 
 #include "Natrium/Graphics/VulkanImpl/vVertexBuffer.hpp"
 #include "Natrium/Graphics/VulkanImpl/vIndexBuffer.hpp"
@@ -158,6 +159,7 @@ namespace Na::VulkanImpl {
 		vk::Result result = vk::Result::eSuccess;
 
 		fd.cmd_buffer.endRenderPass();
+
 		fd.cmd_buffer.end();
 
 		vk::SubmitInfo submit_info;
@@ -225,9 +227,9 @@ namespace Na::VulkanImpl {
 		const auto& logical_device = Device::Get()->logical_device();
 		FrameData& fd = m_Frames[m_FrameIndex];
 
-		auto pipeline = static_ref_cast<const VulkanImpl::Pipeline>(_pipeline);
+		auto pipeline = (const Pipeline*)(((Byte*)_pipeline.ptr()) + k_PipelineOffset);
 
-		fd.cmd_buffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline->pipeline());
+		fd.cmd_buffer.bindPipeline(PipelineTypeToVk(_pipeline->type()), pipeline->pipeline);
 	}
 
 	void Renderer::bind_uniform_set(
@@ -239,15 +241,16 @@ namespace Na::VulkanImpl {
 		const auto& logical_device = Device::Get()->logical_device();
 		FrameData& fd = m_Frames[m_FrameIndex];
 
-		auto pipeline = static_ref_cast<const Pipeline>(_pipeline);
 		auto uniform_set = static_ref_cast<const UniformSet>(_uniform_set);
 
 		u64 stride = (u64)m_FrameIndex * (u64)uniform_set->dynamic_offset_count();
 		const u32* dynamic_offsets = uniform_set->dynamic_offsets().ptr() + stride;
 
+		auto pipeline = (const Pipeline*)(((Byte*)_pipeline.ptr()) + k_PipelineOffset);
+
 		fd.cmd_buffer.bindDescriptorSets(
-			vk::PipelineBindPoint::eGraphics,
-			pipeline->layout(),
+			PipelineTypeToVk(_pipeline->type()),
+			pipeline->layout,
 			set_index,
 			1, &uniform_set->descriptor_set(),
 			uniform_set->dynamic_offset_count(), dynamic_offsets
@@ -263,8 +266,6 @@ namespace Na::VulkanImpl {
 	{
 		const auto& logical_device = Device::Get()->logical_device();
 		FrameData& fd = m_Frames[m_FrameIndex];
-
-		auto pipeline = static_ref_cast<const Pipeline>(_pipeline);
 
 		u64 dynamic_offset_index = 0;
 		u64 dynamic_offset_count = 0;
@@ -289,9 +290,11 @@ namespace Na::VulkanImpl {
 			dynamic_offset_index += uniform_set->dynamic_offset_count() * sizeof(u32);
 		}
 
+		auto pipeline = (const Pipeline*)(((Byte*)_pipeline.ptr()) + k_PipelineOffset);
+
 		fd.cmd_buffer.bindDescriptorSets(
-			vk::PipelineBindPoint::eGraphics,
-			pipeline->layout(),
+			PipelineTypeToVk(_pipeline->type()),
+			pipeline->layout,
 			starting_index,
 			(u32)set_count, m_DescriptorSets.data(),
 			(u32)dynamic_offset_count, m_DynamicOffsets.data()
@@ -309,10 +312,10 @@ namespace Na::VulkanImpl {
 		const auto& logical_device = Device::Get()->logical_device();
 		const FrameData& fd = m_Frames[m_FrameIndex];
 
-		auto pipeline = static_ref_cast<const VulkanImpl::Pipeline>(_pipeline);
+		auto pipeline = (const Pipeline*)(((Byte*)_pipeline.ptr()) + k_PipelineOffset);
 
 		fd.cmd_buffer.pushConstants(
-			pipeline->layout(),
+			pipeline->layout,
 			ShaderStageToVk(stage),
 			offset,
 			size,
@@ -330,7 +333,7 @@ namespace Na::VulkanImpl {
 	{
 		FrameData& fd = m_Frames[m_FrameIndex];
 
-		auto vertex_buffer = static_ref_cast<const VulkanImpl::VertexBuffer>(_vertex_buffer);
+		auto vertex_buffer = static_ref_cast<const VertexBuffer>(_vertex_buffer);
 
 		fd.cmd_buffer.bindVertexBuffers(0, { vertex_buffer->native() }, { 0 });
 
@@ -352,8 +355,8 @@ namespace Na::VulkanImpl {
 	{
 		FrameData& fd = m_Frames[m_FrameIndex];
 
-		auto vertex_buffer = static_ref_cast<const VulkanImpl::VertexBuffer>(_vertex_buffer);
-		auto index_buffer = static_ref_cast<const VulkanImpl::IndexBuffer>(_index_buffer);
+		auto vertex_buffer = static_ref_cast<const VertexBuffer>(_vertex_buffer);
+		auto index_buffer = static_ref_cast<const IndexBuffer>(_index_buffer);
 
 		fd.cmd_buffer.bindVertexBuffers(0, { vertex_buffer->native() }, { 0 });
 		fd.cmd_buffer.bindIndexBuffer(index_buffer->native(), 0, vk::IndexType::eUint32);
@@ -377,7 +380,7 @@ namespace Na::VulkanImpl {
 		{
 			case Graphics::UniformType::UniformBuffer:
 			{
-				auto ubo = static_ref_cast<const VulkanImpl::UniformBuffer>(buffer);
+				auto ubo = static_ref_cast<const UniformBuffer>(buffer);
 
 				void* mapped = (Byte*)(ubo->mapped_data()) + (m_FrameIndex * ubo->aligned_size());
 				memcpy(mapped, data, ubo->per_frame_size());
@@ -386,7 +389,7 @@ namespace Na::VulkanImpl {
 			}
 			case Graphics::UniformType::StorageBuffer:
 			{
-				auto ssbo = static_ref_cast<const VulkanImpl::StorageBuffer>(buffer);
+				auto ssbo = static_ref_cast<const StorageBuffer>(buffer);
 
 				void* mapped = (Byte*)(ssbo->mapped_data()) + (m_FrameIndex * ssbo->aligned_size());
 				memcpy(mapped, data, ssbo->per_frame_size());
@@ -399,6 +402,13 @@ namespace Na::VulkanImpl {
 				break;
 			}
 		}
+	}
+
+	void Renderer::dispatch_compute(glm::uvec3 workgroup_count)
+	{
+		FrameData& fd = m_Frames[m_FrameIndex];
+
+		fd.cmd_buffer.dispatch(workgroup_count.x, workgroup_count.y, workgroup_count.z);
 	}
 
 	void Renderer::_create_command_objects(void)
@@ -478,7 +488,10 @@ namespace Na::VulkanImpl {
 	m_ImageInFlightFences(std::move(other.m_ImageInFlightFences)),
 	m_ImageIndex(other.m_ImageIndex),
 
-	m_DescriptorPool(std::exchange(other.m_DescriptorPool, nullptr))
+	m_DescriptorPool(std::exchange(other.m_DescriptorPool, nullptr)),
+
+	m_DescriptorSets(std::move(other.m_DescriptorSets)),
+	m_DynamicOffsets(std::move(other.m_DynamicOffsets))
 	{}
 
 	Renderer& Renderer::operator=(Renderer&& other) noexcept
@@ -496,6 +509,9 @@ namespace Na::VulkanImpl {
 		m_ImageIndex = other.m_ImageIndex;
 		
 		m_DescriptorPool = std::exchange(other.m_DescriptorPool, nullptr);
+
+		m_DescriptorSets = std::move(other.m_DescriptorSets);
+		m_DynamicOffsets = std::move(other.m_DynamicOffsets);
 
 		return *this;
 	}

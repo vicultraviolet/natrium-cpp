@@ -3,7 +3,6 @@
 
 #include "Natrium/Graphics/Device.hpp"
 #include "Internal.hpp"
-#include "Natrium/Graphics/Pipeline.hpp"
 
 #include "Natrium/Graphics/VulkanImpl/vDevice.hpp"
 

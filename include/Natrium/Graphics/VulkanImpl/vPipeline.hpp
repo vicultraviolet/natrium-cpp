@@ -1,43 +1,23 @@
 #if !defined(NA_VULKAN_IMPL_PIPELINE_HPP)
 #define NA_VULKAN_IMPL_PIPELINE_HPP
 
-#include "Natrium/Graphics/Pipeline.hpp"
-#include "Natrium/Graphics/Renderer.hpp"
-#include "Natrium/Graphics/UniformSetLayout.hpp"
+#include "Natrium/Graphics/Pipelines.hpp"
 
 namespace Na::VulkanImpl {
-	class Pipeline : public Graphics::Pipeline {
-	public:
-		Pipeline(void) = default;
-		Pipeline(
-			View<const Graphics::Renderer> renderer,
-			const Graphics::VertexAttributes& vertex_layout = {},
-			const View<const Graphics::UniformSetLayout>* uniform_set_layouts = nullptr,
-			u64 uniform_set_layout_count = 0,
-			const View<const Graphics::Shader>* shaders = nullptr,
-			u64 shader_count = 0
-		);
+	using PipelineType = Graphics::PipelineType;
 
-		~Pipeline(void) { this->destroy(); }
-		void destroy(void) override;
+	vk::PipelineBindPoint PipelineTypeToVk(PipelineType type);
 
-		Pipeline(const Pipeline& other) = delete;
-		Pipeline& operator=(const Pipeline& other) = delete;
+	struct Pipeline {
+		vk::Pipeline pipeline = nullptr;
+		vk::PipelineLayout layout = nullptr;
 
-		Pipeline(Pipeline&& other);
-		Pipeline& operator=(Pipeline&& other);
+		void destroy(void);
 
-		[[nodiscard]] inline vk::Pipeline& pipeline(void) { return m_Pipeline; }
-		[[nodiscard]] inline const vk::Pipeline& pipeline(void) const { return m_Pipeline; }
-
-		[[nodiscard]] inline vk::PipelineLayout& layout(void) { return m_Layout; }
-		[[nodiscard]] inline const vk::PipelineLayout& layout(void) const { return m_Layout; }
-
-		[[nodiscard]] inline operator bool(void) const { return m_Pipeline; }
-	private:
-		vk::Pipeline m_Pipeline;
-		vk::PipelineLayout m_Layout;
+		[[nodiscard]] inline operator bool(void) const { return this->pipeline && this->layout; }
 	};
-} // namespace Na
+
+	constexpr u64 k_PipelineOffset = 8;
+} // namespace Na::VulkanImpl
 
 #endif // NA_VULKAN_IMPL_PIPELINE_HPP
