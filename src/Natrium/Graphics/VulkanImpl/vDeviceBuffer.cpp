@@ -5,17 +5,6 @@
 #include "Natrium/Graphics/VulkanImpl/vDevice.hpp"
 
 namespace Na::VulkanImpl {
-	u32 FindMemoryType(u32 typeFilter, vk::MemoryPropertyFlags properties)
-	{
-		vk::PhysicalDeviceMemoryProperties memory_properties = Device::Get()->physical_device().getMemoryProperties();
-
-		for (u32 i = 0; i < memory_properties.memoryTypeCount; i++)
-			if ((typeFilter & (1 << i)) && (memory_properties.memoryTypes[i].propertyFlags & properties) == properties)
-				return i;
-
-		return 0;
-	}
-
 	DeviceBuffer::DeviceBuffer(
 		vk::DeviceSize size,
 		vk::BufferUsageFlags usage,
