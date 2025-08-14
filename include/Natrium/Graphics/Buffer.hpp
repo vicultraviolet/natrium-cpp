@@ -19,7 +19,7 @@ namespace Na::Graphics {
 
 	struct BufferCreateInfo {
 		u64 size = 0;
-		u64 count = 1;
+		u64 subbuffer_count = 1;
 		bool cpu_accessible = true;
 		BufferTypeFlags type = BufferTypeFlags::None;
 	};
@@ -31,6 +31,7 @@ namespace Na::Graphics {
 
 		virtual void set_data(const void* data) = 0;
 		virtual void set_data_x(const void* data, u64 offset, u64 size) = 0;
+		virtual void set_subdata(const void* data, u64 index) = 0;
 
 		virtual Byte* map(void) = 0;
 		virtual Byte* map_x(u64 offset, u64 size) = 0;
@@ -45,7 +46,9 @@ namespace Na::Graphics {
 		[[nodiscard]] virtual u64 element_size(void) const = 0;
 		[[nodiscard]] virtual u64 aligned_size(void) const = 0;
 		[[nodiscard]] virtual u64 total_size(void) const = 0;
-		[[nodiscard]] virtual u64 count(void) const = 0;
+		[[nodiscard]] virtual u64 subbuffer_count(void) const = 0;
+
+		[[nodiscard]] inline bool is_multibuffer(void) const { return this->subbuffer_count() > 1; }
 
 		[[nodiscard]] virtual operator bool(void) const = 0;
 	protected:
@@ -58,8 +61,8 @@ namespace Na::Graphics {
 
 	UniqueRef<Buffer> MakeVertexBuffer(u64 size);
 	UniqueRef<Buffer> MakeIndexBuffer(u32 count);
-	UniqueRef<Buffer> MakeUniformBuffer(u64 size, Ref<const RendererSettingsAsset> renderer_settings);
-	UniqueRef<Buffer> MakeStorageBuffer(u64 size, Ref<const RendererSettingsAsset> renderer_settings);
+	UniqueRef<Buffer> MakeUniformBuffer(u64 size, u64 subbuffer_count);
+	UniqueRef<Buffer> MakeStorageBuffer(u64 size, u64 subbuffer_count);
 
 	inline BufferTypeFlags operator|(BufferTypeFlags lhs, BufferTypeFlags rhs) { return (BufferTypeFlags)((u8)lhs | (u8)rhs); }
 	inline BufferTypeFlags operator&(BufferTypeFlags lhs, BufferTypeFlags rhs) { return (BufferTypeFlags)((u8)lhs & (u8)rhs); }

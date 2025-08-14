@@ -8,9 +8,6 @@
 
 #include "Natrium/Graphics/VulkanImpl/vBuffer.hpp"
 
-#include "Natrium/Graphics/VulkanImpl/vUniformBuffer.hpp"
-#include "Natrium/Graphics/VulkanImpl/vStorageBuffer.hpp"
-
 #include "Natrium/Graphics/VulkanImpl/vUniformSet.hpp"
 
 #include "Natrium/Graphics/VulkanImpl/vDevice.hpp"
@@ -370,40 +367,6 @@ namespace Na::VulkanImpl {
 		);
 	}
 
-	void Renderer::set_descriptor_buffer(View<const Graphics::Uniform> buffer, const void* data) const
-	{
-		NA_ASSERT(buffer, "Failed to set descriptor buffer: buffer is null!");
-		NA_ASSERT(data, "Failed to set descriptor buffer: data is null!");
-
-		Graphics::UniformType type = buffer->type();
-		switch (type)
-		{
-			case Graphics::UniformType::UniformBuffer:
-			{
-				auto ubo = static_ref_cast<const UniformBuffer>(buffer);
-
-				void* mapped = (Byte*)(ubo->mapped_data()) + (m_FrameIndex * ubo->aligned_size());
-				memcpy(mapped, data, ubo->per_frame_size());
-
-				break;
-			}
-			case Graphics::UniformType::StorageBuffer:
-			{
-				auto ssbo = static_ref_cast<const StorageBuffer>(buffer);
-
-				void* mapped = (Byte*)(ssbo->mapped_data()) + (m_FrameIndex * ssbo->aligned_size());
-				memcpy(mapped, data, ssbo->per_frame_size());
-
-				break;
-			}
-			default:
-			{
-				throw std::runtime_error("Failed to set descriptor buffer: buffer has unknown type!");
-				break;
-			}
-		}
-	}
-
 	void Renderer::dispatch_compute(glm::uvec3 workgroup_count)
 	{
 		FrameData& fd = m_Frames[m_FrameIndex];
@@ -451,11 +414,15 @@ namespace Na::VulkanImpl {
 
 	void Renderer::_create_descriptor_pool(void)
 	{
-		constexpr u32 k_Count = 3;
+		constexpr u32 k_Count = 5;
 
-		constexpr u32 k_MaxUniformBuffers = 16;
-		constexpr u32 k_MaxStorageBuffers = 16;
+		constexpr u32 k_MaxUniformBuffers = 8;
+		constexpr u32 k_MaxStorageBuffers = 8;
+		constexpr u32 k_MaxMultiUniformBuffers = 8;
+		constexpr u32 k_MaxMultiStorageBuffers = 8;
 		constexpr u32 k_MaxTextures = 32;
+
+		constexpr u32 k_MaxSets = k_MaxUniformBuffers + k_MaxStorageBuffers + k_MaxMultiUniformBuffers + k_MaxMultiStorageBuffers + k_MaxTextures;
 
 		std::array<vk::DescriptorPoolSize, k_Count> descriptor_pool_sizes{};
 
@@ -465,12 +432,18 @@ namespace Na::VulkanImpl {
 		descriptor_pool_sizes[1].type = vk::DescriptorType::eStorageBufferDynamic;
 		descriptor_pool_sizes[1].descriptorCount = k_MaxStorageBuffers;
 
-		descriptor_pool_sizes[2].type = vk::DescriptorType::eCombinedImageSampler;
-		descriptor_pool_sizes[2].descriptorCount = k_MaxTextures;
+		descriptor_pool_sizes[2].type = vk::DescriptorType::eUniformBuffer;
+		descriptor_pool_sizes[2].descriptorCount = k_MaxUniformBuffers;
+
+		descriptor_pool_sizes[3].type = vk::DescriptorType::eStorageBuffer;
+		descriptor_pool_sizes[3].descriptorCount = k_MaxStorageBuffers;
+
+		descriptor_pool_sizes[4].type = vk::DescriptorType::eCombinedImageSampler;
+		descriptor_pool_sizes[4].descriptorCount = k_MaxTextures;
 
 		vk::DescriptorPoolCreateInfo create_info;
 
-		create_info.maxSets = k_MaxUniformBuffers + k_MaxStorageBuffers + k_MaxTextures;
+		create_info.maxSets = k_MaxSets;
 		create_info.poolSizeCount = k_Count;
 		create_info.pPoolSizes = descriptor_pool_sizes.data();
 

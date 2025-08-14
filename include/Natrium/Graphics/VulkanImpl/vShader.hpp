@@ -1,8 +1,10 @@
 #if !defined(NA_VULKAN_IMPL_SHADER_HPP)
 #define NA_VULKAN_IMPL_SHADER_HPP
 
-#include "Natrium/Graphics/VertexAttributes.hpp"
+#include "Natrium/Core/ErrorCodes.hpp"
 #include "Natrium/Graphics/Shader.hpp"
+#include "Natrium/Graphics/VertexAttributes.hpp"
+#include "Natrium/Graphics/UniformSetLayout.hpp"
 
 namespace Na::VulkanImpl {
 	using ShaderStage = Na::Graphics::ShaderStage;

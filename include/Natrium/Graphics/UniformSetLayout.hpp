@@ -1,10 +1,17 @@
 #if !defined(NA_GRAPHICS_UNIFORM_SET_LAYOUT_HPP)
 #define NA_GRAPHICS_UNIFORM_SET_LAYOUT_HPP
 
-#include "Natrium/Graphics/Uniforms.hpp"
 #include "Natrium/Graphics/Shader.hpp"
 
 namespace Na::Graphics {
+	enum class UniformType : u8 {
+		None = 0,
+		UniformBuffer, UniformMultibuffer,
+		StorageBuffer, StorageMultibuffer,
+		// StorageImage,
+		Texture
+	};
+
 	struct UniformBinding {
 		u32 binding;
 		UniformType type;

@@ -5,7 +5,6 @@
 #include "Natrium/Graphics/Colors.hpp"
 #include "Natrium/Graphics/Device.hpp"
 #include "Natrium/Graphics/Buffer.hpp"
-#include "Natrium/Graphics/Uniforms.hpp"
 #include "Natrium/Graphics/UniformSet.hpp"
 #include "Natrium/Assets/RendererSettingsAsset.hpp"
 #include "Natrium/Graphics/Shader.hpp"
@@ -76,10 +75,8 @@ namespace Na::Graphics {
 			glm::uvec3 workgroup_count
 		) = 0;
 
-		virtual void set_descriptor_buffer(
-			View<const Uniform> buffer,
-			const void* data
-		) const = 0;
+		[[nodiscard]] virtual u32 current_frame_index(void) const = 0;
+		[[nodiscard]] virtual u32 current_image_index(void) const = 0;
 
 		[[nodiscard]] virtual const Window& window(void) const = 0;
 		[[nodiscard]] virtual Ref<const RendererSettingsAsset> settings(void) const = 0;

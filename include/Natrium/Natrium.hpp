@@ -25,7 +25,7 @@
 #include "./Graphics/Renderer.hpp"
 #include "./Graphics/Pipelines.hpp"
 #include "./Graphics/Buffer.hpp"
-#include "./Graphics/Uniforms.hpp"
+#include "./Graphics/Texture.hpp"
 #include "./Graphics/VertexAttributes.hpp"
 
 #include "./Math/Camera3dData.hpp"

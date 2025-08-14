@@ -91,21 +91,4 @@ namespace Na::VulkanImpl {
 
 		m_Image.destroy();
 	}
-
-	Texture::Texture(Texture&& other) noexcept
-	: m_Image(std::move(other.m_Image)),
-	m_ImageView(std::exchange(other.m_ImageView, nullptr)),
-	m_Sampler(std::exchange(other.m_Sampler, nullptr))
-	{}
-
-	Texture& Texture::operator=(Texture&& other) noexcept
-	{
-		this->destroy();
-
-		m_Image = std::move(other.m_Image);
-		m_ImageView = std::exchange(other.m_ImageView, nullptr);
-		m_Sampler = std::exchange(other.m_Sampler, nullptr);
-
-		return *this;
-	}
 } // namespace Na

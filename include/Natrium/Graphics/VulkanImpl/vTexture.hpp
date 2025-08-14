@@ -1,7 +1,7 @@
 #if !defined(NA_VULKAN_IMPL_TEXTURE_HPP)
 #define NA_VULKAN_IMPL_TEXTURE_HPP
 
-#include "Natrium/Graphics/Uniforms.hpp"
+#include "Natrium/Graphics/Texture.hpp"
 #include "Natrium/Graphics/VulkanImpl/vDeviceImage.hpp"
 
 namespace Na::VulkanImpl {
@@ -15,13 +15,7 @@ namespace Na::VulkanImpl {
 		);
 
 		~Texture(void) { this->destroy(); }
-		void destroy(void) override;
-
-		Texture(const Texture& other) = delete;
-		Texture& operator=(const Texture& other) = delete;
-
-		Texture(Texture&& other) noexcept;
-		Texture& operator=(Texture&& other) noexcept;
+		void destroy(void);
 
 		[[nodiscard]] inline operator bool(void) const override { return m_Image; }
 

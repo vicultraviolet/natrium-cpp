@@ -29,6 +29,7 @@ namespace Na::VulkanImpl {
 
 		void set_data(const void* data) override;
 		void set_data_x(const void* data, u64 offset, u64 size) override;
+		void set_subdata(const void* data, u64 index) override;
 
 		Byte* map(void) override;
 		Byte* map_x(u64 offset, u64 size) override;
@@ -43,7 +44,7 @@ namespace Na::VulkanImpl {
 		[[nodiscard]] inline u64 element_size(void) const override { return m_ElementSize; }
 		[[nodiscard]] inline u64 aligned_size(void) const override { return m_AlignedSize; }
 		[[nodiscard]] inline u64 total_size(void) const override { return m_TotalSize; }
-		[[nodiscard]] inline u64 count(void) const override { return m_Count; }
+		[[nodiscard]] inline u64 subbuffer_count(void) const override { return m_SubBufferCount; }
 
 		[[nodiscard]] inline operator bool(void) const override { return m_Buffer; }
 
@@ -61,7 +62,7 @@ namespace Na::VulkanImpl {
 		u64 m_ElementSize = 0;
 		u64 m_AlignedSize = 0;
 		u64 m_TotalSize = 0;
-		u64 m_Count = 0;
+		u64 m_SubBufferCount = 0;
 	};
 } // namespace Na::VulkanImpl
 

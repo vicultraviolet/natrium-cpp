@@ -49,12 +49,13 @@ namespace Na::VulkanImpl {
 	{
 		switch (type)
 		{
-		case UniformType::UniformBuffer: return vk::DescriptorType::eUniformBufferDynamic;
-		case UniformType::StorageBuffer: return vk::DescriptorType::eStorageBufferDynamic;
-		case UniformType::Texture:       return vk::DescriptorType::eCombinedImageSampler;
-
-		default:                         return vk::DescriptorType(0);
+		case UniformType::UniformBuffer:      return vk::DescriptorType::eUniformBuffer;
+		case UniformType::StorageBuffer:      return vk::DescriptorType::eStorageBuffer;
+		case UniformType::UniformMultibuffer: return vk::DescriptorType::eUniformBufferDynamic;
+		case UniformType::StorageMultibuffer: return vk::DescriptorType::eStorageBufferDynamic;
+		case UniformType::Texture:            return vk::DescriptorType::eCombinedImageSampler;
 		}
+		return vk::DescriptorType(0);
 	}
 
 	Expected<ArrayList<u32>, ShaderErrorCode> CompileToSpirV(

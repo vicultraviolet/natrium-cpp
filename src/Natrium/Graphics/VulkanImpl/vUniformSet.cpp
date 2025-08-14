@@ -1,11 +1,12 @@
 #include "Pch.hpp"
 #include "Natrium/Graphics/VulkanImpl/vUniformSet.hpp"
 
+#include "Natrium/Graphics/VulkanImpl/vUniformSetLayout.hpp"
+
 #include "Natrium/Graphics/VulkanImpl/vRenderer.hpp"
 #include "Natrium/Graphics/VulkanImpl/vShader.hpp"
 
-#include "Natrium/Graphics/VulkanImpl/vUniformBuffer.hpp"
-#include "Natrium/Graphics/VulkanImpl/vStorageBuffer.hpp"
+#include "Natrium/Graphics/VulkanImpl/vBuffer.hpp"
 #include "Natrium/Graphics/VulkanImpl/vTexture.hpp"
 
 #include "Internal.hpp"
@@ -34,75 +35,61 @@ namespace Na::VulkanImpl {
 		m_Set = nullptr;
 	}
 
-	void UniformSet::bind_at(u32 binding, View<const Graphics::Uniform> uniform)
+	void UniformSet::bind_at(u32 binding, View<const Graphics::Texture> _texture)
 	{
-		UniformType type = uniform->type();
-		switch (type)
-		{
-		case UniformType::Texture:
-		{
-			auto texture = static_ref_cast<const Texture>(uniform);
+		auto texture = static_ref_cast<const Texture>(_texture);
 
-			vk::DescriptorImageInfo image_info;
-			image_info.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
-			image_info.imageView = texture->img_view();
-			image_info.sampler = texture->sampler();
+		vk::DescriptorImageInfo image_info;
+		image_info.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+		image_info.imageView = texture->img_view();
+		image_info.sampler = texture->sampler();
 
-			Internal::WriteToDescriptorSet(
-				m_Set,
-				binding,
-				vk::DescriptorType::eCombinedImageSampler,
-				1,
-				nullptr, // buffer info
-				&image_info,
-				nullptr // texel buffer view
-			);
-			break;
+		Internal::WriteToDescriptorSet(
+			m_Set,
+			binding,
+			vk::DescriptorType::eCombinedImageSampler,
+			1,
+			nullptr, // buffer info
+			&image_info,
+			nullptr // texel buffer view
+		);
+	}
+
+	void UniformSet::bind_at(u32 binding, View<const Graphics::Buffer> _buffer, BufferTypeFlags type)
+	{
+		auto buffer = static_ref_cast<const Buffer>(_buffer);
+
+		vk::DescriptorType descriptor_type{};
+		if (type == BufferTypeFlags::StorageBuffer)
+		{
+			descriptor_type = buffer->is_multibuffer() ? vk::DescriptorType::eStorageBufferDynamic : vk::DescriptorType::eStorageBuffer;
+		} else
+		if (type == BufferTypeFlags::UniformBuffer)
+		{
+			descriptor_type = buffer->is_multibuffer() ? vk::DescriptorType::eUniformBufferDynamic : vk::DescriptorType::eUniformBuffer;
 		}
-		case UniformType::UniformBuffer:
+
+
+		vk::DescriptorBufferInfo buffer_info;
+
+		buffer_info.buffer = buffer->native();
+		buffer_info.offset = 0;
+		buffer_info.range = buffer->aligned_size();
+
+		Internal::WriteToDescriptorSet(
+			m_Set,
+			binding,
+			descriptor_type,
+			1, // count
+			&buffer_info,
+			nullptr, // image info
+			nullptr // texel buffer view
+		);
+
+		if (buffer->is_multibuffer())
 		{
-			auto ubo = static_ref_cast<const UniformBuffer>(uniform);
-
-			vk::DescriptorBufferInfo buffer_info(ubo->buffer().buffer, 0, ubo->aligned_size());
-
-			Internal::WriteToDescriptorSet(
-				m_Set,
-				binding,
-				vk::DescriptorType::eUniformBufferDynamic,
-				1,
-				&buffer_info,
-				nullptr, // image info
-				nullptr // texel buffer view
-			);
-
 			for (u64 i = m_DynamicOffsetIndex++; i < m_DynamicOffsets.size(); i += m_DynamicOffsetCount)
-				m_DynamicOffsets[i] = (u32)(ubo->aligned_size() * i);
-
-			break;
-		}
-		case UniformType::StorageBuffer:
-		{
-			auto ssbo = static_ref_cast<const StorageBuffer>(uniform);
-
-			vk::DescriptorBufferInfo buffer_info(ssbo->buffer().buffer, 0, ssbo->aligned_size());
-
-			Internal::WriteToDescriptorSet(
-				m_Set,
-				binding,
-				vk::DescriptorType::eStorageBufferDynamic,
-				1,
-				&buffer_info,
-				nullptr, // image info
-				nullptr // texel buffer view
-			);
-
-			for (u64 i = m_DynamicOffsetIndex++; i < m_DynamicOffsets.size(); i += m_DynamicOffsetCount)
-				m_DynamicOffsets[i] = (u32)(ssbo->aligned_size() * i);
-
-			break;
-		}
-		default:
-			throw std::runtime_error("Failed to bind uniform to pipeline: Uniform object of unknown type!");
+				m_DynamicOffsets[i] = (u32)(buffer->aligned_size() * i);
 		}
 	}
 } // namespace Na::VulkanImpl

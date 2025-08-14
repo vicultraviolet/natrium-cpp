@@ -38,7 +38,7 @@ namespace Na::VulkanImpl {
 	Buffer::Buffer(const BufferCreateInfo& info)
 	: Graphics::Buffer(info),
       m_ElementSize(info.size),
-	  m_Count(info.count)
+	  m_SubBufferCount(info.subbuffer_count)
 	{
 		const auto& logical_device = Device::Get()->logical_device();
 
@@ -57,7 +57,7 @@ namespace Na::VulkanImpl {
 			m_AlignedSize = info.size;
 		}
 
-		m_TotalSize = m_AlignedSize * info.count;
+		m_TotalSize = m_AlignedSize * info.subbuffer_count;
 
 		vk::BufferUsageFlags usage = BufferTypeToVk(info.type);
 		vk::MemoryPropertyFlags memory_props;
@@ -93,7 +93,7 @@ namespace Na::VulkanImpl {
 
 	Buffer::Buffer(const BufferCreateInfo2& info)
 	: m_TotalSize(info.size * info.count),
-	  m_Count(info.count),
+	  m_SubBufferCount(info.count),
 	  m_ElementSize(info.size),
 	  m_AlignedSize(info.size)
 	{
@@ -123,7 +123,7 @@ namespace Na::VulkanImpl {
 		m_TotalSize = 0;
 		m_ElementSize = 0;
 		m_AlignedSize = 0;
-		m_Count = 0;
+		m_SubBufferCount = 0;
 
 		if (m_Buffer)
 		{
@@ -184,6 +184,10 @@ namespace Na::VulkanImpl {
 		}
 	}
 
+	void Buffer::set_subdata(const void* data, u64 index)
+	{
+		this->set_data_x(data, index * m_AlignedSize, m_ElementSize);
+	}
 
 	Byte* Buffer::map(void)
 	{

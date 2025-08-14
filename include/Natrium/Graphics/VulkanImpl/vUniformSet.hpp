@@ -2,7 +2,7 @@
 #define NA_VULKAN_IMPL_UNIFORM_SET_HPP
 
 #include "Natrium/Graphics/UniformSet.hpp"
-#include "Natrium/Graphics/VulkanImpl/vUniformSetLayout.hpp"
+#include "Natrium/Graphics/VulkanImpl/vBuffer.hpp"
 
 namespace Na::VulkanImpl {
 	class UniformSet : public Graphics::UniformSet {
@@ -10,10 +10,12 @@ namespace Na::VulkanImpl {
 		UniformSet(void) = default;
 		UniformSet(View<const Graphics::UniformSetLayout> layout, View<const Graphics::Renderer> renderer);
 
-		void destroy(void) override;
 		~UniformSet(void) { this->destroy(); }
+		void destroy(void);
 
-		void bind_at(u32 binding, View<const Graphics::Uniform> uniform) override;
+		// type should be EITHER StorageBuffer OR UniformBuffer
+		void bind_at(u32 binding, View<const Graphics::Buffer> buffer, BufferTypeFlags type) override;
+		void bind_at(u32 binding, View<const Graphics::Texture> texture) override;
 		
 		[[nodiscard]] inline vk::DescriptorSet& descriptor_set(void) { return m_Set; }
 		[[nodiscard]] inline const vk::DescriptorSet& descriptor_set(void) const { return m_Set; }

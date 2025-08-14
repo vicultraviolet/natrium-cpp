@@ -24,7 +24,7 @@ namespace Na::Graphics {
 	{
 		BufferCreateInfo info{
 			.size = size,
-			.count = 1,
+			.subbuffer_count = 1,
 			.cpu_accessible = false,
 			.type = BufferTypeFlags::VertexBuffer
 		};
@@ -35,29 +35,29 @@ namespace Na::Graphics {
 	{
 		BufferCreateInfo info{
 			.size = count * sizeof(u32),
-			.count = 1,
+			.subbuffer_count = 1,
 			.cpu_accessible = false,
 			.type = BufferTypeFlags::IndexBuffer
 		};
 		return Buffer::Make(info);
 	}
 
-	UniqueRef<Buffer> MakeUniformBuffer(u64 size, Ref<const RendererSettingsAsset> renderer_settings)
+	UniqueRef<Buffer> MakeUniformBuffer(u64 size, u64 subbuffer_count)
 	{
 		BufferCreateInfo info{
 			.size = size,
-			.count = renderer_settings->max_frames_in_flight(),
+			.subbuffer_count = subbuffer_count,
 			.cpu_accessible = true,
 			.type = BufferTypeFlags::UniformBuffer
 		};
 		return Buffer::Make(info);
 	}
 
-	UniqueRef<Buffer> MakeStorageBuffer(u64 size, Ref<const RendererSettingsAsset> renderer_settings)
+	UniqueRef<Buffer> MakeStorageBuffer(u64 size, u64 subbuffer_count)
 	{
 		BufferCreateInfo info{
 			.size = size,
-			.count = renderer_settings->max_frames_in_flight(),
+			.subbuffer_count = subbuffer_count,
 			.cpu_accessible = true,
 			.type = BufferTypeFlags::StorageBuffer
 		};
