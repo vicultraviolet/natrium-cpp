@@ -4,8 +4,7 @@
 #include "Natrium/Graphics/Device.hpp"
 #include "Natrium/Graphics/Renderer.hpp"
 
-#include "Natrium/Graphics/Buffers.hpp"
-#include "Natrium/Graphics/Uniforms.hpp"
+#include "Natrium/Graphics/Buffer.hpp"
 #include "Natrium/Graphics/UniformSet.hpp"
 
 #include "Natrium/Graphics/VulkanImpl/vRendererWindow.hpp"
@@ -64,7 +63,7 @@ namespace Na::VulkanImpl {
 		) const override;
 
 		void draw_vertices(
-			View<const Graphics::VertexBuffer> vertex_buffer,
+			View<const Graphics::Buffer> vertex_buffer,
 			u32 vertex_count,
 			u32 instance_count = 1,
 			u32 first_vertex = 0,
@@ -72,17 +71,13 @@ namespace Na::VulkanImpl {
 		) override;
 
 		void draw_indexed(
-			View<const Graphics::VertexBuffer> vertex_buffer,
-			View<const Graphics::IndexBuffer> index_buffer,
+			View<const Graphics::Buffer> vertex_buffer,
+			View<const Graphics::Buffer> index_buffer,
+			u32 index_count,
 			u32 instance_count = 1,
 			u32 first_index = 0,
 			u32 first_instance = 0
 		) override;
-
-		void set_descriptor_buffer(
-			View<const Graphics::Uniform> buffer,
-			const void* data
-		) const override;
 
 		void dispatch_compute(
 			glm::uvec3 workgroup_count
@@ -100,7 +95,8 @@ namespace Na::VulkanImpl {
 		[[nodiscard]] inline FrameData& current_frame(void) { return m_Frames[m_FrameIndex]; }
 		[[nodiscard]] inline const FrameData& current_frame(void) const { return m_Frames[m_FrameIndex]; }
 
-		[[nodiscard]] inline u32 current_frame_index(void) const { return m_FrameIndex; }
+		[[nodiscard]] inline u32 current_frame_index(void) const override { return m_FrameIndex; }
+		[[nodiscard]] inline u32 current_image_index(void) const override { return m_ImageIndex; }
 
 		[[nodiscard]] inline vk::DescriptorPool& descriptor_pool(void) { return m_DescriptorPool; }
 		[[nodiscard]] inline const vk::DescriptorPool& descriptor_pool(void) const { return m_DescriptorPool; }

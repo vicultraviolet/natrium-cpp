@@ -7,9 +7,6 @@
 
 #include "Internal.hpp"
 #include "Natrium/Graphics/VulkanImpl/vRenderer.hpp"
-#include "Natrium/Graphics/VulkanImpl/vUniformBuffer.hpp"
-#include "Natrium/Graphics/VulkanImpl/vStorageBuffer.hpp"
-#include "Natrium/Graphics/VulkanImpl/vTexture.hpp"
 #include "Natrium/Graphics/VulkanImpl/vShader.hpp"
 #include "Natrium/Graphics/VulkanImpl/vUniformSetLayout.hpp"
 

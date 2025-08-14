@@ -12,8 +12,8 @@ namespace Na::VulkanImpl {
 		{
 			const UniformBinding& binding = pbindings[i];
 
-			if (binding.type == UniformType::UniformBuffer ||
-				binding.type == UniformType::StorageBuffer)
+			if (binding.type == UniformType::UniformMultibuffer ||
+				binding.type == UniformType::StorageMultibuffer)
 			{
 				m_DynamicCount++;
 			}

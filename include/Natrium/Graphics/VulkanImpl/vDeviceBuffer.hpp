@@ -2,10 +2,9 @@
 #define NA_DEVICE_BUFFER
 
 #include "Natrium/Core.hpp"
+#include "Natrium/Graphics/VulkanImpl/vBuffer.hpp"
 
 namespace Na::VulkanImpl {
-	u32 FindMemoryType(u32 typeFilter, vk::MemoryPropertyFlags properties);
-
 	class DeviceBuffer {
 	public:
 		vk::Buffer buffer = nullptr;

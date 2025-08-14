@@ -1,7 +1,7 @@
 #include "Pch.hpp"
 #include "Natrium/Graphics/VulkanImpl/vTexture.hpp"
 
-#include "Natrium/Graphics/VulkanImpl/vDeviceBuffer.hpp"
+#include "Natrium/Graphics/VulkanImpl/vBuffer.hpp"
 #include "Internal.hpp"
 #include "Natrium/Graphics/VulkanImpl/vDevice.hpp"
 
@@ -33,20 +33,20 @@ namespace Na::VulkanImpl {
 
 		const auto& logical_device = Device::Get()->logical_device();
 
-		DeviceBuffer buffer(
-			first_img->size() * count,
-			vk::BufferUsageFlagBits::eTransferSrc,
-			vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent
-		);
+		BufferCreateInfo2 buffer_info{
+			.size = first_img->size() * count,
+			.count = 1,
+			.usage = vk::BufferUsageFlagBits::eTransferSrc,
+			.memory_props = vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent
+		};
+		Buffer staging_buffer(buffer_info);
 
-		{
-			void* data = logical_device.mapMemory(buffer.memory, 0, first_img->size() * count);
+		Byte* data = staging_buffer.map();
 
-			for (u32 i = 0; i < count; i++)
-				memcpy((Byte*)data + i * first_img->size(), imgs[i]->data(), imgs[i]->size());
+		for (u32 i = 0; i < count; i++)
+			memcpy(data + i * first_img->size(), imgs[i]->data(), imgs[i]->size());
 
-			logical_device.unmapMemory(buffer.memory);
-		}
+		staging_buffer.unmap();
 
 		m_Image = DeviceImage(
 			vk::Extent3D((u32)first_img->width(), (u32)first_img->height(), 1),
@@ -61,10 +61,10 @@ namespace Na::VulkanImpl {
 		);
 
 		m_Image.transition_layout(vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal);
-		m_Image.copy_all_from_buffer(buffer.buffer);
+		m_Image.copy_all_from_buffer(staging_buffer.native());
 		m_Image.transition_layout(vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
 
-		buffer.destroy();
+		staging_buffer.destroy();
 
 		m_ImageView = m_Image.create_img_view();
 
@@ -90,22 +90,5 @@ namespace Na::VulkanImpl {
 		m_ImageView = nullptr;
 
 		m_Image.destroy();
-	}
-
-	Texture::Texture(Texture&& other) noexcept
-	: m_Image(std::move(other.m_Image)),
-	m_ImageView(std::exchange(other.m_ImageView, nullptr)),
-	m_Sampler(std::exchange(other.m_Sampler, nullptr))
-	{}
-
-	Texture& Texture::operator=(Texture&& other) noexcept
-	{
-		this->destroy();
-
-		m_Image = std::move(other.m_Image);
-		m_ImageView = std::exchange(other.m_ImageView, nullptr);
-		m_Sampler = std::exchange(other.m_Sampler, nullptr);
-
-		return *this;
 	}
 } // namespace Na
