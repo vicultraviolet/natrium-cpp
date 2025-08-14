@@ -6,8 +6,7 @@
 #include "Natrium/Graphics/VulkanImpl/vTrianglePipeline.hpp"
 #include "Natrium/Graphics/VulkanImpl/vComputePipeline.hpp"
 
-#include "Natrium/Graphics/VulkanImpl/vVertexBuffer.hpp"
-#include "Natrium/Graphics/VulkanImpl/vIndexBuffer.hpp"
+#include "Natrium/Graphics/VulkanImpl/vBuffer.hpp"
 
 #include "Natrium/Graphics/VulkanImpl/vUniformBuffer.hpp"
 #include "Natrium/Graphics/VulkanImpl/vStorageBuffer.hpp"
@@ -324,7 +323,7 @@ namespace Na::VulkanImpl {
 	}
 
 	void Renderer::draw_vertices(
-		View<const Graphics::VertexBuffer> _vertex_buffer,
+		View<const Graphics::Buffer> _vertex_buffer,
 		u32 vertex_count,
 		u32 instance_count,
 		u32 first_vertex,
@@ -333,7 +332,7 @@ namespace Na::VulkanImpl {
 	{
 		FrameData& fd = m_Frames[m_FrameIndex];
 
-		auto vertex_buffer = static_ref_cast<const VertexBuffer>(_vertex_buffer);
+		auto vertex_buffer = static_ref_cast<const Buffer>(_vertex_buffer);
 
 		fd.cmd_buffer.bindVertexBuffers(0, { vertex_buffer->native() }, { 0 });
 
@@ -346,8 +345,9 @@ namespace Na::VulkanImpl {
 	}
 
 	void Renderer::draw_indexed(
-		View<const Graphics::VertexBuffer> _vertex_buffer,
-		View<const Graphics::IndexBuffer> _index_buffer,
+		View<const Graphics::Buffer> _vertex_buffer,
+		View<const Graphics::Buffer> _index_buffer,
+		u32 index_count,
 		u32 instance_count,
 		u32 first_index,
 		u32 first_instance
@@ -355,14 +355,14 @@ namespace Na::VulkanImpl {
 	{
 		FrameData& fd = m_Frames[m_FrameIndex];
 
-		auto vertex_buffer = static_ref_cast<const VertexBuffer>(_vertex_buffer);
-		auto index_buffer = static_ref_cast<const IndexBuffer>(_index_buffer);
+		auto vertex_buffer = static_ref_cast<const Buffer>(_vertex_buffer);
+		auto index_buffer = static_ref_cast<const Buffer>(_index_buffer);
 
 		fd.cmd_buffer.bindVertexBuffers(0, { vertex_buffer->native() }, { 0 });
 		fd.cmd_buffer.bindIndexBuffer(index_buffer->native(), 0, vk::IndexType::eUint32);
 
 		fd.cmd_buffer.drawIndexed(
-			index_buffer->count(),
+			index_count,
 			instance_count,
 			first_index,
 			0, // vertex offset

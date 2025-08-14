@@ -11,10 +11,13 @@ namespace Na::VulkanImpl {
 
 		if ((type & BufferTypeFlags::StorageBuffer) != BufferTypeFlags::None)
 			usage |= vk::BufferUsageFlagBits::eStorageBuffer;
+
 		if ((type & BufferTypeFlags::UniformBuffer) != BufferTypeFlags::None)
 			usage |= vk::BufferUsageFlagBits::eUniformBuffer;
+
 		if ((type & BufferTypeFlags::IndexBuffer) != BufferTypeFlags::None)
 			usage |= vk::BufferUsageFlagBits::eIndexBuffer;
+
 		if ((type & BufferTypeFlags::VertexBuffer) != BufferTypeFlags::None)
 			usage |= vk::BufferUsageFlagBits::eVertexBuffer;
 

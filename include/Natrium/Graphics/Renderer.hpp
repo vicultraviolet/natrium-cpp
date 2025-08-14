@@ -4,7 +4,7 @@
 #include "Natrium/Core/Window.hpp"
 #include "Natrium/Graphics/Colors.hpp"
 #include "Natrium/Graphics/Device.hpp"
-#include "Natrium/Graphics/Buffers.hpp"
+#include "Natrium/Graphics/Buffer.hpp"
 #include "Natrium/Graphics/Uniforms.hpp"
 #include "Natrium/Graphics/UniformSet.hpp"
 #include "Natrium/Assets/RendererSettingsAsset.hpp"
@@ -56,7 +56,7 @@ namespace Na::Graphics {
 		) const = 0;
 
 		virtual void draw_vertices(
-			View<const VertexBuffer> vertex_buffer,
+			View<const Buffer> vertex_buffer,
 			u32 verex_count,
 			u32 instance_count = 1,
 			u32 first_vertex = 0,
@@ -64,8 +64,9 @@ namespace Na::Graphics {
 		) = 0;
 
 		virtual void draw_indexed(
-			View<const VertexBuffer> vertex_buffer,
-			View<const IndexBuffer> index_buffer,
+			View<const Buffer> vertex_buffer,
+			View<const Buffer> index_buffer,
+			u32 index_count,
 			u32 instance_count = 1,
 			u32 first_index = 0,
 			u32 first_instance = 0
