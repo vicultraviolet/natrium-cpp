@@ -120,7 +120,12 @@ namespace Na {
 		return shader;
 	}
 
+#if defined(__GNUC__)
 	auto AssetManager::load_asset(const std::string& path) -> Expected<Ref<RendererSettingsAsset>, FileErrorCode>
+#else
+	template<>
+	auto AssetManager::load_asset<RendererSettingsAsset>(const std::string& path) -> Expected<Ref<RendererSettingsAsset>, FileErrorCode>
+#endif
 	{
 		UUID_t uuid = UUID::Generate(path);
 		if (auto it = m_Assets.find(uuid); it != m_Assets.end())
