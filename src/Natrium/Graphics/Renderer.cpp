@@ -4,14 +4,11 @@
 #include "Natrium/Graphics/VulkanImpl/vRenderer.hpp"
 
 namespace Na::Graphics {
-	UniqueRef<Renderer> Renderer::Make(
-		const Window& window,
-		Ref<const RendererSettingsAsset> settings
-	)
+	UniqueRef<Renderer> Renderer::Make(Ref<const RendererSettingsAsset> settings)
 	{
 		switch (Device::Get()->backend())
 		{
-		case DeviceBackend::Vulkan: return UniqueRef<VulkanImpl::Renderer>::Make(window, settings);
+		case DeviceBackend::Vulkan: return UniqueRef<VulkanImpl::Renderer>::Make(settings);
 		}
 		return nullptr;
 	}

@@ -2,14 +2,14 @@
 #define NA_VULKAN_IMPL_TRIANGLE_PIPELINE_HPP
 
 #include "Natrium/Graphics/VulkanImpl/vPipeline.hpp"
-#include "Natrium/Graphics/Renderer.hpp"
+#include "Natrium/Graphics/RenderTargets.hpp"
 #include "Natrium/Graphics/UniformSetLayout.hpp"
 
 namespace Na::VulkanImpl {
 	class TrianglePipeline : public Graphics::TrianglePipeline {
 	public:
 		TrianglePipeline(
-			View<const Graphics::Renderer> renderer,
+			WeakRef<const Graphics::RenderTarget> render_target,
 			const Graphics::VertexAttributes& vertex_layout = {},
 			const View<const Graphics::UniformSetLayout>* uniform_set_layouts = nullptr,
 			u64 uniform_set_layout_count = 0,

@@ -14,8 +14,12 @@ namespace Na {
 		auto renderer_settings = m_AssetManager.load_asset<RendererSettingsAsset>(settings.renderer_settings_path.data()).value();
 		renderer_settings->set_max_anisotropy(Graphics::Device::Get()->limits()->max_anisotropy());
 
-		m_Window = Window(settings.window_width, settings.window_height, settings.window_title);
-		m_Renderer = Graphics::Renderer::Make(m_Window, renderer_settings);
+		m_Renderer = Graphics::Renderer::Make(renderer_settings);
+
+		m_Window = Ref<Window>::Make(settings.window_width, settings.window_height, settings.window_title);
+
+		m_RenderTarget = Graphics::SwapchainRenderTarget::Make(m_Window, renderer_settings);
+		m_Renderer->bind_render_target(m_RenderTarget);
 	}
 
 	void Application::destroy(void)
@@ -26,12 +30,6 @@ namespace Na {
 		Graphics::Device::Get()->wait_all();
 
 		m_LayerManager.detach_all();
-
-		m_Renderer.destroy();
-		m_Window.destroy();
-
-		m_LayerManager.destroy();
-		m_AssetManager.destroy();
 
 		Application::s_Application = nullptr;
 	}
@@ -73,11 +71,14 @@ namespace Na {
 				layer->update(dt);
 			}
 
-			if (m_Window.minimized())
+			if (m_Window->minimized())
 				continue;
 
-			if (!m_Renderer->begin_frame())
+			if (!m_RenderTarget->acquire_next_image())
 				continue;
+
+			m_Renderer->begin_frame();
+			m_Renderer->begin_render_pass();
 
 			for (Ref<Layer>& layer : m_LayerManager)
 			{
@@ -100,11 +101,14 @@ namespace Na {
 					layer->imgui_draw();
 				}
 
-				imgui_layer->end();
+				m_Renderer->draw_imgui();
 			} 
 		#endif // NA_DISABLE_IMGUI
 
+			m_Renderer->end_render_pass();
 			m_Renderer->end_frame();
+
+			m_RenderTarget->present();
 		}
 	}
 

@@ -47,7 +47,7 @@ namespace Na::VulkanImpl {
 	};
 
 	TrianglePipeline::TrianglePipeline(
-		View<const Graphics::Renderer> _renderer,
+		WeakRef<const Graphics::RenderTarget> _render_target,
 		const Graphics::VertexAttributes& vertex_layout,
 		const View<const Graphics::UniformSetLayout>* uniform_set_layouts,
 		u64 uniform_set_layout_count,
@@ -56,8 +56,9 @@ namespace Na::VulkanImpl {
 	)
 	{
 		const auto& logical_device = Device::Get()->logical_device();
-		auto renderer = static_ref_cast<const Renderer>(_renderer);
 
+		auto render_target = _render_target.lock();
+		
 		const Na::ArrayList<vk::DynamicState> dynamic_states = {
 			vk::DynamicState::eViewport,
 			vk::DynamicState::eScissor
@@ -69,7 +70,7 @@ namespace Na::VulkanImpl {
 		auto viewport_info = viewportInfo();
 		auto input_assembly_info = inputAssemblyInfo();
 		auto rasterization_info = rasterizationInfo();
-		auto multisample_info = multisampleInfo(renderer->settings()->multisampling_enabled());
+		auto multisample_info = multisampleInfo(render_target->renderer_settings()->multisampling_enabled());
 		auto color_blend_attachment = colorBlendAttachment(false);
 		auto color_blend_info = colorBlendInfo(color_blend_attachment);
 		auto depth_stencil_info = depthStencilInfo();
@@ -126,7 +127,13 @@ namespace Na::VulkanImpl {
 		create_info.stageCount = (u32)shader_count;
 		create_info.pStages = shader_infos.ptr();
 
-		create_info.renderPass = renderer->window_data().render_pass();
+		switch (render_target->type())
+		{
+		case Graphics::RenderTargetType::Swapchain:
+			create_info.renderPass = static_ref_cast<const SwapchainRenderTarget>(render_target)->render_pass();
+			break;
+		}
+
 		create_info.layout = m_Pipeline.layout;
 
 		create_info.pDynamicState = &dynamic_state_info;

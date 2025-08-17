@@ -6,7 +6,7 @@
 
 namespace Na::Graphics {
 	UniqueRef<TrianglePipeline> TrianglePipeline::Make(
-		View<const Renderer> renderer,
+		WeakRef<const Graphics::RenderTarget> render_target,
 		const VertexAttributes& vertex_layout,
 		const View<const UniformSetLayout>* uniform_set_layouts,
 		u64 uniform_set_layout_count,
@@ -16,20 +16,20 @@ namespace Na::Graphics {
 	{
 		switch (Device::Get()->backend())
 		{
-		case DeviceBackend::Vulkan: return UniqueRef<VulkanImpl::TrianglePipeline>::Make(renderer, vertex_layout, uniform_set_layouts, uniform_set_layout_count, shaders, shader_count);
+		case DeviceBackend::Vulkan: return UniqueRef<VulkanImpl::TrianglePipeline>::Make(render_target, vertex_layout, uniform_set_layouts, uniform_set_layout_count, shaders, shader_count);
 		}
 		return nullptr;
 	}
 
 	UniqueRef<TrianglePipeline> TrianglePipeline::Make(
-		View<const Renderer> renderer,
+		WeakRef<const Graphics::RenderTarget> render_target,
 		const VertexAttributes& vertex_layout,
 		const UniformLayout& uniform_layout,
 		const Shaders& shaders
 	)
 	{
 		return TrianglePipeline::Make(
-			renderer,
+			render_target,
 			vertex_layout,
 			uniform_layout.begin(), uniform_layout.size(),
 			shaders.begin(), shaders.size()

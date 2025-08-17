@@ -145,7 +145,7 @@ namespace Na {
     }
 
 	UniqueRef<ImGuiLayer> ImGuiLayer::Make(
-		View<const Graphics::Renderer> renderer,
+        WeakRef<const Graphics::SwapchainRenderTarget> render_target,
 		i64 priority,
 		bool demo_window_shown
 	)
@@ -153,13 +153,19 @@ namespace Na {
 		switch (Graphics::Device::Get()->backend())
 		{
         case Graphics::DeviceBackend::Vulkan:
-            return UniqueRef<VulkanImpl::ImGuiLayer>::Make(renderer, priority, demo_window_shown);
+            return UniqueRef<VulkanImpl::ImGuiLayer>::Make(render_target, priority, demo_window_shown);
 		}
         return nullptr;
 	}
 
-    ImGuiLayer::ImGuiLayer(View<const Graphics::Renderer> renderer, i64 priority, bool demo_window_shown)
-    : Layer(priority), m_Renderer(renderer), m_DemoWindowShown(demo_window_shown)
+    ImGuiLayer::ImGuiLayer(
+        WeakRef<const Graphics::SwapchainRenderTarget> render_target,
+        i64 priority,
+        bool demo_window_shown
+    )
+    : Layer(priority),
+      m_RenderTarget(render_target),
+      m_DemoWindowShown(demo_window_shown)
     {
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
@@ -170,8 +176,6 @@ namespace Na {
         io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
         ImGui::StyleColorsDark();
-
-        ImGui_ImplGlfw_InitForVulkan(renderer->window().native(), false);
     }
 
     ImGuiLayer::~ImGuiLayer(void)

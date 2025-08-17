@@ -4,6 +4,11 @@
 #include "./ArrayIterator.hpp"
 
 namespace Na {
+	template<typename T>
+	concept Dereferenceable = requires(T obj) {
+		*obj;
+	};
+
 	template<typename T, typename t_Allocator = std::allocator<T>>
 	class ArrayList {
 	public:
@@ -55,7 +60,7 @@ namespace Na {
 				std::construct_at(m_Buffer + i, std::forward<t_Args>(__args)...);
 		}
 
-		template<typename t_Iterator>
+		template<Dereferenceable t_Iterator>
 		ArrayList(
 			const t_Iterator& begin,
 			const t_Iterator& end,
