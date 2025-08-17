@@ -16,7 +16,7 @@ namespace Na::Graphics {
 	{
 		switch (Device::Get()->backend())
 		{
-		case DeviceBackend::Vulkan: return UniqueRef<VulkanImpl::TrianglePipeline>::Make(render_target, vertex_layout, uniform_set_layouts, uniform_set_layout_count, shaders, shader_count);
+		case DeviceBackend::Vulkan: return MakeUnique<VulkanImpl::TrianglePipeline>(render_target, vertex_layout, uniform_set_layouts, uniform_set_layout_count, shaders, shader_count);
 		}
 		return nullptr;
 	}
@@ -44,7 +44,7 @@ namespace Na::Graphics {
 	{
 		switch (Device::Get()->backend())
 		{
-		case DeviceBackend::Vulkan: return UniqueRef<VulkanImpl::ComputePipeline>::Make(shader, uniform_set_layouts, uniform_set_layout_count);
+		case DeviceBackend::Vulkan: return MakeUnique<VulkanImpl::ComputePipeline>(shader, uniform_set_layouts, uniform_set_layout_count);
 		}
 		return nullptr;
 	}

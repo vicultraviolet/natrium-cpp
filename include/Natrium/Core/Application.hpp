@@ -41,7 +41,7 @@ namespace Na {
 		template<DerivedLayer t_Layer, typename... t_Args>
 		Ref<t_Layer> create_layer(t_Args&&... __args)
 		{
-			Ref<t_Layer> layer = CreateLayer<t_Layer>(std::forward<t_Args>(__args)...);
+			Ref<t_Layer> layer = MakeLayer<t_Layer>(std::forward<t_Args>(__args)...);
 			this->attach_layer(layer);
 			return layer;
 		}

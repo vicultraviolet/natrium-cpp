@@ -92,6 +92,12 @@ namespace Na {
 		T* m_Ptr = nullptr;
 	};
 
+	template<typename T, typename... t_Args>
+	UniqueRef<T> MakeUnique(t_Args&&... __args)
+	{
+		return UniqueRef<T>::Make(std::forward<t_Args>(__args)...);
+	}
+
 	template<typename T>
 	using ConstUniqueRef = UniqueRef<const T>;
 
@@ -265,6 +271,12 @@ namespace Na {
 
 		ControlBlock* m_ControlBlock = nullptr;
 	};
+
+	template<typename T, typename... t_Args>
+	Ref<T> MakeRef(t_Args&&... __args)
+	{
+		return Ref<T>::Make(std::forward<t_Args>(__args)...);
+	}
 	
 	template<typename T>
 	using ConstRef = Ref<const T>;
@@ -274,6 +286,12 @@ namespace Na {
 
 	template<typename T>
 	using ConstSharedRef = SharedRef<const T>;
+
+	template<typename T, typename... t_Args>
+	SharedRef<T> MakeShared(t_Args&&... __args)
+	{
+		return SharedRef<T>::Make(std::forward<t_Args>(__args)...);
+	}
 
 	template<typename To, typename From>
 	Ref<To> static_ref_cast(const Ref<From>& from)

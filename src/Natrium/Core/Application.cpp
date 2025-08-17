@@ -16,7 +16,7 @@ namespace Na {
 
 		m_Renderer = Graphics::Renderer::Make(renderer_settings);
 
-		m_Window = Ref<Window>::Make(settings.window_width, settings.window_height, settings.window_title);
+		m_Window = MakeRef<Window>(settings.window_width, settings.window_height, settings.window_title);
 
 		m_RenderTarget = Graphics::SwapchainRenderTarget::Make(m_Window, renderer_settings);
 		m_Renderer->bind_render_target(m_RenderTarget);

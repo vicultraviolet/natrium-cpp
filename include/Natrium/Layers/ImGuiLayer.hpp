@@ -8,7 +8,7 @@ namespace Na {
 #if !defined(NA_DISABLE_IMGUI)
 	class ImGuiLayer : public Layer {
 	public:
-		[[nodiscard]] static UniqueRef<ImGuiLayer> Make(
+		[[nodiscard]] static Ref<ImGuiLayer> Make(
 			WeakRef<const Graphics::SwapchainRenderTarget> render_target,
 			i64 priority = 0,
 			bool demo_window_shown = false

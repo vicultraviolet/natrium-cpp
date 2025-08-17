@@ -144,7 +144,7 @@ namespace Na {
         return ImGuiKey_None;
     }
 
-	UniqueRef<ImGuiLayer> ImGuiLayer::Make(
+	Ref<ImGuiLayer> ImGuiLayer::Make(
         WeakRef<const Graphics::SwapchainRenderTarget> render_target,
 		i64 priority,
 		bool demo_window_shown
@@ -152,8 +152,7 @@ namespace Na {
 	{
 		switch (Graphics::Device::Get()->backend())
 		{
-        case Graphics::DeviceBackend::Vulkan:
-            return UniqueRef<VulkanImpl::ImGuiLayer>::Make(render_target, priority, demo_window_shown);
+        case Graphics::DeviceBackend::Vulkan: return MakeRef<VulkanImpl::ImGuiLayer>(render_target, priority, demo_window_shown);
 		}
         return nullptr;
 	}

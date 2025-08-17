@@ -80,7 +80,7 @@ namespace Na {
 				{
 					if (auto expected = VulkanImpl::LoadSpirV(output_path))
 					{
-						shader = UniqueRef<VulkanImpl::Shader>::Make(
+						shader = MakeUnique<VulkanImpl::Shader>(
 							expected.value(),
 							stage,
 							entry_point
@@ -108,7 +108,7 @@ namespace Na {
 						output_file.write((const char*)spv.ptr(), spv.size() * sizeof(u32));
 						output_file.close();
 
-						shader = UniqueRef<VulkanImpl::Shader>::Make(spv, stage, entry_point);
+						shader = MakeUnique<VulkanImpl::Shader>(spv, stage, entry_point);
 					} else
 					{
 						return Unexpected(ShaderLoadingError(expected.error()));
@@ -133,7 +133,7 @@ namespace Na {
 			return dynamic_ref_cast<RendererSettingsAsset>(it->second);
 		}
 
-		auto asset = Ref<RendererSettingsAsset>::Make(uuid);
+		auto asset = MakeRef<RendererSettingsAsset>(uuid);
 
 		FileErrorCode err_code = asset->load(path);
 
