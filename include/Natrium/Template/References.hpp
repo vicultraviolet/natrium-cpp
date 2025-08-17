@@ -255,6 +255,7 @@ namespace Na {
 		[[nodiscard]] inline operator bool(void) const { return m_ControlBlock; }
 	private:
 		friend class WeakRef<T>;
+		friend class WeakRef<const T>;
 
 		template<typename To, typename From>
 		friend Ref<To> static_ref_cast(const Ref<From>& from);
@@ -366,6 +367,17 @@ namespace Na {
 				m_ControlBlock->inc_weak_count();
 
 			return *this;
+		}
+
+		template<typename U, std::enable_if_t<std::is_convertible_v<U*, T*>, int> = 0>
+		WeakRef(const Ref<U>& ref)
+		: WeakRef((const Ref<T>&)ref)
+		{}
+
+		template<typename U, std::enable_if_t<std::is_convertible_v<U*, T*>, int> = 0>
+		WeakRef& operator=(const Ref<U>& ref)
+		{
+			return this->operator=((const Ref<T>&)ref);
 		}
 
 		void release(void)

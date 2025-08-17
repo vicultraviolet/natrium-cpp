@@ -8,7 +8,7 @@
 
 #include "Natrium/Graphics/VulkanImpl/vDevice.hpp"
 
-#include "Natrium/Graphics/VulkanImpl/vRenderer.hpp"
+#include "Natrium/Graphics/VulkanImpl/vSwapchainRenderTarget.hpp"
 
 #include <imgui/backends/imgui_impl_glfw.h>
 #include <imgui/backends/imgui_impl_vulkan.h>
@@ -18,10 +18,16 @@ namespace Na {
 } // namespace Na
 
 namespace Na::VulkanImpl {
-	ImGuiLayer::ImGuiLayer(View<const Graphics::Renderer> _renderer, i64 priority, bool demo_window_shown)
-	: Na::ImGuiLayer(_renderer, priority, demo_window_shown)
+	ImGuiLayer::ImGuiLayer(
+        WeakRef<Graphics::SwapchainRenderTarget> _render_target,
+        i64 priority,
+        bool demo_window_shown
+    )
+	: Na::ImGuiLayer(_render_target, priority, demo_window_shown)
 	{
-		auto renderer = static_ref_cast<const Renderer>(_renderer);
+		auto render_target = static_ref_cast<const SwapchainRenderTarget>(_render_target.lock());
+
+        ImGui_ImplGlfw_InitForVulkan(render_target->window().lock()->native(), false);
 
         vk::DescriptorPoolSize pool_size;
         pool_size.type = vk::DescriptorType::eCombinedImageSampler;
@@ -35,7 +41,9 @@ namespace Na::VulkanImpl {
 
         m_DescriptorPool = Device::Get()->logical_device().createDescriptorPool(create_info);
 
-        auto msaa = Device::Get()->vk_limits().vk_msaa_sample_count_if(renderer->settings()->multisampling_enabled());
+        auto msaa = Device::Get()->vk_limits().vk_msaa_sample_count_if(
+            render_target->renderer_settings()->multisampling_enabled()
+        );
 
         ImGui_ImplVulkan_InitInfo init_info{};
 		init_info.ApiVersion = VK_API_VERSION_1_0; 
@@ -46,10 +54,10 @@ namespace Na::VulkanImpl {
         init_info.Queue = Device::Get()->graphics_queue();
         init_info.PipelineCache = nullptr;
         init_info.DescriptorPool = m_DescriptorPool;
-        init_info.RenderPass = renderer->window_data().render_pass();
+        init_info.RenderPass = render_target->render_pass();
         init_info.Subpass = 0;
         init_info.MinImageCount = 2;
-        init_info.ImageCount = (u32)renderer->window_data().images().size();
+        init_info.ImageCount = (u32)render_target->image_count();
         init_info.MSAASamples = (VkSampleCountFlagBits)msaa;
         init_info.Allocator = nullptr;
         init_info.CheckVkResultFn = nullptr;
@@ -69,10 +77,10 @@ namespace Na::VulkanImpl {
 
     void ImGuiLayer::begin(void)
     {
-        auto renderer = static_ref_cast<const Renderer>(this->renderer());
+        auto render_target = static_ref_cast<const SwapchainRenderTarget>(this->render_target().lock());
 
         ImGuiIO& io = ImGui::GetIO();
-        const Window& window = renderer->window_data().window();
+		Ref<const Window> window = render_target->window().lock();
 
         ImGui_ImplVulkan_NewFrame();
         ImGui_ImplGlfw_NewFrame();
@@ -80,7 +88,7 @@ namespace Na::VulkanImpl {
 
         for (Key k = 0; k < Keys::k_Last; k++)
         {
-            bool down = glfwGetKey(window.native(), k);
+            bool down = glfwGetKey(window->native(), k);
             io.AddKeyEvent(TranslateToImGuiKey(k), down);
         }
 
@@ -88,23 +96,15 @@ namespace Na::VulkanImpl {
             return;
 
         double mouse_x, mouse_y;
-        glfwGetCursorPos(window.native(), &mouse_x, &mouse_y);
+        glfwGetCursorPos(window->native(), &mouse_x, &mouse_y);
         io.AddMousePosEvent((float)mouse_x, (float)mouse_y);
 
         for (int button = 0; button < 3; button++)
         {
-            int state = glfwGetMouseButton(window.native(), button);
+            int state = glfwGetMouseButton(window->native(), button);
             io.AddMouseButtonEvent(button, state == GLFW_PRESS);
         }
     }
-
-    void ImGuiLayer::end(void) const
-    {
-        auto renderer = static_ref_cast<const Renderer>(this->renderer());
-
-        ImGui::Render();
-        ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), renderer->current_frame().cmd_buffer);
-	}
 } // namespace Na
 
 #endif // NA_DISABLE_IMGUI

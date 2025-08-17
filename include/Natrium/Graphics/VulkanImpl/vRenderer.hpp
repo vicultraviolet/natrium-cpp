@@ -7,37 +7,28 @@
 #include "Natrium/Graphics/Buffer.hpp"
 #include "Natrium/Graphics/UniformSet.hpp"
 
-#include "Natrium/Graphics/VulkanImpl/vRendererWindow.hpp"
+#include "Natrium/Graphics/VulkanImpl/vSwapchainRenderTarget.hpp"
 
 namespace Na::VulkanImpl {
 	using ShaderStage = Na::Graphics::ShaderStage;
 
-	struct FrameData {
-		bool              valid = false;
-
-		vk::CommandBuffer cmd_buffer;
-
-		vk::Semaphore     image_available_semaphore;
-		vk::Semaphore     render_finished_semaphore;
-		vk::Fence         in_flight_fence;
-	};
-
 	class Renderer : public Graphics::Renderer {
 	public:
-		Renderer(void) = default;
-		Renderer(const Window& window, Ref<const RendererSettingsAsset> settings);
+		Renderer(Ref<const RendererSettingsAsset> renderer_settings);
 
 		~Renderer(void) { this->destroy(); }
 		void destroy(void) override;
 
-		Renderer(const Renderer& other) = delete;
-		Renderer& operator=(const Renderer& other) = delete;
-
-		Renderer(Renderer&& other) noexcept;
-		Renderer& operator=(Renderer&& other) noexcept;
-
-		[[nodiscard]] bool begin_frame(const glm::vec4& color = Colors::k_Black) override;
+		void begin_frame(void) override;
 		void end_frame(void) override;
+
+		inline void bind_render_target(WeakRef<Graphics::RenderTarget> render_target) override { m_RenderTarget = render_target; }
+		inline void unbind_render_target(void) override { m_RenderTarget = nullptr; }
+
+		void begin_render_pass(const glm::vec4& clear_color = Colors::k_Black);
+		void end_render_pass(void);
+
+		void draw_imgui(void);
 
 		void bind_pipeline(View<const Graphics::Pipeline> pipeline) override;
 
@@ -83,44 +74,37 @@ namespace Na::VulkanImpl {
 			glm::uvec3 workgroup_count
 		) override;
 
-		[[nodiscard]] inline const Window& window(void) const override { return m_Window.window(); }
-		[[nodiscard]] inline Ref<const RendererSettingsAsset> settings(void) const override { return m_Window.settings(); }
+		[[nodiscard]] inline vk::CommandPool& graphics_cmd_pool(void) { return m_GraphicsCommandPool; }
+		[[nodiscard]] inline const vk::CommandPool& graphics_cmd_pool(void) const { return m_GraphicsCommandPool; }
 
-		[[nodiscard]] inline RendererWindow& window_data(void) { return m_Window; }
-		[[nodiscard]] inline const RendererWindow& window_data(void) const { return m_Window; }
-
-		[[nodiscard]] inline vk::CommandPool& graphics_cmd_pool(void) { return m_GraphicsCmdPool; }
-		[[nodiscard]] inline const vk::CommandPool& graphics_cmd_pool(void) const { return m_GraphicsCmdPool; }
-
-		[[nodiscard]] inline FrameData& current_frame(void) { return m_Frames[m_FrameIndex]; }
-		[[nodiscard]] inline const FrameData& current_frame(void) const { return m_Frames[m_FrameIndex]; }
+		[[nodiscard]] inline const vk::CommandBuffer& current_cmd_buffer(void) const { return m_CommandBuffers[m_FrameIndex]; }
+		[[nodiscard]] inline vk::CommandBuffer& current_cmd_buffer(void) { return m_CommandBuffers[m_FrameIndex]; }
 
 		[[nodiscard]] inline u32 current_frame_index(void) const override { return m_FrameIndex; }
-		[[nodiscard]] inline u32 current_image_index(void) const override { return m_ImageIndex; }
 
 		[[nodiscard]] inline vk::DescriptorPool& descriptor_pool(void) { return m_DescriptorPool; }
 		[[nodiscard]] inline const vk::DescriptorPool& descriptor_pool(void) const { return m_DescriptorPool; }
+		
+		[[nodiscard]] inline Ref<const RendererSettingsAsset> settings(void) const override { return m_RendererSettings;  }
 
-		[[nodiscard]] inline operator bool(void) const { return m_Window; }
+		[[nodiscard]] inline operator bool(void) const { return m_GraphicsCommandPool; }
 	private:
-		void _create_command_objects(void);
-		void _create_sync_objects(void);
+		void _create_cmd_objects(void);
 		void _create_descriptor_pool(void);
 	private:
-		RendererWindow m_Window;
+		WeakRef<Graphics::RenderTarget> m_RenderTarget = nullptr;
 
-		vk::CommandPool m_GraphicsCmdPool = nullptr;
+		vk::CommandPool m_GraphicsCommandPool = nullptr;
 
-		ArrayList<FrameData> m_Frames;
+		ArrayList<vk::CommandBuffer> m_CommandBuffers;
 		u32 m_FrameIndex = 0;
-
-		ArrayList<vk::Fence> m_ImageInFlightFences;
-		u32 m_ImageIndex = 0;
 		
 		vk::DescriptorPool m_DescriptorPool = nullptr;
 
 		std::array<vk::DescriptorSet, 4> m_DescriptorSets{};
 		std::array<u32, 32> m_DynamicOffsets{};
+
+		Ref<const RendererSettingsAsset> m_RendererSettings;
 	};
 } // namespace Na
 

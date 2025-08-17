@@ -8,22 +8,28 @@
 #include "Natrium/Graphics/UniformSet.hpp"
 #include "Natrium/Assets/RendererSettingsAsset.hpp"
 #include "Natrium/Graphics/Shader.hpp"
+#include "Natrium/Graphics/RenderTargets.hpp"
 
 namespace Na::Graphics {
 	class Pipeline;
 
 	class Renderer {
 	public:
-		[[nodiscard]] static UniqueRef<Renderer> Make(
-			const Window& window,
-			Ref<const RendererSettingsAsset> settings = nullptr
-		);
+		[[nodiscard]] static UniqueRef<Renderer> Make(Ref<const RendererSettingsAsset> settings);
 
 		virtual ~Renderer(void) { this->destroy(); }
 		virtual void destroy(void) {}
 
-		[[nodiscard]] virtual bool begin_frame(const glm::vec4& color = Colors::k_Black) = 0;
+		virtual void begin_frame(void) = 0;
 		virtual void end_frame(void) = 0;
+
+		virtual void bind_render_target(WeakRef<RenderTarget> render_target) = 0;
+		virtual void unbind_render_target(void) = 0;
+
+		virtual void begin_render_pass(const glm::vec4& clear_color = Colors::k_Black) = 0;
+		virtual void end_render_pass(void) = 0;
+
+		virtual void draw_imgui(void) = 0;
 
 		virtual void bind_pipeline(View<const Pipeline> pipeline) = 0;
 
@@ -76,10 +82,9 @@ namespace Na::Graphics {
 		) = 0;
 
 		[[nodiscard]] virtual u32 current_frame_index(void) const = 0;
-		[[nodiscard]] virtual u32 current_image_index(void) const = 0;
 
-		[[nodiscard]] virtual const Window& window(void) const = 0;
 		[[nodiscard]] virtual Ref<const RendererSettingsAsset> settings(void) const = 0;
+
 		[[nodiscard]] virtual operator bool(void) const = 0;
 	};
 } // namespace Na::Graphics

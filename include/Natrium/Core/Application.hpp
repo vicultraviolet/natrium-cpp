@@ -63,11 +63,14 @@ namespace Na {
 		[[nodiscard]] inline LayerManager& layer_manager(void) { return m_LayerManager; }
 		[[nodiscard]] inline const LayerManager& layer_manager(void) const { return m_LayerManager; }
 
-		[[nodiscard]] inline Window& window(void) { return m_Window; }
-		[[nodiscard]] inline const Window& window(void) const { return m_Window; }
+		[[nodiscard]] inline Ref<Graphics::Renderer> renderer(void) { return m_Renderer; }
+		[[nodiscard]] inline Ref<const Graphics::Renderer> renderer(void) const { return m_Renderer; }
 
-		[[nodiscard]] inline View<Graphics::Renderer> renderer(void) { return m_Renderer; }
-		[[nodiscard]] inline View<const Graphics::Renderer> renderer(void) const { return m_Renderer; }
+		[[nodiscard]] inline Ref<Window> window(void) { return m_Window; }
+		[[nodiscard]] inline Ref<const Window> window(void) const { return m_Window; }
+
+		[[nodiscard]] inline Ref<Graphics::SwapchainRenderTarget> render_target(void) { return m_RenderTarget; }
+		[[nodiscard]] inline Ref<const Graphics::SwapchainRenderTarget> render_target(void) const { return m_RenderTarget; }
 
 		[[nodiscard]] inline WeakRef<ImGuiLayer> imgui_layer(void) const { return m_ImGuiLayer; }
 
@@ -76,8 +79,10 @@ namespace Na {
 		AssetManager m_AssetManager;
 		LayerManager m_LayerManager;
 
-		Window m_Window;
-		UniqueRef<Graphics::Renderer> m_Renderer;
+		Ref<Graphics::Renderer> m_Renderer;
+
+		Ref<Window> m_Window;
+		Ref<Graphics::SwapchainRenderTarget> m_RenderTarget;
 
 		WeakRef<ImGuiLayer> m_ImGuiLayer;
 

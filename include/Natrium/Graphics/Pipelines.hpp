@@ -7,7 +7,7 @@
 #include "Natrium/Graphics/UniformSetLayout.hpp"
 
 namespace Na::Graphics {
-	class Renderer;
+	class RenderTarget;
 
 	using Shaders = std::initializer_list<View<const Shader>>;
 	using UniformLayout = std::initializer_list<View<const UniformSetLayout>>;
@@ -32,7 +32,7 @@ namespace Na::Graphics {
 	class TrianglePipeline : public Pipeline {
 	public:
 		[[nodiscard]] static UniqueRef<TrianglePipeline> Make(
-			View<const Renderer> renderer,
+			WeakRef<const RenderTarget> render_target,
 			const VertexAttributes& vertex_layout,
 			const View<const UniformSetLayout>* uniform_set_layouts,
 			u64 uniform_set_layout_count,
@@ -41,7 +41,7 @@ namespace Na::Graphics {
 		);
 
 		[[nodiscard]] static UniqueRef<TrianglePipeline> Make(
-			View<const Renderer> renderer,
+			WeakRef<const RenderTarget> render_target,
 			const VertexAttributes& vertex_layout = {},
 			const UniformLayout& uniform_layout = {},
 			const Shaders& shaders = {}
