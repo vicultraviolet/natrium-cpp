@@ -12,7 +12,7 @@ namespace Na::Graphics {
 	{
 		switch (Device::Get()->backend())
 		{
-		case DeviceBackend::Vulkan: return Ref<VulkanImpl::SwapchainRenderTarget>::Make(window, renderer_settings);
+		case DeviceBackend::Vulkan: return MakeRef<VulkanImpl::SwapchainRenderTarget>(window, renderer_settings);
 		}
 
 		return nullptr;

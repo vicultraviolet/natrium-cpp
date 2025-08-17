@@ -48,7 +48,7 @@ namespace Na {
 				return dynamic_ref_cast<T>(it->second);
 			}
 
-			Ref<T> asset = Ref<T>::Make(uuid);
+			Ref<T> asset = MakeRef<T>(uuid);
 
 			FileErrorCode err_code = asset->load(path);
 			if (err_code != FileErrorCode::None)

@@ -11,7 +11,7 @@ namespace Na::Graphics {
 	{
 		switch (Device::Get()->backend())
 		{
-		case DeviceBackend::Vulkan: return UniqueRef<VulkanImpl::UniformSet>::Make(layout, renderer);
+		case DeviceBackend::Vulkan: return MakeUnique<VulkanImpl::UniformSet>(layout, renderer);
 		}
 		return nullptr;
 	}
