@@ -70,7 +70,7 @@ namespace Na::Graphics {
 
 	class SwapchainRenderTarget : public RenderTarget {
 	public:
-		[[nodiscard]] static UniqueRef<SwapchainRenderTarget> Make(
+		[[nodiscard]] static Ref<SwapchainRenderTarget> Make(
 			WeakRef<const Window> window,
 			Ref<const RendererSettingsAsset> renderer_settings
 		);

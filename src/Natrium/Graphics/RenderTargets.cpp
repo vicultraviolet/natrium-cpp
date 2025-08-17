@@ -5,14 +5,14 @@
 #include "Natrium/Graphics/VulkanImpl/vSwapchainRenderTarget.hpp"
 
 namespace Na::Graphics {
-	UniqueRef<SwapchainRenderTarget> SwapchainRenderTarget::Make(
+	Ref<SwapchainRenderTarget> SwapchainRenderTarget::Make(
 		WeakRef<const Window> window,
 		Ref<const RendererSettingsAsset> renderer_settings
 	)
 	{
 		switch (Device::Get()->backend())
 		{
-		case DeviceBackend::Vulkan: return UniqueRef<VulkanImpl::SwapchainRenderTarget>::Make(window, renderer_settings);
+		case DeviceBackend::Vulkan: return Ref<VulkanImpl::SwapchainRenderTarget>::Make(window, renderer_settings);
 		}
 
 		return nullptr;
