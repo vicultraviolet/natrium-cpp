@@ -1,4 +1,8 @@
 # Natrium
+<img width="1312" height="890" alt="image" src="https://github.com/user-attachments/assets/458a2950-7017-45a3-9d1c-bd0d3179352a" />
+
+_Examples in https://github.com/vicultraviolet/natrium-cpp-example_
+
 ## Introduction
 Open source C++ game framework powered by the Vulkan graphics API.
 
