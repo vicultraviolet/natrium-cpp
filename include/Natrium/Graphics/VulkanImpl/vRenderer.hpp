@@ -87,6 +87,9 @@ namespace Na::VulkanImpl {
 		
 		[[nodiscard]] inline Ref<const RendererSettingsAsset> settings(void) const override { return m_RendererSettings;  }
 
+		[[nodiscard]] inline WeakRef<const Graphics::RenderTarget> current_render_target(void) const override { return m_RenderTarget; }
+
+
 		[[nodiscard]] inline operator bool(void) const { return m_GraphicsCommandPool; }
 	private:
 		void _create_cmd_objects(void);

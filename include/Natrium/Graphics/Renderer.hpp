@@ -85,6 +85,8 @@ namespace Na::Graphics {
 
 		[[nodiscard]] virtual Ref<const RendererSettingsAsset> settings(void) const = 0;
 
+		[[nodiscard]] virtual WeakRef<const RenderTarget> current_render_target(void) const = 0;
+
 		[[nodiscard]] virtual operator bool(void) const = 0;
 	};
 } // namespace Na::Graphics
