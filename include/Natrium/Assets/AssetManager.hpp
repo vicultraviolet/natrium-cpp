@@ -81,6 +81,9 @@ namespace Na {
 			static_assert(std::is_base_of<Asset, T>::value, "Failed to get asset: T must inherit from Asset!");
 			return dynamic_ref_cast<T>(this->get_asset(uuid));
 		}
+
+		[[nodiscard]] inline const auto& engine_assets_dir(void) const { return m_EngineAssetsDirectory; }
+		[[nodiscard]] inline const auto& shader_output_dir(void) const { return m_ShaderOutputDirectory; }
 	private:
 		std::unordered_map<UUID_t, Ref<Asset>> m_Assets;
 		std::filesystem::path m_EngineAssetsDirectory = "engine/assets/";
