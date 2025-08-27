@@ -1,7 +1,7 @@
 #if !defined(NA_SHADER_HPP)
 #define NA_SHADER_HPP
 
-#include "Natrium/Graphics/Device.hpp"
+#include "Natrium/Core.hpp"
 
 namespace Na::Graphics {
 	enum class ShaderStage : u8 {
