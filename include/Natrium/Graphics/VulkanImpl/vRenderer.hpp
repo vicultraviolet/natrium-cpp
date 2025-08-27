@@ -53,8 +53,17 @@ namespace Na::VulkanImpl {
 			View<const Graphics::Pipeline> pipeline
 		) const override;
 
-		void draw_vertices(
+		void bind_vertex_buffer(
 			View<const Graphics::Buffer> vertex_buffer,
+			u64 offset = 0
+		) override;
+
+		void bind_index_buffer(
+			View<const Graphics::Buffer> index_buffer,
+			u64 offset = 0
+		) override;
+
+		void draw_vertices(
 			u32 vertex_count,
 			u32 instance_count = 1,
 			u32 first_vertex = 0,
@@ -62,8 +71,6 @@ namespace Na::VulkanImpl {
 		) override;
 
 		void draw_indexed(
-			View<const Graphics::Buffer> vertex_buffer,
-			View<const Graphics::Buffer> index_buffer,
 			u32 index_count,
 			u32 instance_count = 1,
 			u32 first_index = 0,
@@ -86,6 +93,9 @@ namespace Na::VulkanImpl {
 		[[nodiscard]] inline const vk::DescriptorPool& descriptor_pool(void) const { return m_DescriptorPool; }
 		
 		[[nodiscard]] inline Ref<const RendererSettingsAsset> settings(void) const override { return m_RendererSettings;  }
+
+		[[nodiscard]] inline WeakRef<const Graphics::RenderTarget> current_render_target(void) const override { return m_RenderTarget; }
+
 
 		[[nodiscard]] inline operator bool(void) const { return m_GraphicsCommandPool; }
 	private:

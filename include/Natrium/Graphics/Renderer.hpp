@@ -60,17 +60,24 @@ namespace Na::Graphics {
 			View<const Pipeline> pipeline
 		) const = 0;
 
-		virtual void draw_vertices(
+		virtual void bind_vertex_buffer(
 			View<const Buffer> vertex_buffer,
-			u32 verex_count,
+			u64 offset = 0
+		) = 0;
+
+		virtual void bind_index_buffer(
+			View<const Buffer> index_buffer,
+			u64 offset = 0
+		) = 0;
+
+		virtual void draw_vertices(
+			u32 vertex_count,
 			u32 instance_count = 1,
 			u32 first_vertex = 0,
 			u32 first_instance = 0
 		) = 0;
 
 		virtual void draw_indexed(
-			View<const Buffer> vertex_buffer,
-			View<const Buffer> index_buffer,
 			u32 index_count,
 			u32 instance_count = 1,
 			u32 first_index = 0,
@@ -84,6 +91,8 @@ namespace Na::Graphics {
 		[[nodiscard]] virtual u32 current_frame_index(void) const = 0;
 
 		[[nodiscard]] virtual Ref<const RendererSettingsAsset> settings(void) const = 0;
+
+		[[nodiscard]] virtual WeakRef<const RenderTarget> current_render_target(void) const = 0;
 
 		[[nodiscard]] virtual operator bool(void) const = 0;
 	};

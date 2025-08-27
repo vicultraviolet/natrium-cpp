@@ -234,8 +234,31 @@ namespace Na::VulkanImpl {
 		);
 	}
 
-	void Renderer::draw_vertices(
+	void Renderer::bind_vertex_buffer(
 		View<const Graphics::Buffer> _vertex_buffer,
+		u64 offset
+	)
+	{
+		vk::CommandBuffer cmd_buffer = m_CommandBuffers[m_FrameIndex];
+
+		auto vertex_buffer = static_ref_cast<const Buffer>(_vertex_buffer);
+
+		cmd_buffer.bindVertexBuffers(0, { vertex_buffer->native() }, { offset });
+	}
+
+	void Renderer::bind_index_buffer(
+		View<const Graphics::Buffer> _index_buffer,
+		u64 offset
+	)
+	{
+		vk::CommandBuffer cmd_buffer = m_CommandBuffers[m_FrameIndex];
+
+		auto index_buffer = static_ref_cast<const Buffer>(_index_buffer);
+
+		cmd_buffer.bindIndexBuffer(index_buffer->native(), offset, vk::IndexType::eUint32);
+	}
+
+	void Renderer::draw_vertices(
 		u32 vertex_count,
 		u32 instance_count,
 		u32 first_vertex,
@@ -243,10 +266,6 @@ namespace Na::VulkanImpl {
 	)
 	{
 		vk::CommandBuffer cmd_buffer = m_CommandBuffers[m_FrameIndex];
-
-		auto vertex_buffer = static_ref_cast<const Buffer>(_vertex_buffer);
-
-		cmd_buffer.bindVertexBuffers(0, { vertex_buffer->native() }, { 0 });
 
 		cmd_buffer.draw(
 			vertex_count,
@@ -257,8 +276,6 @@ namespace Na::VulkanImpl {
 	}
 
 	void Renderer::draw_indexed(
-		View<const Graphics::Buffer> _vertex_buffer,
-		View<const Graphics::Buffer> _index_buffer,
 		u32 index_count,
 		u32 instance_count,
 		u32 first_index,
@@ -266,12 +283,6 @@ namespace Na::VulkanImpl {
 	)
 	{
 		vk::CommandBuffer cmd_buffer = m_CommandBuffers[m_FrameIndex];
-
-		auto vertex_buffer = static_ref_cast<const Buffer>(_vertex_buffer);
-		auto index_buffer = static_ref_cast<const Buffer>(_index_buffer);
-
-		cmd_buffer.bindVertexBuffers(0, { vertex_buffer->native() }, { 0 });
-		cmd_buffer.bindIndexBuffer(index_buffer->native(), 0, vk::IndexType::eUint32);
 
 		cmd_buffer.drawIndexed(
 			index_count,
