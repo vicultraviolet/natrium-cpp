@@ -62,19 +62,19 @@ namespace Na::VulkanImpl {
 			__debugbreak();
 #endif
 		} else
-			if (severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
-			{
-				g_Logger.print(Warn, data->pMessage);
-			} else
-				if (severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT)
-				{
-					g_Logger.print(Info, data->pMessage);
-				} else
-				{
-					g_Logger.print(Trace, data->pMessage);
-				}
+		if (severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
+		{
+			g_Logger.print(Warn, data->pMessage);
+		} else
+		if (severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT)
+		{
+			g_Logger.print(Info, data->pMessage);
+		} else
+		{
+			g_Logger.print(Trace, data->pMessage);
+		}
 
-				return VK_FALSE;
+		return VK_FALSE;
 	}
 
 	static vk::DebugUtilsMessengerCreateInfoEXT dbgMessengerInfo(void)

@@ -8,6 +8,12 @@
 namespace Na::Graphics {
 	class Renderer;
 
+	struct UniformSetBufferBindingInfo;
+	struct UniformSetTextureBindingInfo;
+
+	struct UniformSetBufferBindingInfo2;
+	struct UniformSetTextureBindingInfo2;
+
 	class UniformSet {
 	public:
 		[[nodiscard]] static UniqueRef<UniformSet> Make(
@@ -16,10 +22,61 @@ namespace Na::Graphics {
 		);
 		virtual ~UniformSet(void) = default;
 
-		virtual void bind_at(u32 binding, View<const Buffer> buffer, BufferTypeFlags type) = 0;
-		virtual void bind_at(u32 binding, View<const Texture> texture) = 0;
+		virtual void bind(const UniformSetBufferBindingInfo& info) = 0;
+		virtual void bind(const UniformSetTextureBindingInfo& info) = 0;
+
+		virtual void bind_array(const UniformSetBufferBindingInfo2& info) = 0;
+		virtual void bind_array(const UniformSetTextureBindingInfo2& info) = 0;
 
 		[[nodiscard]] virtual operator bool(void) const = 0;
+	};
+
+	struct UniformSetBufferBindingInfo {
+		u32 binding = u32max;
+		u32 array_index = 0;
+
+		View<const Graphics::Buffer> buffer;
+
+		// buffer itself can be multiple types, but for binding we need to know which one
+		BufferTypeFlags type = BufferTypeFlags::None;
+	};
+
+	struct UniformSetTextureBindingInfo {
+		u32 binding = u32max;
+		u32 array_index = 0;
+
+		View<const Graphics::Texture> texture;
+	};
+
+	struct UniformSetBufferBindingInfo2 {
+		u32 binding = u32max;
+		u32 starting_index = 0;
+
+		const View<const Graphics::Buffer>* buffers = nullptr;
+		u32 buffer_count = 0;
+
+		// buffer itself can be multiple types, but for binding we need to know which one
+		BufferTypeFlags type = BufferTypeFlags::None;
+
+		void set_buffers(const std::initializer_list<View<const Graphics::Buffer>>& buffers)
+		{
+			this->buffers = buffers.begin();
+			this->buffer_count = (u32)buffers.size();
+		}
+	};
+
+	struct UniformSetTextureBindingInfo2 {
+		u32 binding = u32max;
+		u32 starting_index = 0;
+
+		const View<const Graphics::Texture>* textures = nullptr;
+		u32 texture_count = 0;
+
+		void set_textures(const std::initializer_list<View<const Graphics::Texture>>& textures)
+		{
+			this->textures = textures.begin();
+			this->texture_count = (u32)textures.size();
+		}
 	};
 } // namespace Na::Graphics
 

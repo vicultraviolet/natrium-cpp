@@ -16,6 +16,15 @@ namespace Na::Graphics {
 		u32 binding;
 		UniformType type;
 		ShaderStage shader_stage;
+
+		// arrays require the UniformIndexing extension
+		u32 count = 1; 
+
+		// requires the UniformIndexing extension with binding_partially_bound = true
+		bool partially_bound = false;
+
+		// requires the UniformIndexing extension with dynamic_count = true
+		bool dynamic_count = false;
 	};
 
 	class UniformSetLayout {
