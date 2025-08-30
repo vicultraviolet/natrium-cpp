@@ -57,12 +57,6 @@ namespace Na::Graphics {
 
 		// buffer itself can be multiple types, but for binding we need to know which one
 		BufferTypeFlags type = BufferTypeFlags::None;
-
-		void set_buffers(const std::initializer_list<View<const Graphics::Buffer>>& buffers)
-		{
-			this->buffers = buffers.begin();
-			this->buffer_count = (u32)buffers.size();
-		}
 	};
 
 	struct UniformSetTextureBindingInfo2 {
@@ -71,12 +65,6 @@ namespace Na::Graphics {
 
 		const View<const Graphics::Texture>* textures = nullptr;
 		u32 texture_count = 0;
-
-		void set_textures(const std::initializer_list<View<const Graphics::Texture>>& textures)
-		{
-			this->textures = textures.begin();
-			this->texture_count = (u32)textures.size();
-		}
 	};
 } // namespace Na::Graphics
 

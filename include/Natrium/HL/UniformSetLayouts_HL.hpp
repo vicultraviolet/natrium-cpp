@@ -29,11 +29,13 @@ namespace Na::HL {
 
 		[[nodiscard]] inline u64 size(void) const
 		{
-			u64 i = 0;
-			for (; i < UniformSetIndices::k_Count; i++)
-				if (!this->ptr()[i])
-					break;
-			return i;
+			u64 size = 0;
+
+			for (u64 i = 0; i < this->capacity(); i++)
+				if (this->ptr()[i])
+					size++;
+
+			return size;
 		}
 		[[nodiscard]] inline u64 capacity(void) const { return UniformSetIndices::k_Count; }
 	};
