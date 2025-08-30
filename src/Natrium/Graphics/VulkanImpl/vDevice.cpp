@@ -177,7 +177,7 @@ namespace Na::VulkanImpl {
 
 		features.runtimeDescriptorArray = info.runtime_array;
 
-		features.descriptorBindingUpdateUnusedWhilePending = info.update_while_in_use;
+		features.descriptorBindingUpdateUnusedWhilePending = info.update_unused_while_in_use;
 
 		features.descriptorBindingVariableDescriptorCount = info.dynamic_count;
 

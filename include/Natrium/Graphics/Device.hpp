@@ -29,8 +29,8 @@ namespace Na::Graphics {
 		// each type you want to be able to update after binding must be listed here
 		std::set<UniformType> update_after_bind_types;
 
-		// support for updating uniforms in a set while it is in use
-		bool update_while_in_use = false;
+		// support for updating unused uniforms in a set while the set is in use
+		bool update_unused_while_in_use = false;
 
 		// support for uniform sets where some uniforms in a binding may be invalid or unbound
 		bool binding_partially_bound = false; 
@@ -45,8 +45,6 @@ namespace Na::Graphics {
 		// support for shaders to declare uniform arrays without a fixed shader compile-time size
 		// like `sampler2D textures[];` instead of `sampler2D textures[16];`
 		bool runtime_array = false;
-
-		[[nodiscard]] static UniformIndexingInfo BindlessTextures(void);
 	};
 
 	struct DeviceInitInfo {
@@ -90,12 +88,14 @@ namespace Na::Graphics {
 
 		[[nodiscard]] inline DeviceBackend backend(void) const { return m_Backend; }
 		[[nodiscard]] inline const auto& extensions(void) const { return m_Extensions; }
+		[[nodiscard]] inline const auto& uniform_indexing_info(void) const { return m_UniformIndexingInfo; }
 
 		[[nodiscard]] virtual View<DeviceLimits> limits(void) { return nullptr; }
 		[[nodiscard]] virtual View<const DeviceLimits> limits(void) const = 0;
 	private:
 		DeviceBackend m_Backend = DeviceBackend::None;
 		DeviceExtensions m_Extensions;
+		UniformIndexingInfo m_UniformIndexingInfo;
 
 		static inline View<Device> s_Instance = nullptr;
 	};

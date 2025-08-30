@@ -74,12 +74,7 @@ namespace Na::VulkanImpl {
 
 		if (buffer->is_multibuffer())
 		{
-			this->_set_dynamic_offsets_for_buffer(m_DynamicOffsetIndex++, buffer->aligned_size());
-		}
-
-		for (u32 offset : m_DynamicOffsets)
-		{
-			g_Logger.printf(Debug, "Dynamic Offset: {}", offset);
+			this->_set_dynamic_offsets_for_buffer(m_DynamicOffsetIndex++, (u32)buffer->aligned_size());
 		}
 	}
 
@@ -118,7 +113,7 @@ namespace Na::VulkanImpl {
 			
 			if (buffer->is_multibuffer())
 			{
-				this->_set_dynamic_offsets_for_buffer(m_DynamicOffsetIndex++, buffer->aligned_size());
+				this->_set_dynamic_offsets_for_buffer(m_DynamicOffsetIndex++, (u32)buffer->aligned_size());
 			}
 		}
 
@@ -168,7 +163,7 @@ namespace Na::VulkanImpl {
 		u32 count = m_DynamicOffsets.size() / m_DynamicOffsetCount;
 		for (u32 i = 0; i < count; i++)
 		{
-			u64 offset_index = (u64)i * m_DynamicOffsetCount + dynamic_descriptor_index;
+			u64 offset_index = (u64)i * (u64)m_DynamicOffsetCount + (u64)dynamic_descriptor_index;
 			m_DynamicOffsets[offset_index] = i * aligned_size;
 		}
 	}

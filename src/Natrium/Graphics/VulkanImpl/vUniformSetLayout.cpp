@@ -15,7 +15,7 @@ namespace Na::VulkanImpl {
 			if (binding.type == UniformType::UniformMultibuffer ||
 				binding.type == UniformType::StorageMultibuffer)
 			{
-				m_DynamicCount++;
+				m_DynamicCount += binding.count;
 			}
 
 			bindings[i].binding = binding.binding;
@@ -42,6 +42,9 @@ namespace Na::VulkanImpl {
 
 				if (binding.dynamic_count)
 					binding_flags[i] |= vk::DescriptorBindingFlagBitsEXT::eVariableDescriptorCount;
+
+				if (binding.update_unused_while_in_use)
+					binding_flags[i] |= vk::DescriptorBindingFlagBitsEXT::eUpdateUnusedWhilePending;
 			}
 		}
 
@@ -49,6 +52,11 @@ namespace Na::VulkanImpl {
 
 		create_info.bindingCount = (u32)bindings.size();
 		create_info.pBindings = bindings.ptr();
+
+		if (!Device::Get()->uniform_indexing_info().update_after_bind_types.empty())
+		{
+			create_info.flags = vk::DescriptorSetLayoutCreateFlagBits::eUpdateAfterBindPool;
+		}
 
 		vk::DescriptorSetLayoutBindingFlagsCreateInfoEXT create_info_ex;
 

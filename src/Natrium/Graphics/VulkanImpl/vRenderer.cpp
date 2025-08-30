@@ -354,6 +354,11 @@ namespace Na::VulkanImpl {
 		create_info.poolSizeCount = k_Count;
 		create_info.pPoolSizes = descriptor_pool_sizes.data();
 
+		if (!Device::Get()->uniform_indexing_info().update_after_bind_types.empty())
+		{
+			create_info.flags = vk::DescriptorPoolCreateFlagBits::eUpdateAfterBind;
+		}
+
 		m_DescriptorPool = Device::Get()->logical_device().createDescriptorPool(create_info);
 	}
 } // namespace Na

@@ -5,19 +5,6 @@
 #include "Natrium/Graphics/VulkanImpl/vDevice.hpp"
 
 namespace Na::Graphics {
-	UniformIndexingInfo UniformIndexingInfo::BindlessTextures(void)
-	{
-		UniformIndexingInfo info;
-
-		info.array_types.insert(UniformType::Texture);
-		info.update_after_bind_types.insert(UniformType::Texture);
-
-		info.runtime_array = true;
-		info.binding_partially_bound = true;
-
-		return info;
-	}
-
 	UniqueRef<Device> Device::Make(const DeviceInitInfo& info)
 	{
 		switch (info.backend)
@@ -28,7 +15,9 @@ namespace Na::Graphics {
 	}
 
 	Device::Device(const DeviceInitInfo& info)
-	: m_Backend(info.backend), m_Extensions(info.required_extensions)
+	: m_Backend(info.backend),
+	  m_Extensions(info.required_extensions),
+	  m_UniformIndexingInfo(info.uniform_indexing_info.value_or({}))
 	{
 		NA_VERIFY(!Device::s_Instance, "Failed to create Device: Device already initialized!");
 		Device::s_Instance = this;

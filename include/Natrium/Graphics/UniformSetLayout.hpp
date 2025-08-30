@@ -25,6 +25,9 @@ namespace Na::Graphics {
 
 		// requires the UniformIndexing extension with dynamic_count = true
 		bool dynamic_count = false;
+
+		// requires the UniformIndexing extension with update_unused_while_in_use = true
+		bool update_unused_while_in_use = false;
 	};
 
 	class UniformSetLayout {
