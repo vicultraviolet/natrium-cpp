@@ -6,6 +6,16 @@
 namespace Na::VulkanImpl {
 	inline constexpr bool k_ValidationLayersEnabled = k_BuildConfig != BuildConfig::Distribution;
 
+	using DeviceExtension = Graphics::DeviceExtension;
+	const char* DeviceExtensionToVk(DeviceExtension extension);
+
+	using DeviceExtensions = Graphics::DeviceExtensions;
+	ArrayList<const char*> DeviceExtensionsToVk(const DeviceExtensions& extensions);
+
+	using UniformIndexingInfo = Graphics::UniformIndexingInfo;
+	vk::PhysicalDeviceDescriptorIndexingFeaturesEXT
+		UniformIndexingInfoToVk(const UniformIndexingInfo& info);
+
 	using DeviceInitInfo = Graphics::DeviceInitInfo;
 	using DeviceBackend = Graphics::DeviceBackend;
 
@@ -65,7 +75,11 @@ namespace Na::VulkanImpl {
 		void _create_dbg_messenger(void);
 		void _pick_physical_device(vk::SurfaceKHR surface, const Na::ArrayList<const char*>& extensions);
 		void _get_limits(void);
-		void _create_logical_device(vk::SurfaceKHR surface, const Na::ArrayList<const char*>& extensions);
+		void _create_logical_device(
+			vk::SurfaceKHR surface,
+			const Na::ArrayList<const char*>& extensions,
+			vk::PhysicalDeviceDescriptorIndexingFeaturesEXT* descriptor_indexing_features 
+		);
 		void _create_single_time_cmd_pool(void);
 	private:
 		vk::Instance m_Instance = nullptr;

@@ -98,6 +98,7 @@ namespace Na::VulkanImpl {
 		vk::DescriptorSet set,
 		u32 binding,
 		vk::DescriptorType type,
+		u32 starting_index,
 		u32 count,
 		vk::DescriptorBufferInfo* buffer_info, 
 		vk::DescriptorImageInfo* image_info,
@@ -107,10 +108,10 @@ namespace Na::VulkanImpl {
 		vk::WriteDescriptorSet descriptor_write;
 		descriptor_write.dstSet = set;
 		descriptor_write.dstBinding = binding;
-		descriptor_write.dstArrayElement = 0;
+		descriptor_write.dstArrayElement = starting_index;
 
 		descriptor_write.descriptorType = type;
-		descriptor_write.descriptorCount = 1;
+		descriptor_write.descriptorCount = count;
 
 		descriptor_write.pBufferInfo = buffer_info;
 		descriptor_write.pImageInfo = image_info;

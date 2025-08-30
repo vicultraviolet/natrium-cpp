@@ -1,6 +1,7 @@
 #include "Pch.hpp"
 #include "Natrium/Assets/AssetManager.hpp"
 
+#include "Natrium/Graphics/Device.hpp"
 #include "Natrium/Graphics/VulkanImpl/vShader.hpp"
 #include "Natrium/Assets/TextAsset.hpp"
 #include "Natrium/Assets/RendererSettingsAsset.hpp"

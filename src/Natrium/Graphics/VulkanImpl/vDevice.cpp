@@ -1,41 +1,11 @@
 #include "Pch.hpp"
 #include "Natrium/Graphics/VulkanImpl/vDevice.hpp"
 
+#include "Natrium/Graphics/VulkanImpl/vShader.hpp"
+
 #include "Internal.hpp"
 
 namespace Na::VulkanImpl {
-	static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
-		VkDebugUtilsMessageSeverityFlagBitsEXT severity,
-		VkDebugUtilsMessageTypeFlagsEXT types,
-		const VkDebugUtilsMessengerCallbackDataEXT* data,
-		void* user_data
-	)
-	{
-		if (!k_ValidationLayersEnabled)
-			return VK_FALSE;
-
-		if (severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT)
-		{
-			g_Logger.print(Error, data->pMessage);
-		#if defined(_MSC_VER)
-			__debugbreak();
-		#endif
-		} else
-		if (severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
-		{
-			g_Logger.print(Warn, data->pMessage);
-		} else
-		if (severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT)
-		{
-			g_Logger.print(Info, data->pMessage);
-		} else
-		{
-			g_Logger.print(Trace, data->pMessage);
-		}
-
-		return VK_FALSE;
-	}
-
 	static vk::DebugUtilsMessengerEXT createDbgMessenger(
 		vk::Instance instance = {},
 		const vk::DebugUtilsMessengerCreateInfoEXT& create_info = {}
@@ -75,6 +45,38 @@ namespace Na::VulkanImpl {
 		);
 	}
 
+	static VKAPI_ATTR VkBool32 VKAPI_CALL dbgCallback(
+		VkDebugUtilsMessageSeverityFlagBitsEXT severity,
+		VkDebugUtilsMessageTypeFlagsEXT types,
+		const VkDebugUtilsMessengerCallbackDataEXT* data,
+		void* user_data
+	)
+	{
+		if (!k_ValidationLayersEnabled)
+			return VK_FALSE;
+
+		if (severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT)
+		{
+			g_Logger.print(Error, data->pMessage);
+#if defined(_MSC_VER)
+			__debugbreak();
+#endif
+		} else
+		if (severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
+		{
+			g_Logger.print(Warn, data->pMessage);
+		} else
+		if (severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT)
+		{
+			g_Logger.print(Info, data->pMessage);
+		} else
+		{
+			g_Logger.print(Trace, data->pMessage);
+		}
+
+		return VK_FALSE;
+	}
+
 	static vk::DebugUtilsMessengerCreateInfoEXT dbgMessengerInfo(void)
 	{
 		vk::DebugUtilsMessengerCreateInfoEXT info{};
@@ -89,7 +91,7 @@ namespace Na::VulkanImpl {
 			vk::DebugUtilsMessageTypeFlagBitsEXT::ePerformance |
 			vk::DebugUtilsMessageTypeFlagBitsEXT::eValidation;
 
-		info.setPfnUserCallback(debugCallback);
+		info.setPfnUserCallback(dbgCallback);
 
 		return info;
 	}
@@ -120,7 +122,72 @@ namespace Na::VulkanImpl {
 		return true;
 	}
 
-	static bool areRequiredExtensionsSupported(vk::PhysicalDevice device, const Na::ArrayList<const char*>& extensions)
+	const char* DeviceExtensionToVk(DeviceExtension extension)
+	{
+		switch (extension)
+		{
+		case DeviceExtension::Swapchain:	   return VK_KHR_SWAPCHAIN_EXTENSION_NAME;
+		case DeviceExtension::UniformIndexing: return VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME;
+		}
+		return "";
+	}
+
+	ArrayList<const char*> DeviceExtensionsToVk(const DeviceExtensions& extensions)
+	{
+		ArrayList<const char*> vk_extensions(extensions.size());
+
+		for (const auto& extension : extensions)
+		{
+			const char* vk_extension = DeviceExtensionToVk(extension);
+			if (strlen(vk_extension))
+				vk_extensions.emplace_back(vk_extension);
+		}
+
+		return vk_extensions;
+	}
+
+	vk::PhysicalDeviceDescriptorIndexingFeaturesEXT
+		UniformIndexingInfoToVk(const UniformIndexingInfo& info)
+	{
+		vk::PhysicalDeviceDescriptorIndexingFeaturesEXT features{};
+
+		if (info.array_types.contains(UniformType::Texture))
+			features.shaderSampledImageArrayNonUniformIndexing = true;
+
+		if (info.array_types.contains(UniformType::UniformBuffer) ||
+			info.array_types.contains(UniformType::UniformMultibuffer))
+			features.shaderUniformBufferArrayNonUniformIndexing = true;
+
+		if (info.array_types.contains(UniformType::StorageBuffer) || 
+			info.array_types.contains(UniformType::StorageMultibuffer))
+			features.shaderStorageBufferArrayNonUniformIndexing = true;
+
+		if (info.update_after_bind_types.contains(UniformType::Texture))
+			features.shaderSampledImageArrayNonUniformIndexing = true;
+
+		if (info.update_after_bind_types.contains(UniformType::UniformBuffer) ||
+			info.update_after_bind_types.contains(UniformType::UniformMultibuffer))
+			features.shaderUniformBufferArrayNonUniformIndexing = true;
+
+		if (info.update_after_bind_types.contains(UniformType::StorageBuffer) ||
+			info.update_after_bind_types.contains(UniformType::StorageMultibuffer))
+			features.shaderStorageBufferArrayNonUniformIndexing = true;
+
+		features.descriptorBindingPartiallyBound = info.binding_partially_bound;
+
+		features.runtimeDescriptorArray = info.runtime_array;
+
+		features.descriptorBindingUpdateUnusedWhilePending = info.update_unused_while_in_use;
+
+		features.descriptorBindingVariableDescriptorCount = info.dynamic_count;
+
+		return features;
+	}
+
+	static bool areRequiredExtensionsSupported(
+		vk::PhysicalDevice device,
+		const Na::ArrayList<const char*>& extensions
+	)
 	{
 		auto available_extensions = device.enumerateDeviceExtensionProperties();
 		std::set<std::string_view> required_extensions(extensions.begin(), extensions.end());
@@ -167,10 +234,12 @@ namespace Na::VulkanImpl {
 	Device::Device(const DeviceInitInfo& info)
 	: Graphics::Device(info)
 	{
-		Na::ArrayList<const char*> device_extensions = {
-			VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-			VK_KHR_MAINTENANCE1_EXTENSION_NAME
-		};
+		ArrayList<const char*> device_extensions = DeviceExtensionsToVk(info.required_extensions);
+
+		if (info.required_extensions.contains(DeviceExtension::Swapchain))
+		{
+			device_extensions.emplace_back(VK_KHR_MAINTENANCE_1_EXTENSION_NAME);
+		}
 
 		this->_create_instance();
 		this->_create_dbg_messenger();
@@ -181,7 +250,27 @@ namespace Na::VulkanImpl {
 		this->_pick_physical_device(temp_surface, device_extensions);
 		this->_get_limits();
 
-		this->_create_logical_device(temp_surface, device_extensions);
+		if (info.uniform_indexing_info.has_value() &&
+			info.required_extensions.contains(DeviceExtension::UniformIndexing))
+		{
+			auto uniform_indexing_features = UniformIndexingInfoToVk(
+				info.uniform_indexing_info.value()
+			);
+
+			this->_create_logical_device(
+				temp_surface,
+				device_extensions,
+				&uniform_indexing_features
+			);
+		} else
+		{
+			this->_create_logical_device(
+				temp_surface,
+				device_extensions,
+				nullptr // uniform indexing features (not used)
+			);
+		}
+
 		this->_create_single_time_cmd_pool();
 
 		m_Instance.destroySurfaceKHR(temp_surface);
@@ -269,7 +358,10 @@ namespace Na::VulkanImpl {
 		m_DebugMessenger = createDbgMessenger(m_Instance, dbgMessengerInfo());
 	}
 
-	void Device::_pick_physical_device(vk::SurfaceKHR surface, const Na::ArrayList<const char*>& extensions)
+	void Device::_pick_physical_device(
+		vk::SurfaceKHR surface,
+		const Na::ArrayList<const char*>& extensions
+	)
 	{
 		i32 high_score = 0;
 		for (const auto& device : m_Instance.enumeratePhysicalDevices())
@@ -312,7 +404,11 @@ namespace Na::VulkanImpl {
 		m_Limits.vk_max_anisotropy = properties.limits.maxSamplerAnisotropy;
 	}
 
-	void Device::_create_logical_device(vk::SurfaceKHR surface, const Na::ArrayList<const char*>& extensions)
+	void Device::_create_logical_device(
+		vk::SurfaceKHR surface,
+		const Na::ArrayList<const char*>& extensions,
+		vk::PhysicalDeviceDescriptorIndexingFeaturesEXT* descriptor_indexing_features
+	)
 	{
 		Internal::QueueFamilyIndices queue_indices(m_PhysicalDevice, surface);
 
@@ -339,7 +435,10 @@ namespace Na::VulkanImpl {
 		create_info.enabledExtensionCount = (u32)extensions.size();
 		create_info.ppEnabledExtensionNames = extensions.ptr();
 
+		create_info.pNext = descriptor_indexing_features;
+
 		m_LogicalDevice = m_PhysicalDevice.createDevice(create_info);
+
 		m_GraphicsQueue = m_LogicalDevice.getQueue(queue_indices.graphics(), 0);
 		m_GraphicsQueueIndex = queue_indices.graphics();
 	}

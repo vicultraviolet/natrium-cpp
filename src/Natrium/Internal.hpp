@@ -44,6 +44,7 @@ namespace Na::VulkanImpl::Internal {
 		vk::DescriptorSet set,
 		u32 binding,
 		vk::DescriptorType type,
+		u32 starting_index,
 		u32 count,
 		vk::DescriptorBufferInfo* buffer_info = nullptr,
 		vk::DescriptorImageInfo* image_info = nullptr,

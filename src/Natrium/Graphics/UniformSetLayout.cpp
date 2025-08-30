@@ -1,6 +1,7 @@
 #include "Pch.hpp"
 #include "Natrium/Graphics/UniformSetLayout.hpp"
 
+#include "Natrium/Graphics/Device.hpp"
 #include "Natrium/Graphics/VulkanImpl/vUniformSetLayout.hpp"
 
 namespace Na::Graphics {

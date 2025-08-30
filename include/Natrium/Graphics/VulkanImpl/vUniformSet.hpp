@@ -5,6 +5,12 @@
 #include "Natrium/Graphics/VulkanImpl/vBuffer.hpp"
 
 namespace Na::VulkanImpl {
+	using UniformSetBufferBindingInfo   = Graphics::UniformSetBufferBindingInfo;
+	using UniformSetTextureBindingInfo  = Graphics::UniformSetTextureBindingInfo;
+
+	using UniformSetBufferBindingInfo2  = Graphics::UniformSetBufferBindingInfo2;
+	using UniformSetTextureBindingInfo2 = Graphics::UniformSetTextureBindingInfo2;
+
 	class UniformSet : public Graphics::UniformSet {
 	public:
 		UniformSet(void) = default;
@@ -13,10 +19,12 @@ namespace Na::VulkanImpl {
 		~UniformSet(void) { this->destroy(); }
 		void destroy(void);
 
-		// type should be EITHER StorageBuffer OR UniformBuffer
-		void bind_at(u32 binding, View<const Graphics::Buffer> buffer, BufferTypeFlags type) override;
-		void bind_at(u32 binding, View<const Graphics::Texture> texture) override;
-		
+		void bind(const UniformSetBufferBindingInfo& info) override;
+		void bind(const UniformSetTextureBindingInfo& info) override;
+
+		void bind_array(const UniformSetBufferBindingInfo2& info) override;
+		void bind_array(const UniformSetTextureBindingInfo2& info) override;
+
 		[[nodiscard]] inline vk::DescriptorSet& descriptor_set(void) { return m_Set; }
 		[[nodiscard]] inline const vk::DescriptorSet& descriptor_set(void) const { return m_Set; }
 
@@ -24,6 +32,8 @@ namespace Na::VulkanImpl {
 		[[nodiscard]] inline u32 dynamic_offset_count(void) const { return m_DynamicOffsetCount; }
 
 		[[nodiscard]] inline operator bool(void) const override { return m_Set; }
+	private:
+		void _set_dynamic_offsets_for_buffer(u32 dynamic_descriptor_index, u32 aligned_size);
 	private:
 		vk::DescriptorSet m_Set = nullptr;
 

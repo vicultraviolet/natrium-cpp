@@ -12,6 +12,18 @@
 #include "Internal.hpp"
 
 namespace Na::VulkanImpl {
+	static vk::DescriptorType bufferTypeToDescriptorType(BufferTypeFlags type, bool dynamic)
+	{
+		switch (type)
+		{
+		case BufferTypeFlags::UniformBuffer:
+			return dynamic ? vk::DescriptorType::eUniformBufferDynamic : vk::DescriptorType::eUniformBuffer;
+		case BufferTypeFlags::StorageBuffer:
+			return dynamic ? vk::DescriptorType::eStorageBufferDynamic : vk::DescriptorType::eStorageBuffer;
+		}
+		return vk::DescriptorType(-1);
+	}
+
 	UniformSet::UniformSet(
 		View<const Graphics::UniformSetLayout> _layout,
 		View<const Graphics::Renderer> _renderer
@@ -35,40 +47,9 @@ namespace Na::VulkanImpl {
 		m_Set = nullptr;
 	}
 
-	void UniformSet::bind_at(u32 binding, View<const Graphics::Texture> _texture)
+	void UniformSet::bind(const UniformSetBufferBindingInfo& info)
 	{
-		auto texture = static_ref_cast<const Texture>(_texture);
-
-		vk::DescriptorImageInfo image_info;
-		image_info.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
-		image_info.imageView = texture->img_view();
-		image_info.sampler = texture->sampler();
-
-		Internal::WriteToDescriptorSet(
-			m_Set,
-			binding,
-			vk::DescriptorType::eCombinedImageSampler,
-			1,
-			nullptr, // buffer info
-			&image_info,
-			nullptr // texel buffer view
-		);
-	}
-
-	void UniformSet::bind_at(u32 binding, View<const Graphics::Buffer> _buffer, BufferTypeFlags type)
-	{
-		auto buffer = static_ref_cast<const Buffer>(_buffer);
-
-		vk::DescriptorType descriptor_type{};
-		if (type == BufferTypeFlags::StorageBuffer)
-		{
-			descriptor_type = buffer->is_multibuffer() ? vk::DescriptorType::eStorageBufferDynamic : vk::DescriptorType::eStorageBuffer;
-		} else
-		if (type == BufferTypeFlags::UniformBuffer)
-		{
-			descriptor_type = buffer->is_multibuffer() ? vk::DescriptorType::eUniformBufferDynamic : vk::DescriptorType::eUniformBuffer;
-		}
-
+		auto buffer = static_ref_cast<const Buffer>(info.buffer);
 
 		vk::DescriptorBufferInfo buffer_info;
 
@@ -76,10 +57,15 @@ namespace Na::VulkanImpl {
 		buffer_info.offset = 0;
 		buffer_info.range = buffer->aligned_size();
 
+		vk::DescriptorType descriptor_type = bufferTypeToDescriptorType(
+			info.type, buffer->is_multibuffer()
+		);
+
 		Internal::WriteToDescriptorSet(
 			m_Set,
-			binding,
+			info.binding,
 			descriptor_type,
+			info.array_index,
 			1, // count
 			&buffer_info,
 			nullptr, // image info
@@ -88,8 +74,97 @@ namespace Na::VulkanImpl {
 
 		if (buffer->is_multibuffer())
 		{
-			for (u64 i = m_DynamicOffsetIndex++; i < m_DynamicOffsets.size(); i += m_DynamicOffsetCount)
-				m_DynamicOffsets[i] = (u32)(buffer->aligned_size() * i);
+			this->_set_dynamic_offsets_for_buffer(m_DynamicOffsetIndex++, (u32)buffer->aligned_size());
+		}
+	}
+
+	void UniformSet::bind(const UniformSetTextureBindingInfo& info)
+	{
+		auto texture = static_ref_cast<const Texture>(info.texture);
+
+		vk::DescriptorImageInfo image_info;
+		image_info.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+		image_info.imageView = texture->img_view();
+		image_info.sampler = texture->sampler();
+
+		Internal::WriteToDescriptorSet(
+			m_Set,
+			info.binding,
+			vk::DescriptorType::eCombinedImageSampler,
+			info.array_index,
+			1, // count
+			nullptr, // buffer info
+			&image_info,
+			nullptr // texel buffer view
+		);
+	}
+
+	void UniformSet::bind_array(const UniformSetBufferBindingInfo2& info)
+	{
+		ArrayList<vk::DescriptorBufferInfo> buffer_infos(info.buffer_count, info.buffer_count);
+
+		for (u32 i = 0; i < info.buffer_count; i++)
+		{
+			auto buffer = static_ref_cast<const Buffer>(info.buffers[i]);
+
+			buffer_infos[i].buffer = buffer->native();
+			buffer_infos[i].offset = 0;
+			buffer_infos[i].range = buffer->aligned_size();
+			
+			if (buffer->is_multibuffer())
+			{
+				this->_set_dynamic_offsets_for_buffer(m_DynamicOffsetIndex++, (u32)buffer->aligned_size());
+			}
+		}
+
+		bool is_dynamic = info.buffers[0]->is_multibuffer();
+
+		vk::DescriptorType descriptor_type = bufferTypeToDescriptorType(info.type, is_dynamic);
+
+		Internal::WriteToDescriptorSet(
+			m_Set,
+			info.binding,
+			descriptor_type,
+			info.starting_index,
+			info.buffer_count, // count
+			buffer_infos.ptr(),
+			nullptr, // image info
+			nullptr // texel buffer view
+		);
+	}
+
+	void UniformSet::bind_array(const UniformSetTextureBindingInfo2& info)
+	{
+		ArrayList<vk::DescriptorImageInfo> image_infos(info.texture_count, info.texture_count);
+
+		for (u32 i = 0; i < info.texture_count; i++)
+		{
+			auto texture = static_ref_cast<const Texture>(info.textures[i]);
+
+			image_infos[i].imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+			image_infos[i].imageView = texture->img_view();
+			image_infos[i].sampler = texture->sampler();
+		}
+
+		Internal::WriteToDescriptorSet(
+			m_Set,
+			info.binding,
+			vk::DescriptorType::eCombinedImageSampler,
+			info.starting_index,
+			info.texture_count,
+			nullptr, // buffer info
+			image_infos.ptr(),
+			nullptr // texel buffer view
+		);
+	}
+
+	void UniformSet::_set_dynamic_offsets_for_buffer(u32 dynamic_descriptor_index, u32 aligned_size)
+	{
+		u32 count = m_DynamicOffsets.size() / m_DynamicOffsetCount;
+		for (u32 i = 0; i < count; i++)
+		{
+			u64 offset_index = (u64)i * (u64)m_DynamicOffsetCount + (u64)dynamic_descriptor_index;
+			m_DynamicOffsets[offset_index] = i * aligned_size;
 		}
 	}
 } // namespace Na::VulkanImpl
