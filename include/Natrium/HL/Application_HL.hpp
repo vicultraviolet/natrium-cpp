@@ -1,5 +1,5 @@
-#if !defined(NA_APPLICATION_HPP)
-#define NA_APPLICATION_HPP
+#if !defined(NA_HL_APPLICATION_HPP)
+#define NA_HL_APPLICATION_HPP
 
 #include "Natrium/Core/Context.hpp"
 #include "Natrium/Core/Window.hpp"
@@ -8,7 +8,7 @@
 #include "Natrium/Graphics/Renderer.hpp"
 #include "Natrium/Layers/ImGuiLayer.hpp"
 
-namespace Na {
+namespace Na::HL {
 	struct ApplicationSettings {
 		u32 window_width = 1280;
 		u32 window_height = 720;
@@ -17,6 +17,7 @@ namespace Na {
 		std::filesystem::path shader_output_directory = "bin/shaders";
 		std::string_view renderer_settings_path = "renderer_settings.json";
 	};
+	using AppSettings = ApplicationSettings;
 
 	class Application {
 	public:
@@ -91,6 +92,6 @@ namespace Na {
 		static inline View<Application> s_Application = nullptr;
 	};
 	using App = Application;
-} // namespace Na
+} // namespace Na::HL
 
-#endif // NA_APPLICATION_HPP
+#endif // NA_HL_APPLICATION_HPP

@@ -30,13 +30,12 @@
 
 #include "./Math/Camera3dData.hpp"
 
-#include "./Core/Application.hpp"
-
 #include "./Layers/ImGuiLayer.hpp"
 
 #include "./HL/UniformManager_HL.hpp"
 #include "./HL/Pipeline_HL.hpp"
 #include "./HL/DeviceMesh_HL.hpp"
+#include "./HL/Application_HL.hpp"
 
 // entry point
 #include "./Main.hpp"
