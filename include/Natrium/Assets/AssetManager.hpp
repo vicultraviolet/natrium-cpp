@@ -61,12 +61,7 @@ namespace Na {
 			return asset;
 		}
 
-	#if defined(__GNUC__)
-		[[nodiscard]] auto load_asset(const std::string& path) -> Expected<Ref<RendererSettingsAsset>, FileErrorCode>;
-	#else
-		template<>
-		[[nodiscard]] auto load_asset<RendererSettingsAsset>(const std::string& path) -> Expected<Ref<RendererSettingsAsset>, FileErrorCode>;
-	#endif
+		[[nodiscard]] auto load_renderer_settings(const std::string& path) -> Expected<Ref<RendererSettingsAsset>, FileErrorCode>;
 
 		template<typename T>
 		[[nodiscard]] inline Expected<Ref<T>, FileErrorCode> load_asset_p(const std::filesystem::path& path) { return this->load_asset<T>(path.string()); }
