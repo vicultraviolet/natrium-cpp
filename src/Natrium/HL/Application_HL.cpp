@@ -1,9 +1,9 @@
 #include "Pch.hpp"
-#include "Natrium/Core/Application.hpp"
+#include "Natrium/HL/Application_HL.hpp"
 
 #include "Natrium/Core/DeltaTime.hpp"
 
-namespace Na {
+namespace Na::HL {
 	Application::Application(const ApplicationSettings& settings)
 	{
 		NA_VERIFY(!Application::s_Application, "Failed to create Application: Cannot create more than one Application instance!");
@@ -117,4 +117,4 @@ namespace Na {
 		m_LayerManager.attach_layer(layer);
 		m_ImGuiLayer = layer;
 	}
-} // namespace Na
+} // namespace Na::HL
