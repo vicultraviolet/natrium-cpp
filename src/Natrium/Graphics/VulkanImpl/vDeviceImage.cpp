@@ -2,9 +2,9 @@
 #include "Natrium/Graphics/VulkanImpl/vDeviceImage.hpp"
 
 #include "Internal.hpp"
-#include "Natrium/Graphics/VulkanImpl/vDeviceBuffer.hpp"
 
 #include "Natrium/Graphics/VulkanImpl/vDevice.hpp"
+#include "Natrium/Graphics/VulkanImpl/vBuffer.hpp"
 
 namespace Na::VulkanImpl {
 	vk::Format FindSupportedFormat(
