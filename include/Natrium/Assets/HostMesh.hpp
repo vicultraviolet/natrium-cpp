@@ -1,5 +1,5 @@
-#if !defined(NA_MODEL_ASSET_HPP)
-#define NA_MODEL_ASSET_HPP
+#if !defined(NA_ASSETS_HOST_MESH_HPP)
+#define NA_ASSETS_HOST_MESH_HPP
 
 #include "Natrium/Assets/Asset.hpp"
 #include "Natrium/Graphics/VertexAttributes.hpp"
@@ -12,16 +12,16 @@ namespace Na {
 		[[nodiscard]] inline bool operator==(const Vertex& other) const { return position == other.position && uv_coord == other.uv_coord; }
 	};
 
-	class ModelAsset : public Asset {
+	class HostMesh : public Asset {
 	public:
-		ModelAsset(void) = default;
-		ModelAsset(const UUID_t& uuid) : Asset(uuid) {}
+		HostMesh(void) = default;
+		HostMesh(const UUID_t& uuid) : Asset(uuid) {}
 
-		~ModelAsset(void) = default;
+		~HostMesh(void) = default;
 
 		FileErrorCode load(const std::filesystem::path& path) override;
 
-		[[nodiscard]] static const Graphics::VertexAttributes& VertexAttributes(void);
+		[[nodiscard]] static const Graphics::VertexAttributes& GetVertexAttributes(void);
 
 		[[nodiscard]] inline u64 vertex_data_size(void) const { return m_Vertices.size() * sizeof(Vertex); }
 		[[nodiscard]] inline u64 index_data_size(void) const { return m_Indices.size() * sizeof(u32); }
@@ -55,4 +55,4 @@ namespace std {
 	};
 } // namespace std
 
-#endif // NA_MODEL_ASSET_HPP
+#endif // NA_ASSETS_HOST_MESH_HPP

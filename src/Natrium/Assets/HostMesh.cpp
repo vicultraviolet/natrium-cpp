@@ -1,10 +1,10 @@
 #include "Pch.hpp"
-#include "Natrium/Assets/ModelAsset.hpp"
+#include "Natrium/Assets/HostMesh.hpp"
 
 #include <tiny_obj_loader/tiny_obj_loader.h>
 
 namespace Na {
-    FileErrorCode ModelAsset::load(const std::filesystem::path& path)
+    FileErrorCode HostMesh::load(const std::filesystem::path& path)
     {
         if (!std::filesystem::exists(path))
         {
@@ -62,7 +62,7 @@ namespace Na {
         Graphics::VertexAttribute(Graphics::VertexAttributeType::Vec3),
         Graphics::VertexAttribute(Graphics::VertexAttributeType::Vec2)
     };
-    const Graphics::VertexAttributes& ModelAsset::VertexAttributes(void)
+    const Graphics::VertexAttributes& HostMesh::GetVertexAttributes(void)
     {
         return vertexAttributes;
     }
