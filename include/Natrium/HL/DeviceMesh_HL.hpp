@@ -9,6 +9,10 @@ namespace Na::HL {
 	public:
 		DeviceMesh(void) = default;
 		DeviceMesh(WeakRef<HostMesh> host_mesh);
+		DeviceMesh(
+			const Vertex* vertices, u32 vertex_count,
+			const u32* indices, u32 index_count
+		);
 
 		[[nodiscard]] inline View<const Graphics::Buffer> vertex_buffer(void) const { return m_VertexBuffer; }
 		[[nodiscard]] inline View<const Graphics::Buffer> index_buffer(void) const { return m_IndexBuffer; }

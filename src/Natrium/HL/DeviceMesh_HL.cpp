@@ -16,4 +16,17 @@ namespace Na::HL {
 		m_IndexBuffer = Graphics::MakeIndexBuffer(host_mesh->index_count());
 		m_IndexBuffer->set_data(host_mesh->indices().ptr());
 	}
+
+	DeviceMesh::DeviceMesh(
+		const Vertex* vertices, u32 vertex_count,
+		const u32* indices, u32 index_count
+	)
+	: m_VertexCount(vertex_count), m_IndexCount(index_count)
+	{
+		m_VertexBuffer = Graphics::MakeVertexBuffer((u64)vertex_count * sizeof(Vertex));
+		m_VertexBuffer->set_data(vertices);
+
+		m_IndexBuffer = Graphics::MakeIndexBuffer(index_count);
+		m_IndexBuffer->set_data(indices);
+	}
 } // namespace Na::HL
