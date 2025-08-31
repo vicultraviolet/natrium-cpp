@@ -36,6 +36,7 @@
 
 #include "./HL/UniformManager_HL.hpp"
 #include "./HL/Pipeline_HL.hpp"
+#include "./HL/DeviceMesh_HL.hpp"
 
 // entry point
 #include "./Main.hpp"
