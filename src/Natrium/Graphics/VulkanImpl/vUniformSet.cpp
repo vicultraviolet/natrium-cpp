@@ -7,7 +7,8 @@
 #include "Natrium/Graphics/VulkanImpl/vShader.hpp"
 
 #include "Natrium/Graphics/VulkanImpl/vBuffer.hpp"
-#include "Natrium/Graphics/VulkanImpl/vTexture.hpp"
+#include "Natrium/Graphics/VulkanImpl/vDeviceImage.hpp"
+#include "Natrium/Graphics/VulkanImpl/vSampler.hpp"
 
 #include "Internal.hpp"
 
@@ -80,12 +81,13 @@ namespace Na::VulkanImpl {
 
 	void UniformSet::bind(const UniformSetTextureBindingInfo& info)
 	{
-		auto texture = static_ref_cast<const Texture>(info.texture);
+		auto img = static_ref_cast<DeviceImage>(info.texture_info.img);
+		auto sampler = static_ref_cast<Sampler>(info.texture_info.sampler);
 
 		vk::DescriptorImageInfo image_info;
 		image_info.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
-		image_info.imageView = texture->img_view();
-		image_info.sampler = texture->sampler();
+		image_info.imageView = img->img_view();
+		image_info.sampler = sampler->native();
 
 		Internal::WriteToDescriptorSet(
 			m_Set,
@@ -139,11 +141,12 @@ namespace Na::VulkanImpl {
 
 		for (u32 i = 0; i < info.texture_count; i++)
 		{
-			auto texture = static_ref_cast<const Texture>(info.textures[i]);
+			auto img = static_ref_cast<DeviceImage>(info.texture_infos[i].img);
+			auto sampler = static_ref_cast<Sampler>(info.texture_infos[i].sampler);
 
 			image_infos[i].imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
-			image_infos[i].imageView = texture->img_view();
-			image_infos[i].sampler = texture->sampler();
+			image_infos[i].imageView = img->img_view();
+			image_infos[i].sampler = sampler->native();
 		}
 
 		Internal::WriteToDescriptorSet(

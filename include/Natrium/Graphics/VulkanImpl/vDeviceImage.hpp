@@ -1,72 +1,93 @@
-#if !defined(NA_DEVICE_IMAGE_HPP)
-#define NA_DEVICE_IMAGE_HPP
+#if !defined(NA_VULKAN_IMPL_DEVICE_IMAGE_HPP)
+#define NA_VULKAN_IMPL_DEVICE_IMAGE_HPP
 
 #include "Natrium/Core.hpp"
+#include "Natrium/Graphics/DeviceImage.hpp"
 
 namespace Na::VulkanImpl {
-	vk::Format FindSupportedFormat(
+	using DeviceImageCreateInfo = Graphics::DeviceImageCreateInfo;
+	struct DeviceImageCreateInfo2 {
+		vk::Extent3D extent;
+		u32 layer_count;
+		vk::ImageAspectFlagBits aspect_mask;
+		vk::Format format;
+		vk::ImageTiling tiling;
+		vk::ImageUsageFlags usage;
+		vk::SharingMode sharing_mode;
+		vk::SampleCountFlagBits sample_count;
+		vk::MemoryPropertyFlags memory_properties;
+	};
+
+	using ImageFormat = Graphics::ImageFormat;
+	using DeviceImageTypeFlags = Graphics::DeviceImageTypeFlags;
+
+	[[nodiscard]] vk::Format ImageFormatToVk(ImageFormat format);
+	[[nodiscard]] vk::ImageUsageFlags DeviceImageTypeToVk(DeviceImageTypeFlags type);
+
+	[[nodiscard]] vk::ImageView CreateImageView(vk::Image img, vk::ImageAspectFlags aspect_mask, vk::Format format, u32 layer_count = 1);
+
+	[[nodiscard]] vk::Format FindSupportedFormat(
 		const std::initializer_list<vk::Format>& candidates,
 		vk::ImageTiling tiling,
 		vk::FormatFeatureFlags features
 	);
 
-	class DeviceImage {
+	class DeviceImage : public Graphics::DeviceImage {
 	public:
-		vk::Image img = nullptr;
-		vk::DeviceMemory memory = nullptr;
+		DeviceImage(void) = default;
+		~DeviceImage(void) { this->destroy(); }
 
-		union {
-			vk::Extent3D extent;
-			struct {
-				u32 width, height, depth;
-			};
-		};
-		vk::Format format = vk::Format::eUndefined;
-		vk::ImageSubresourceRange subresource_range{};
-
-		DeviceImage(void) {};
-		DeviceImage(
-			const vk::Extent3D& extent,
-			u32 layer_count,
-			vk::ImageAspectFlagBits aspect_mask,
-			vk::Format format,
-			vk::ImageTiling tiling,
-			vk::ImageUsageFlags usage,
-			vk::SharingMode sharing_mode,
-			vk::SampleCountFlagBits sample_count,
-			vk::MemoryPropertyFlags memory_properties
-		);
 		void destroy(void);
 
-		DeviceImage(const DeviceImage& other) = delete;
-		DeviceImage& operator=(const DeviceImage& other) = delete;
+		DeviceImage(const DeviceImageCreateInfo& info);
+		DeviceImage(const DeviceImageCreateInfo2& info);
 
 		DeviceImage(DeviceImage&& other);
 		DeviceImage& operator=(DeviceImage&& other);
 
-		void transition_layout(vk::ImageLayout old_layout, vk::ImageLayout new_layout);
+		// will treat data as a single image and copy it into all layers
+		void set_all_data(const void* data, u32 starting_layer = 0, u32 layer_count = 1) override;
 
-		void copy_from_buffer(vk::Buffer buffer, u32 starting_layer = 0, u32 layer_count = 1);
+		// will treat data as an array of images and copy each one into a separate layer
+		void set_each_data(const void* data) override;
 
-		void copy_all_from_buffer(vk::Buffer buffer, u32 starting_layer = 0);
+		void set_each_data_2(const void* datas[]) override;
 
-		/// 
-		/// copies each buffer into a separate layer, starting at starting_layer
-		/// 
-		void copy_from_buffers(const vk::Buffer* buffers, u32 buffer_count, u32 starting_layer = 0);
+		void transition_layout(
+			vk::ImageLayout old_layout,
+			vk::ImageLayout new_layout
+		);
 
-		/// 
-		/// copies each buffer into a separate layer, starting at starting_layer
-		/// 
-		inline void copy_from_buffers(const std::initializer_list<vk::Buffer> buffers, u32 starting_layer = 0) { this->copy_from_buffers(buffers.begin(), (u32)buffers.size(), starting_layer); }
+		void copy_from_buffer(
+			vk::Buffer buffer,
+			u32 starting_layer = 0,
+			u32 layer_count = 1
+		);
 
-		[[nodiscard]] vk::ImageView create_img_view(void) const;
+		void copy_each_from_buffer(vk::Buffer buffer);
 
-		[[nodiscard]] inline u32 layer_count(void) const { return this->subresource_range.layerCount; }
-		[[nodiscard]] inline operator bool(void) const { return format != vk::Format::eUndefined; }
+		void copy_from_buffers(
+			const vk::Buffer* buffers,
+			u32 buffer_count,
+			u32 starting_layer = 0
+		);
+
+		[[nodiscard]] inline vk::Image& img(void) { return m_Image; }
+		[[nodiscard]] inline const vk::Image& img(void) const { return m_Image; }
+
+		[[nodiscard]] inline vk::DeviceMemory& memory(void) { return m_Memory; }
+		[[nodiscard]] inline const vk::DeviceMemory& memory(void) const { return m_Memory; }
+
+		[[nodiscard]] inline vk::ImageView& img_view(void) { return m_ImageView; }
+		[[nodiscard]] inline const vk::ImageView& img_view(void) const { return m_ImageView; }
+	private:
+		vk::Image m_Image = nullptr;
+		vk::DeviceMemory m_Memory = nullptr;
+
+		vk::ImageView m_ImageView = nullptr;
+
+		vk::ImageAspectFlags m_AspectMask;
 	};
+} // namespace Na::VulkanImpl
 
-	vk::ImageView CreateImageView(vk::Image img, vk::ImageAspectFlags aspect_mask, vk::Format format, u32 layer_count = 1);
-}
-
-#endif // NA_DEVICE_IMAGE_HPP
+#endif // NA_VULKAN_IMPL_DEVICE_IMAGE_HPP

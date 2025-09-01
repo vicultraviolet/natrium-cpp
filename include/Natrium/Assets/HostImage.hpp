@@ -1,18 +1,18 @@
-#if !defined(NA_IMAGE_ASSET_HPP)
-#define NA_IMAGE_ASSET_HPP
+#if !defined(NA_ASSETS_HOST_IMAGE_HPP)
+#define NA_ASSETS_HOST_IMAGE_HPP
 
 #include "Natrium/Assets/Asset.hpp"
 
 namespace Na {
 	// rgba8 image
-	class ImageAsset : public Asset {
+	class HostImage : public Asset {
 	public:
-		ImageAsset(void) = default;
-		ImageAsset(const UUID_t& uuid) : Asset(uuid) {}
+		HostImage(void) = default;
+		HostImage(const UUID_t& uuid) : Asset(uuid) {}
 
 		FileErrorCode load(const std::filesystem::path& path) override;
 
-		~ImageAsset(void) { this->destroy(); }
+		~HostImage(void) { this->destroy(); }
 		inline void destroy(void) { free(m_Data); m_Data = nullptr; }
 
 		[[nodiscard]] inline void* data(void) const { return m_Data; }
@@ -28,4 +28,4 @@ namespace Na {
 	};
 } // namespace Na
 
-#endif // NA_IMAGE_ASSET_HPP
+#endif // NA_ASSETS_HOST_IMAGE_HPP

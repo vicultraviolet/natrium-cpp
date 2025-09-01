@@ -78,14 +78,8 @@ namespace Na::VulkanImpl {
 		[[nodiscard]] inline DeviceImage& color_image(void) { return m_ColorImage; }
 		[[nodiscard]] inline const DeviceImage& color_image(void) const { return m_ColorImage; }
 
-		[[nodiscard]] inline vk::ImageView& color_image_view(void) { return m_ColorImageView; }
-		[[nodiscard]] inline const vk::ImageView& color_image_view(void) const { return m_ColorImageView; }
-
 		[[nodiscard]] inline DeviceImage& depth_image(void) { return m_DepthImage; }
 		[[nodiscard]] inline const DeviceImage& depth_image(void) const { return m_DepthImage; }
-
-		[[nodiscard]] inline vk::ImageView& depth_image_view(void) { return m_DepthImageView; }
-		[[nodiscard]] inline const vk::ImageView& depth_image_view(void) const { return m_DepthImageView; }
 
 		[[nodiscard]] inline vk::RenderPass& render_pass(void) { return m_RenderPass; }
 		[[nodiscard]] inline const vk::RenderPass& render_pass(void) const { return m_RenderPass; }
@@ -129,10 +123,7 @@ namespace Na::VulkanImpl {
 		Na::ArrayList<vk::ImageView> m_ImageViews;
 
 		DeviceImage m_ColorImage;
-		vk::ImageView m_ColorImageView;
-
 		DeviceImage m_DepthImage;
-		vk::ImageView m_DepthImageView;
 
 		vk::RenderPass m_RenderPass;
 		ArrayList<vk::Framebuffer> m_Framebuffers;

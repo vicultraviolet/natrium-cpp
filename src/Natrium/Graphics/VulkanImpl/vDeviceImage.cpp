@@ -7,6 +7,35 @@
 #include "Natrium/Graphics/VulkanImpl/vBuffer.hpp"
 
 namespace Na::VulkanImpl {
+	vk::Format ImageFormatToVk(ImageFormat format)
+	{
+		switch (format)
+		{
+		case ImageFormat::Rgba8: return vk::Format::eR8G8B8A8Unorm;
+		case ImageFormat::Rgba32: return vk::Format::eR32G32B32A32Sfloat;
+		}
+		return vk::Format::eUndefined;
+	}
+
+	vk::ImageUsageFlags DeviceImageTypeToVk(DeviceImageTypeFlags type)
+	{
+		vk::ImageUsageFlags usage;
+
+		if ((type & DeviceImageTypeFlags::Sampled) != DeviceImageTypeFlags::None)
+			usage |= vk::ImageUsageFlagBits::eSampled;
+
+		if ((type & DeviceImageTypeFlags::Storage) != DeviceImageTypeFlags::None)
+			usage |= vk::ImageUsageFlagBits::eStorage;
+
+		if ((type & DeviceImageTypeFlags::ColorAttachment) != DeviceImageTypeFlags::None)
+			usage |= vk::ImageUsageFlagBits::eColorAttachment;
+
+		if ((type & DeviceImageTypeFlags::DepthAttachment) != DeviceImageTypeFlags::None)
+			usage |= vk::ImageUsageFlagBits::eDepthStencilAttachment;
+
+		return usage;
+	}
+
 	vk::Format FindSupportedFormat(
 		const std::initializer_list<vk::Format>& candidates,
 		vk::ImageTiling tiling,
@@ -20,90 +49,254 @@ namespace Na::VulkanImpl {
 			if (tiling == vk::ImageTiling::eLinear && (properties.linearTilingFeatures & features) == features)
 				return format;
 			else
-			if (tiling == vk::ImageTiling::eOptimal && (properties.optimalTilingFeatures & features) == features)
-				return format;
+				if (tiling == vk::ImageTiling::eOptimal && (properties.optimalTilingFeatures & features) == features)
+					return format;
 		}
 
 		return vk::Format::eUndefined;
 	}
 
-	DeviceImage::DeviceImage(
-		const vk::Extent3D& extent,
-		u32 layer_count,
-		vk::ImageAspectFlagBits aspect_mask,
-		vk::Format format,
-		vk::ImageTiling tiling,
-		vk::ImageUsageFlags usage,
-		vk::SharingMode sharing_mode,
-		vk::SampleCountFlagBits sample_count,
-		vk::MemoryPropertyFlags memory_properties
-	)
-	: extent(extent),
-	format(format),
-	subresource_range(
-		aspect_mask,
-		0,
-		1,
-		0,
-		layer_count
-	)
+	DeviceImage::DeviceImage(const DeviceImageCreateInfo& info)
+	: Graphics::DeviceImage(info),
+	  m_AspectMask(vk::ImageAspectFlagBits::eColor)
 	{
-		NA_ASSERT(layer_count > 0, "Failed to create DeviceImage: Invalid layer count!");
-
 		const auto& logical_device = Device::Get()->logical_device();
 
 		vk::ImageCreateInfo create_info;
 
-		if (extent.depth == 1)
-			create_info.imageType = vk::ImageType::e2D;
-		else if (extent.depth > 1)
-			create_info.imageType = vk::ImageType::e3D;
-		else 
-			throw std::runtime_error("Failed to create DeviceImage: Invalid depth!");
+		create_info.imageType = vk::ImageType::e2D;
 
-		create_info.extent = extent;
+		create_info.extent = vk::Extent3D(info.width, info.height, 1);
 		create_info.mipLevels = 1;
-		create_info.arrayLayers = layer_count;
+		create_info.arrayLayers = info.layer_count;
 
-		create_info.format = format;
+		create_info.format = ImageFormatToVk(info.format);
 
 		create_info.tiling = vk::ImageTiling::eOptimal;
 		create_info.initialLayout = vk::ImageLayout::eUndefined;
 
-		create_info.usage = usage;
-		create_info.sharingMode = sharing_mode;
+		create_info.usage = (
+			vk::ImageUsageFlagBits::eTransferDst |
+			DeviceImageTypeToVk(info.type)
+		);
 
-		create_info.samples = sample_count;
+		create_info.sharingMode = vk::SharingMode::eExclusive;
 
-		this->img = logical_device.createImage(create_info);
+		create_info.samples = vk::SampleCountFlagBits::e1;
 
-		vk::MemoryRequirements memory_requirements = logical_device.getImageMemoryRequirements(this->img);
+		m_Image = logical_device.createImage(create_info);
+
+		vk::MemoryRequirements memory_requirements = logical_device.getImageMemoryRequirements(m_Image);
 
 		vk::MemoryAllocateInfo alloc_info;
 		alloc_info.allocationSize = memory_requirements.size;
 		alloc_info.memoryTypeIndex = FindMemoryType(
 			memory_requirements.memoryTypeBits,
-			memory_properties
+			vk::MemoryPropertyFlagBits::eDeviceLocal
 		);
 
-		this->memory = logical_device.allocateMemory(alloc_info);
-		logical_device.bindImageMemory(this->img, this->memory, 0);
+		m_Memory = logical_device.allocateMemory(alloc_info);
+		logical_device.bindImageMemory(m_Image, m_Memory, 0);
+
+		m_ImageView = CreateImageView(
+			m_Image,
+			m_AspectMask,
+			create_info.format,
+			info.layer_count
+		);
+	}
+
+	vk::ImageView CreateImageView(
+		vk::Image img,
+		vk::ImageAspectFlags aspect_mask,
+		vk::Format format,
+		u32 layer_count
+	)
+	{
+		vk::ImageViewCreateInfo create_info;
+
+		create_info.image = img;
+
+		if (layer_count == 1)
+		{
+			create_info.viewType = vk::ImageViewType::e2D;
+		}
+		else if (layer_count > 1)
+		{
+			create_info.viewType = vk::ImageViewType::e2DArray;
+		}
+		else
+		{
+			throw std::runtime_error("Failed to create Image View: Invalid layer count!");
+		}
+
+		create_info.format = format;
+
+		create_info.subresourceRange.aspectMask = aspect_mask;
+
+		create_info.subresourceRange.baseMipLevel = 0;
+		create_info.subresourceRange.levelCount = 1;
+
+		create_info.subresourceRange.baseArrayLayer = 0;
+		create_info.subresourceRange.layerCount = layer_count;
+
+		return Device::Get()->logical_device().createImageView(create_info);
 	}
 
 	void DeviceImage::destroy(void)
 	{
 		const auto& logical_device = Device::Get()->logical_device();
 
-		if (this->img)
-			logical_device.destroyImage(this->img);
+		if (m_ImageView)
+		{
+			logical_device.destroyImageView(m_ImageView);
+			m_ImageView = nullptr;
+		}
 
-		if (this->memory)
-			logical_device.freeMemory(this->memory);
+		if (m_Image)
+		{
+			logical_device.destroyImage(m_Image);
+			m_Image = nullptr;
+		}
 
-		memset(this, 0, sizeof(DeviceImage));
+		if (m_Memory)
+		{
+			logical_device.freeMemory(m_Memory);
+			m_Memory = nullptr;
+		}
 	}
 
-	void DeviceImage::transition_layout(vk::ImageLayout old_layout, vk::ImageLayout new_layout)
+	void DeviceImage::set_all_data(const void* data, u32 starting_layer, u32 layer_count)
+	{
+		BufferCreateInfo2 buffer_info{
+			.size = this->layer_size(),
+			.count = 1,
+			.usage = vk::BufferUsageFlagBits::eTransferSrc,
+			.memory_props = vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent
+		};
+		Buffer staging_buffer(buffer_info);
+
+		staging_buffer.set_data(data);
+
+		this->transition_layout(
+			vk::ImageLayout::eUndefined,
+			vk::ImageLayout::eTransferDstOptimal
+		);
+
+		this->copy_from_buffer(staging_buffer.native(), starting_layer, layer_count);
+
+		this->transition_layout(
+			vk::ImageLayout::eTransferDstOptimal,
+			vk::ImageLayout::eShaderReadOnlyOptimal
+		);
+	}
+
+	void DeviceImage::set_each_data(const void* data)
+	{
+		BufferCreateInfo2 buffer_info{
+			.size = this->total_size(),
+			.count = 1,
+			.usage = vk::BufferUsageFlagBits::eTransferSrc,
+			.memory_props = vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent
+		};
+		Buffer staging_buffer(buffer_info);
+
+		staging_buffer.set_data(data);
+
+		this->transition_layout(
+			vk::ImageLayout::eUndefined,
+			vk::ImageLayout::eTransferDstOptimal
+		);
+
+		this->copy_each_from_buffer(staging_buffer.native());
+
+		this->transition_layout(
+			vk::ImageLayout::eTransferDstOptimal,
+			vk::ImageLayout::eShaderReadOnlyOptimal
+		);
+	}
+
+	void DeviceImage::set_each_data_2(const void* datas[])
+	{
+		BufferCreateInfo2 buffer_info{
+			.size = this->total_size(),
+			.count = 1,
+			.usage = vk::BufferUsageFlagBits::eTransferSrc,
+			.memory_props = vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent
+		};
+		Buffer staging_buffer(buffer_info);
+
+		for (u32 i = 0; i < m_LayerCount; i++)
+		{
+			staging_buffer.set_data(datas[i]);
+		}
+
+		this->transition_layout(
+			vk::ImageLayout::eUndefined,
+			vk::ImageLayout::eTransferDstOptimal
+		);
+
+		this->copy_each_from_buffer(staging_buffer.native());
+
+		this->transition_layout(
+			vk::ImageLayout::eTransferDstOptimal,
+			vk::ImageLayout::eShaderReadOnlyOptimal
+		);
+	}
+
+	DeviceImage::DeviceImage(const DeviceImageCreateInfo2& info)
+	: m_AspectMask(info.aspect_mask)
+	{
+		const auto& logical_device = Device::Get()->logical_device();
+
+		vk::ImageCreateInfo create_info;
+
+		if (info.extent.depth > 1)
+			create_info.imageType = vk::ImageType::e3D;
+		else
+			create_info.imageType = vk::ImageType::e2D;
+
+		create_info.extent = info.extent;
+		create_info.mipLevels = 1;
+		create_info.arrayLayers = info.layer_count;
+
+		create_info.format = info.format;
+
+		create_info.tiling = info.tiling;
+		create_info.initialLayout = vk::ImageLayout::eUndefined;
+
+		create_info.usage = info.usage;
+
+		create_info.sharingMode = info.sharing_mode;
+
+		create_info.samples = info.sample_count;
+
+		m_Image = logical_device.createImage(create_info);
+
+		vk::MemoryRequirements memory_requirements = logical_device.getImageMemoryRequirements(m_Image);
+
+		vk::MemoryAllocateInfo alloc_info;
+		alloc_info.allocationSize = memory_requirements.size;
+		alloc_info.memoryTypeIndex = FindMemoryType(
+			memory_requirements.memoryTypeBits,
+			info.memory_properties
+		);
+
+		m_Memory = logical_device.allocateMemory(alloc_info);
+		logical_device.bindImageMemory(m_Image, m_Memory, 0);
+
+		m_ImageView = CreateImageView(
+			m_Image,
+			info.aspect_mask,
+			info.format,
+			info.layer_count
+		);
+	}
+
+	void DeviceImage::transition_layout(
+		vk::ImageLayout old_layout,
+		vk::ImageLayout new_layout
+	)
 	{
 		const auto& logical_device = Device::Get()->logical_device();
 
@@ -112,11 +305,17 @@ namespace Na::VulkanImpl {
 		barrier.oldLayout = old_layout;
 		barrier.newLayout = new_layout;
 
-		barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-		barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		barrier.srcQueueFamilyIndex = vk::QueueFamilyIgnored;
+		barrier.dstQueueFamilyIndex = vk::QueueFamilyIgnored;
 
-		barrier.image = this->img;
-		barrier.subresourceRange = this->subresource_range;
+		barrier.image = m_Image;
+		barrier.subresourceRange = vk::ImageSubresourceRange{
+			m_AspectMask,
+			0, // starting mip level
+			1, // mip level count
+			0, // starting array layer
+			m_LayerCount
+		};
 
 		vk::PipelineStageFlags execute_stage;
 		vk::PipelineStageFlags wait_stage;
@@ -126,7 +325,7 @@ namespace Na::VulkanImpl {
 		{
 			barrier.srcAccessMask = {};
 			barrier.dstAccessMask = vk::AccessFlagBits::eTransferWrite;
-			
+
 			execute_stage = vk::PipelineStageFlagBits::eTopOfPipe;
 			wait_stage = vk::PipelineStageFlagBits::eTransfer;
 		} else
@@ -164,19 +363,19 @@ namespace Na::VulkanImpl {
 		region.bufferRowLength = 0;
 		region.bufferImageHeight = 0;
 
-		region.imageSubresource.aspectMask = this->subresource_range.aspectMask;
+		region.imageSubresource.aspectMask = m_AspectMask;
 		region.imageSubresource.mipLevel = 0;
 		region.imageSubresource.baseArrayLayer = starting_layer;
 		region.imageSubresource.layerCount = layer_count;
 
-		region.imageOffset = {{ 0, 0, 0 }};
-		region.imageExtent = this->extent;
+		region.imageOffset = { { 0, 0, 0 } };
+		region.imageExtent = vk::Extent3D(m_Width, m_Height, 1);
 
 		vk::CommandBuffer cmd_buffer = Internal::BeginSingleTimeCommands();
 
 		cmd_buffer.copyBufferToImage(
 			buffer,
-			this->img,
+			m_Image,
 			vk::ImageLayout::eTransferDstOptimal,
 			1, &region
 		);
@@ -184,32 +383,31 @@ namespace Na::VulkanImpl {
 		Internal::EndSingleTimeCommands(cmd_buffer);
 	}
 
-	void DeviceImage::copy_all_from_buffer(vk::Buffer buffer, u32 starting_layer)
+	void DeviceImage::copy_each_from_buffer(vk::Buffer buffer)
 	{
-		Na::ArrayList<vk::BufferImageCopy> regions(this->layer_count() - starting_layer);
-		regions.resize(regions.capacity());
+		Na::ArrayList<vk::BufferImageCopy> regions(m_LayerCount, m_LayerCount);
 
 		for (u32 i = 0; i < regions.size(); i++)
 		{
 			regions[i].bufferImageHeight = 0;
 			regions[i].bufferRowLength = 0;
-			regions[i].bufferOffset = u64(i * this->width * this->height * 4);
+			regions[i].bufferOffset = (u64)this->layer_size() * (u64)i;
 			regions[i].imageSubresource = vk::ImageSubresourceLayers(
 				vk::ImageAspectFlagBits::eColor,
 				0, // mip level
-				i + starting_layer,
+				i, // layer
 				1 // layer count (1 at a time)
 			);
 
 			regions[i].imageOffset = vk::Offset3D();
-			regions[i].imageExtent = vk::Extent3D(this->width, this->height, 1);
+			regions[i].imageExtent = vk::Extent3D(m_Width, m_Height, 1);
 		}
 
 		vk::CommandBuffer cmd_buffer = Internal::BeginSingleTimeCommands();
 
 		cmd_buffer.copyBufferToImage(
 			buffer, // src
-			this->img, // dest
+			m_Image, // dest
 			vk::ImageLayout::eTransferDstOptimal,
 			(u32)regions.size(), regions.ptr()
 		);
@@ -217,22 +415,26 @@ namespace Na::VulkanImpl {
 		Internal::EndSingleTimeCommands(cmd_buffer);
 	}
 
-	void DeviceImage::copy_from_buffers(const vk::Buffer* buffers, u32 buffer_count, u32 starting_layer)
+	void DeviceImage::copy_from_buffers(
+		const vk::Buffer* buffers,
+		u32 buffer_count,
+		u32 starting_layer
+	)
 	{
-		vk::CommandBuffer cmd_buffer = Internal::BeginSingleTimeCommands();
-
 		vk::BufferImageCopy region;
 		region.bufferOffset = 0;
 		region.bufferRowLength = 0;
 		region.bufferImageHeight = 0;
 
-		region.imageSubresource.aspectMask = this->subresource_range.aspectMask;
+		region.imageSubresource.aspectMask = m_AspectMask;
 
 		region.imageSubresource.mipLevel = 0;
 		region.imageSubresource.layerCount = 1;
 
 		region.imageOffset = { { 0, 0, 0 } };
-		region.imageExtent = this->extent;
+		region.imageExtent = vk::Extent3D(m_Width, m_Height, 1);
+
+		vk::CommandBuffer cmd_buffer = Internal::BeginSingleTimeCommands();
 
 		for (u32 i = starting_layer; i < starting_layer + buffer_count; i++)
 		{
@@ -240,7 +442,7 @@ namespace Na::VulkanImpl {
 
 			cmd_buffer.copyBufferToImage(
 				buffers[i],
-				this->img,
+				m_Image,
 				vk::ImageLayout::eTransferDstOptimal,
 				1, &region
 			);
@@ -250,61 +452,34 @@ namespace Na::VulkanImpl {
 	}
 
 	DeviceImage::DeviceImage(DeviceImage&& other)
-	: img(std::exchange(other.img, nullptr)),
-	memory(std::exchange(other.memory, nullptr)),
-	extent(other.extent),
-	format(other.format),
-	subresource_range(other.subresource_range)
-	{}
+	: Graphics::DeviceImage(std::forward<DeviceImage>(other)),
+
+	  m_Image(std::exchange(other.m_Image, nullptr)),
+	  m_Memory(std::exchange(other.m_Memory, nullptr)),
+	  
+	  m_ImageView(std::exchange(other.m_ImageView, nullptr)),
+	  
+	  m_AspectMask(other.m_AspectMask)
+	{
+
+	}
 
 	DeviceImage& DeviceImage::operator=(DeviceImage&& other)
 	{
+		if (this == &other)
+			return *this;
+
 		this->destroy();
-		this->img = std::exchange(other.img, nullptr);
-		this->memory = std::exchange(other.memory, nullptr);
-		this->extent = other.extent;
-		this->format = other.format;
-		this->subresource_range = other.subresource_range;
+
+		Graphics::DeviceImage::operator=(std::forward<DeviceImage>(other));
+
+		m_Image = std::exchange(other.m_Image, nullptr);
+		m_Memory = std::exchange(other.m_Memory, nullptr);
+
+		m_ImageView = std::exchange(other.m_ImageView, nullptr);
+
+		m_AspectMask = other.m_AspectMask;
+
 		return *this;
-	}
-
-	vk::ImageView DeviceImage::create_img_view(void) const
-	{
-		return CreateImageView(
-			this->img,
-			this->subresource_range.aspectMask,
-			this->format,
-			this->layer_count()
-		);
-	}
-
-	vk::ImageView CreateImageView(
-		vk::Image img,
-		vk::ImageAspectFlags aspect_mask,
-		vk::Format format,
-		u32 layer_count
-	)
-	{
-		vk::ImageViewCreateInfo create_info;
-
-		create_info.image = img;
-		if (layer_count == 1)
-			create_info.viewType = vk::ImageViewType::e2D;
-		else if (layer_count > 1)
-			create_info.viewType = vk::ImageViewType::e2DArray;
-		else
-			throw std::runtime_error("Failed to create Image View: Invalid layer count!");
-
-		create_info.format = format;
-
-		create_info.subresourceRange.aspectMask = aspect_mask;
-
-		create_info.subresourceRange.baseMipLevel = 0;
-		create_info.subresourceRange.levelCount = 1;
-
-		create_info.subresourceRange.baseArrayLayer = 0;
-		create_info.subresourceRange.layerCount = layer_count;
-
-		return Device::Get()->logical_device().createImageView(create_info);
 	}
 } // namespace Na

@@ -2,7 +2,8 @@
 #define NA_GRAPHICS_UNIFORM_SET_HPP
 
 #include "Natrium/Graphics/UniformSetLayout.hpp"
-#include "Natrium/Graphics/Texture.hpp"
+#include "Natrium/Graphics/DeviceImage.hpp"
+#include "Natrium/Graphics/Sampler.hpp"
 #include "Natrium/Graphics/Buffer.hpp"
 
 namespace Na::Graphics {
@@ -31,6 +32,11 @@ namespace Na::Graphics {
 		[[nodiscard]] virtual operator bool(void) const = 0;
 	};
 
+	struct UniformSetTextureInfo {
+		View<const DeviceImage> img;
+		View<const Sampler> sampler;
+	};
+
 	struct UniformSetBufferBindingInfo {
 		u32 binding = u32max;
 		u32 array_index = 0;
@@ -45,7 +51,7 @@ namespace Na::Graphics {
 		u32 binding = u32max;
 		u32 array_index = 0;
 
-		View<const Graphics::Texture> texture;
+		UniformSetTextureInfo texture_info;
 	};
 
 	struct UniformSetBufferBindingInfo2 {
@@ -63,7 +69,7 @@ namespace Na::Graphics {
 		u32 binding = u32max;
 		u32 starting_index = 0;
 
-		const View<const Graphics::Texture>* textures = nullptr;
+		const UniformSetTextureInfo* texture_infos = nullptr;
 		u32 texture_count = 0;
 	};
 } // namespace Na::Graphics
