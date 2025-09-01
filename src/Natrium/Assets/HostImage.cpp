@@ -1,10 +1,10 @@
 #include "Pch.hpp"
-#include "Natrium/Assets/ImageAsset.hpp"
+#include "Natrium/Assets/HostImage.hpp"
 
 #include <stb/stb_image.h>
 
 namespace Na {
-	FileErrorCode ImageAsset::load(const std::filesystem::path& path)
+	FileErrorCode HostImage::load(const std::filesystem::path& path)
 	{
 		if (!std::filesystem::exists(path))
 		{

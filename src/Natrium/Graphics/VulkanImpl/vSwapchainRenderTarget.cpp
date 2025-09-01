@@ -78,20 +78,7 @@ namespace Na::VulkanImpl {
 		}
 
 		m_DepthImage.destroy();
-
-		if (m_DepthImageView)
-		{
-			logical_device.destroyImageView(m_DepthImageView);
-			m_DepthImageView = nullptr;
-		}
-
 		m_ColorImage.destroy();
-
-		if (m_ColorImageView)
-		{
-			logical_device.destroyImageView(m_ColorImageView);
-			m_ColorImageView = nullptr;
-		}
 
 		for (auto& img_view : m_ImageViews)
 			logical_device.destroyImageView(img_view);
@@ -265,10 +252,7 @@ namespace Na::VulkanImpl {
 			logical_device.destroyFramebuffer(framebuffer);
 
 		m_DepthImage.destroy();
-		logical_device.destroyImageView(m_DepthImageView);
-
 		m_ColorImage.destroy();
-		logical_device.destroyImageView(m_ColorImageView);
 
 		for (auto& img_view : m_ImageViews)
 			logical_device.destroyImageView(img_view);
@@ -395,23 +379,19 @@ namespace Na::VulkanImpl {
 
 		vk::SampleCountFlagBits sample_count = Device::Get()->vk_limits().vk_msaa_sample_count_if(msaa_enabled);
 
-		m_ColorImage = DeviceImage(
-			vk::Extent3D(m_Width, m_Height, 1),
-			1, // layer count
-			vk::ImageAspectFlagBits::eColor,
-			m_SwapchainFormat.format,
-			vk::ImageTiling::eOptimal,
-			vk::ImageUsageFlagBits::eTransientAttachment | vk::ImageUsageFlagBits::eColorAttachment,
-			vk::SharingMode::eExclusive,
-			sample_count,
-			vk::MemoryPropertyFlagBits::eDeviceLocal
-		);
-		m_ColorImageView = VulkanImpl::CreateImageView(
-			m_ColorImage.img,
-			vk::ImageAspectFlagBits::eColor,
-			m_SwapchainFormat.format,
-			1 // layer count
-		);
+		DeviceImageCreateInfo2 create_info
+		{
+			.extent = vk::Extent3D(m_Width, m_Height, 1),
+			.layer_count = 1,
+			.aspect_mask = vk::ImageAspectFlagBits::eColor,
+			.format = m_SwapchainFormat.format,
+			.tiling = vk::ImageTiling::eOptimal,
+			.usage = vk::ImageUsageFlagBits::eTransientAttachment | vk::ImageUsageFlagBits::eColorAttachment,
+			.sharing_mode = vk::SharingMode::eExclusive,
+			.sample_count = sample_count,
+			.memory_properties = vk::MemoryPropertyFlagBits::eDeviceLocal
+		};
+		m_ColorImage = DeviceImage(create_info);
 	}
 
 	void SwapchainRenderTarget::_create_depth_buffer(void)
@@ -425,23 +405,19 @@ namespace Na::VulkanImpl {
 		bool msaa_enabled = m_RendererSettings->multisampling_enabled();
 		vk::SampleCountFlagBits sample_count = Device::Get()->vk_limits().vk_msaa_sample_count_if(msaa_enabled);
 
-		m_DepthImage = DeviceImage(
-			vk::Extent3D(m_Width, m_Height, 1),
-			1, // layer count
-			vk::ImageAspectFlagBits::eDepth,
-			depth_format,
-			vk::ImageTiling::eOptimal,
-			vk::ImageUsageFlagBits::eDepthStencilAttachment,
-			vk::SharingMode::eExclusive,
-			sample_count,
-			vk::MemoryPropertyFlagBits::eDeviceLocal
-		);
-		m_DepthImageView = CreateImageView(
-			m_DepthImage.img,
-			vk::ImageAspectFlagBits::eDepth,
-			depth_format,
-			1 // layer count
-		);
+		DeviceImageCreateInfo2 create_info
+		{
+			.extent = vk::Extent3D(m_Width, m_Height, 1),
+			.layer_count = 1,
+			.aspect_mask = vk::ImageAspectFlagBits::eDepth,
+			.format = depth_format,
+			.tiling = vk::ImageTiling::eOptimal,
+			.usage = vk::ImageUsageFlagBits::eDepthStencilAttachment,
+			.sharing_mode = vk::SharingMode::eExclusive,
+			.sample_count = sample_count,
+			.memory_properties = vk::MemoryPropertyFlagBits::eDeviceLocal
+		};
+		m_DepthImage = DeviceImage(create_info);
 	}
 
 	void SwapchainRenderTarget::_create_render_pass(void)
@@ -552,8 +528,8 @@ namespace Na::VulkanImpl {
 		for (u64 i = 0; i < m_ImageViews.size(); i++)
 		{
 			std::array<vk::ImageView, 3> attachments = {
-				msaa_enabled ? m_ColorImageView : m_ImageViews[i],
-				m_DepthImageView,
+				msaa_enabled ? m_ColorImage.img_view() : m_ImageViews[i],
+				m_DepthImage.img_view(),
 				msaa_enabled ? m_ImageViews[i] : nullptr,
 			};
 

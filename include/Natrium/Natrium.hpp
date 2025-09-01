@@ -16,7 +16,7 @@
 
 #include "./Assets/Asset.hpp"
 #include "./Assets/AssetManager.hpp"
-#include "./Assets/ImageAsset.hpp"
+#include "./Assets/HostImage.hpp"
 #include "./Assets/RendererSettingsAsset.hpp"
 #include "./Assets/HostMesh.hpp"
 #include "./Assets/TextAsset.hpp"
@@ -25,7 +25,8 @@
 #include "./Graphics/Renderer.hpp"
 #include "./Graphics/Pipelines.hpp"
 #include "./Graphics/Buffer.hpp"
-#include "./Graphics/Texture.hpp"
+#include "./Graphics/DeviceImage.hpp"
+#include "./Graphics/Sampler.hpp"
 #include "./Graphics/VertexAttributes.hpp"
 
 #include "./Math/Camera3dData.hpp"
@@ -35,6 +36,7 @@
 #include "./HL/UniformManager_HL.hpp"
 #include "./HL/Pipeline_HL.hpp"
 #include "./HL/DeviceMesh_HL.hpp"
+#include "./HL/Texture_HL.hpp"
 #include "./HL/Application_HL.hpp"
 
 // entry point
