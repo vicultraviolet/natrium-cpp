@@ -1,7 +1,7 @@
 #include "Pch.hpp"
 #include "Natrium/Graphics/VulkanImpl/vDevice.hpp"
 
-#include "Natrium/Graphics/VulkanImpl/vShader.hpp"
+#include "Natrium/Graphics/VulkanImpl/vUniformSetLayout.hpp"
 
 #include "Internal.hpp"
 

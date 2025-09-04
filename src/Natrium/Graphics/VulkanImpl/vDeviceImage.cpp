@@ -166,6 +166,85 @@ namespace Na::VulkanImpl {
 		}
 	}
 
+	void DeviceImage::set_stage(DeviceImageStage stage)
+	{
+		vk::ImageMemoryBarrier barrier;
+
+		barrier.oldLayout = m_CurrentLayout;
+		//barrier.newLayout = layout;
+
+		barrier.srcQueueFamilyIndex = vk::QueueFamilyIgnored;
+		barrier.dstQueueFamilyIndex = vk::QueueFamilyIgnored;
+
+		barrier.image = m_Image;
+		barrier.subresourceRange = vk::ImageSubresourceRange{
+			m_AspectMask,
+			0, // starting mip level
+			1, // mip level count
+			0, // starting array layer
+			m_LayerCount
+		};
+
+		vk::PipelineStageFlags execute_stage;
+		vk::PipelineStageFlags wait_stage;
+
+		switch (stage)
+		{
+			case DeviceImageStage::Mutable:
+			{
+				barrier.newLayout = vk::ImageLayout::eTransferDstOptimal;
+
+				barrier.srcAccessMask = m_CurrentAccessMask;
+				barrier.dstAccessMask = vk::AccessFlagBits::eTransferWrite;
+
+				execute_stage = vk::PipelineStageFlagBits::eTopOfPipe;
+				wait_stage = vk::PipelineStageFlagBits::eTransfer;
+
+				break;
+			}
+			case DeviceImageStage::Texture:
+			{
+				barrier.newLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+
+				barrier.srcAccessMask = m_CurrentAccessMask;
+				barrier.dstAccessMask = vk::AccessFlagBits::eShaderRead;
+
+				execute_stage = vk::PipelineStageFlagBits::eTransfer;
+				wait_stage = vk::PipelineStageFlagBits::eFragmentShader;
+
+				break;
+			}
+			case DeviceImageStage::StorageImage:
+			{
+				barrier.newLayout = vk::ImageLayout::eGeneral;
+
+				barrier.srcAccessMask = m_CurrentAccessMask;
+				barrier.dstAccessMask = vk::AccessFlagBits::eShaderWrite;
+
+				execute_stage = vk::PipelineStageFlagBits::eTopOfPipe;
+				wait_stage = vk::PipelineStageFlagBits::eComputeShader;
+
+				break;
+			}
+		}
+
+		m_CurrentLayout = barrier.newLayout;
+		m_CurrentAccessMask = barrier.srcAccessMask;
+
+		vk::CommandBuffer cmd_buffer = Internal::BeginSingleTimeCommands();
+
+		cmd_buffer.pipelineBarrier(
+			execute_stage,
+			wait_stage,
+			{}, // dependency flags
+			0, nullptr, // memory barriers
+			0, nullptr, // buffer memory barriers
+			1, &barrier // image memory barriers
+		);
+
+		Internal::EndSingleTimeCommands(cmd_buffer);
+	}
+
 	void DeviceImage::set_all_data(const void* data, u32 starting_layer, u32 layer_count)
 	{
 		BufferCreateInfo2 buffer_info{
@@ -178,17 +257,7 @@ namespace Na::VulkanImpl {
 
 		staging_buffer.set_data(data);
 
-		this->transition_layout(
-			vk::ImageLayout::eUndefined,
-			vk::ImageLayout::eTransferDstOptimal
-		);
-
 		this->copy_from_buffer(staging_buffer.native(), starting_layer, layer_count);
-
-		this->transition_layout(
-			vk::ImageLayout::eTransferDstOptimal,
-			vk::ImageLayout::eShaderReadOnlyOptimal
-		);
 	}
 
 	void DeviceImage::set_each_data(const void* data)
@@ -203,17 +272,7 @@ namespace Na::VulkanImpl {
 
 		staging_buffer.set_data(data);
 
-		this->transition_layout(
-			vk::ImageLayout::eUndefined,
-			vk::ImageLayout::eTransferDstOptimal
-		);
-
 		this->copy_each_from_buffer(staging_buffer.native());
-
-		this->transition_layout(
-			vk::ImageLayout::eTransferDstOptimal,
-			vk::ImageLayout::eShaderReadOnlyOptimal
-		);
 	}
 
 	void DeviceImage::set_each_data_2(const void* datas[])
@@ -231,17 +290,7 @@ namespace Na::VulkanImpl {
 			staging_buffer.set_data(datas[i]);
 		}
 
-		this->transition_layout(
-			vk::ImageLayout::eUndefined,
-			vk::ImageLayout::eTransferDstOptimal
-		);
-
 		this->copy_each_from_buffer(staging_buffer.native());
-
-		this->transition_layout(
-			vk::ImageLayout::eTransferDstOptimal,
-			vk::ImageLayout::eShaderReadOnlyOptimal
-		);
 	}
 
 	DeviceImage::DeviceImage(const DeviceImageCreateInfo2& info)
@@ -291,69 +340,6 @@ namespace Na::VulkanImpl {
 			info.format,
 			info.layer_count
 		);
-	}
-
-	void DeviceImage::transition_layout(
-		vk::ImageLayout old_layout,
-		vk::ImageLayout new_layout
-	)
-	{
-		const auto& logical_device = Device::Get()->logical_device();
-
-		vk::ImageMemoryBarrier barrier;
-
-		barrier.oldLayout = old_layout;
-		barrier.newLayout = new_layout;
-
-		barrier.srcQueueFamilyIndex = vk::QueueFamilyIgnored;
-		barrier.dstQueueFamilyIndex = vk::QueueFamilyIgnored;
-
-		barrier.image = m_Image;
-		barrier.subresourceRange = vk::ImageSubresourceRange{
-			m_AspectMask,
-			0, // starting mip level
-			1, // mip level count
-			0, // starting array layer
-			m_LayerCount
-		};
-
-		vk::PipelineStageFlags execute_stage;
-		vk::PipelineStageFlags wait_stage;
-
-		if (old_layout == vk::ImageLayout::eUndefined
-		&& new_layout == vk::ImageLayout::eTransferDstOptimal)
-		{
-			barrier.srcAccessMask = {};
-			barrier.dstAccessMask = vk::AccessFlagBits::eTransferWrite;
-
-			execute_stage = vk::PipelineStageFlagBits::eTopOfPipe;
-			wait_stage = vk::PipelineStageFlagBits::eTransfer;
-		} else
-		if (old_layout == vk::ImageLayout::eTransferDstOptimal
-		&& new_layout == vk::ImageLayout::eShaderReadOnlyOptimal)
-		{
-			barrier.srcAccessMask = vk::AccessFlagBits::eTransferWrite;
-			barrier.dstAccessMask = vk::AccessFlagBits::eShaderRead;
-
-			execute_stage = vk::PipelineStageFlagBits::eTransfer;
-			wait_stage = vk::PipelineStageFlagBits::eFragmentShader;
-		} else
-		{
-			throw std::runtime_error("Unsupported image layout transition!");
-		}
-
-		vk::CommandBuffer cmd_buffer = Internal::BeginSingleTimeCommands();
-
-		cmd_buffer.pipelineBarrier(
-			execute_stage,
-			wait_stage,
-			{}, // dependency flags
-			0, nullptr, // memory barriers
-			0, nullptr, // buffer memory barriers
-			1, &barrier // image memory barriers
-		);
-
-		Internal::EndSingleTimeCommands(cmd_buffer);
 	}
 
 	void DeviceImage::copy_from_buffer(vk::Buffer buffer, u32 starting_layer, u32 layer_count)

@@ -101,6 +101,26 @@ namespace Na::VulkanImpl {
 		);
 	}
 
+	void UniformSet::bind(const UniformSetStorageImageBindingInfo& info)
+	{
+		auto img = static_ref_cast<DeviceImage>(info.img);
+
+		vk::DescriptorImageInfo image_info;
+		image_info.imageLayout = vk::ImageLayout::eGeneral;
+		image_info.imageView = img->img_view();
+
+		Internal::WriteToDescriptorSet(
+			m_Set,
+			info.binding,
+			vk::DescriptorType::eStorageImage,
+			info.array_index,
+			1, // count
+			nullptr, // buffer info
+			&image_info,
+			nullptr // texel buffer view
+		);
+	}
+
 	void UniformSet::bind_array(const UniformSetBufferBindingInfo2& info)
 	{
 		ArrayList<vk::DescriptorBufferInfo> buffer_infos(info.buffer_count, info.buffer_count);
@@ -137,16 +157,16 @@ namespace Na::VulkanImpl {
 
 	void UniformSet::bind_array(const UniformSetTextureBindingInfo2& info)
 	{
-		ArrayList<vk::DescriptorImageInfo> image_infos(info.texture_count, info.texture_count);
+		ArrayList<vk::DescriptorImageInfo> img_infos(info.texture_count, info.texture_count);
 
 		for (u32 i = 0; i < info.texture_count; i++)
 		{
 			auto img = static_ref_cast<DeviceImage>(info.texture_infos[i].img);
 			auto sampler = static_ref_cast<Sampler>(info.texture_infos[i].sampler);
 
-			image_infos[i].imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
-			image_infos[i].imageView = img->img_view();
-			image_infos[i].sampler = sampler->native();
+			img_infos[i].imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+			img_infos[i].imageView = img->img_view();
+			img_infos[i].sampler = sampler->native();
 		}
 
 		Internal::WriteToDescriptorSet(
@@ -156,7 +176,32 @@ namespace Na::VulkanImpl {
 			info.starting_index,
 			info.texture_count,
 			nullptr, // buffer info
-			image_infos.ptr(),
+			img_infos.ptr(),
+			nullptr // texel buffer view
+		);
+	}
+
+	void UniformSet::bind_array(const UniformSetStorageImageBindingInfo2& info)
+	{
+		ArrayList<vk::DescriptorImageInfo> img_infos(info.img_count, info.img_count);
+
+		for (u32 i = 0; i < info.img_count; i++)
+		{
+			auto img = static_ref_cast<DeviceImage>(info.imgs[i]);
+
+			img_infos[i].imageLayout = vk::ImageLayout::eGeneral;
+			img_infos[i].imageView = img->img_view();
+			img_infos[i].sampler = nullptr;
+		}
+
+		Internal::WriteToDescriptorSet(
+			m_Set,
+			info.binding,
+			vk::DescriptorType::eCombinedImageSampler,
+			info.starting_index,
+			info.img_count,
+			nullptr, // buffer info
+			img_infos.ptr(),
 			nullptr // texel buffer view
 		);
 	}

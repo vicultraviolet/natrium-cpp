@@ -5,6 +5,20 @@
 #include "Natrium/Graphics/VulkanImpl/vDevice.hpp"
 
 namespace Na::VulkanImpl {
+	vk::DescriptorType UniformTypeToVk(UniformType type)
+	{
+		switch (type)
+		{
+		case UniformType::UniformBuffer:      return vk::DescriptorType::eUniformBuffer;
+		case UniformType::StorageBuffer:      return vk::DescriptorType::eStorageBuffer;
+		case UniformType::UniformMultibuffer: return vk::DescriptorType::eUniformBufferDynamic;
+		case UniformType::StorageMultibuffer: return vk::DescriptorType::eStorageBufferDynamic;
+		case UniformType::StorageImage:       return vk::DescriptorType::eStorageImage;
+		case UniformType::Texture:            return vk::DescriptorType::eCombinedImageSampler;
+		}
+		return vk::DescriptorType(0);
+	}
+
 	UniformSetLayout::UniformSetLayout(const UniformBinding* pbindings, u64 binding_count)
 	{
 		Na::ArrayList<vk::DescriptorSetLayoutBinding> bindings(binding_count, binding_count);

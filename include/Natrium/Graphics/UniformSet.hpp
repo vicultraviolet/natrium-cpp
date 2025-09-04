@@ -11,9 +11,11 @@ namespace Na::Graphics {
 
 	struct UniformSetBufferBindingInfo;
 	struct UniformSetTextureBindingInfo;
+	struct UniformSetStorageImageBindingInfo;
 
 	struct UniformSetBufferBindingInfo2;
 	struct UniformSetTextureBindingInfo2;
+	struct UniformSetStorageImageBindingInfo2;
 
 	class UniformSet {
 	public:
@@ -25,9 +27,11 @@ namespace Na::Graphics {
 
 		virtual void bind(const UniformSetBufferBindingInfo& info) = 0;
 		virtual void bind(const UniformSetTextureBindingInfo& info) = 0;
+		virtual void bind(const UniformSetStorageImageBindingInfo& info) = 0;
 
 		virtual void bind_array(const UniformSetBufferBindingInfo2& info) = 0;
 		virtual void bind_array(const UniformSetTextureBindingInfo2& info) = 0;
+		virtual void bind_array(const UniformSetStorageImageBindingInfo2& info) = 0;
 
 		[[nodiscard]] virtual operator bool(void) const = 0;
 	};
@@ -54,6 +58,13 @@ namespace Na::Graphics {
 		UniformSetTextureInfo texture_info;
 	};
 
+	struct UniformSetStorageImageBindingInfo {
+		u32 binding = u32max;
+		u32 array_index = 0;
+
+		View<const DeviceImage> img;
+	};
+
 	struct UniformSetBufferBindingInfo2 {
 		u32 binding = u32max;
 		u32 starting_index = 0;
@@ -71,6 +82,14 @@ namespace Na::Graphics {
 
 		const UniformSetTextureInfo* texture_infos = nullptr;
 		u32 texture_count = 0;
+	};
+
+	struct UniformSetStorageImageBindingInfo2 {
+		u32 binding = u32max;
+		u32 starting_index = 0;
+
+		const View<const DeviceImage>* imgs = nullptr;
+		u32 img_count = 0;
 	};
 } // namespace Na::Graphics
 

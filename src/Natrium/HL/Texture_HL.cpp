@@ -49,7 +49,11 @@ namespace Na::HL {
 	{
 		auto img = _img.lock();
 
+		m_Image->set_stage(Graphics::DeviceImageStage::Mutable);
+
 		m_Image->set_all_data(img->data());
+
+		m_Image->set_stage(Graphics::DeviceImageStage::Texture);
 	}
 
 	void Texture::set_data(const WeakRef<const HostImage> imgs[])
@@ -61,6 +65,10 @@ namespace Na::HL {
 			datas[i] = imgs[i].lock()->data();
 		}
 
+		m_Image->set_stage(Graphics::DeviceImageStage::Mutable);
+
 		m_Image->set_each_data_2((const void*[])datas.ptr());
+
+		m_Image->set_stage(Graphics::DeviceImageStage::Texture);
 	}
 } // namespace Na::HL

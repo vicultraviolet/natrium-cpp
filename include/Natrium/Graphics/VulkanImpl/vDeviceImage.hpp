@@ -20,9 +20,11 @@ namespace Na::VulkanImpl {
 
 	using ImageFormat = Graphics::ImageFormat;
 	using DeviceImageTypeFlags = Graphics::DeviceImageTypeFlags;
+	using DeviceImageStage = Graphics::DeviceImageStage;
 
 	[[nodiscard]] vk::Format ImageFormatToVk(ImageFormat format);
 	[[nodiscard]] vk::ImageUsageFlags DeviceImageTypeToVk(DeviceImageTypeFlags type);
+	[[nodiscard]] vk::ImageLayout DeviceImageStageToVk(DeviceImageStage stage);
 
 	[[nodiscard]] vk::ImageView CreateImageView(vk::Image img, vk::ImageAspectFlags aspect_mask, vk::Format format, u32 layer_count = 1);
 
@@ -45,6 +47,8 @@ namespace Na::VulkanImpl {
 		DeviceImage(DeviceImage&& other);
 		DeviceImage& operator=(DeviceImage&& other);
 
+		void set_stage(DeviceImageStage stage) override;
+
 		// will treat data as a single image and copy it into all layers
 		void set_all_data(const void* data, u32 starting_layer = 0, u32 layer_count = 1) override;
 
@@ -52,11 +56,6 @@ namespace Na::VulkanImpl {
 		void set_each_data(const void* data) override;
 
 		void set_each_data_2(const void* datas[]) override;
-
-		void transition_layout(
-			vk::ImageLayout old_layout,
-			vk::ImageLayout new_layout
-		);
 
 		void copy_from_buffer(
 			vk::Buffer buffer,
@@ -87,6 +86,9 @@ namespace Na::VulkanImpl {
 		vk::ImageView m_ImageView = nullptr;
 
 		vk::ImageAspectFlags m_AspectMask;
+
+		vk::ImageLayout m_CurrentLayout = vk::ImageLayout::eUndefined;
+		vk::AccessFlags m_CurrentAccessMask = {};
 	};
 } // namespace Na::VulkanImpl
 
