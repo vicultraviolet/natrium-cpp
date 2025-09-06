@@ -33,6 +33,12 @@ namespace Na::VulkanImpl {
 		if ((type & DeviceImageTypeFlags::DepthAttachment) != DeviceImageTypeFlags::None)
 			usage |= vk::ImageUsageFlagBits::eDepthStencilAttachment;
 
+		if ((type & DeviceImageTypeFlags::TransferDst) != DeviceImageTypeFlags::None)
+			usage |= vk::ImageUsageFlagBits::eTransferDst;
+
+		if ((type & DeviceImageTypeFlags::TransferSrc) != DeviceImageTypeFlags::None)
+			usage |= vk::ImageUsageFlagBits::eTransferSrc;
+
 		return usage;
 	}
 
@@ -75,10 +81,7 @@ namespace Na::VulkanImpl {
 		create_info.tiling = vk::ImageTiling::eOptimal;
 		create_info.initialLayout = vk::ImageLayout::eUndefined;
 
-		create_info.usage = (
-			vk::ImageUsageFlagBits::eTransferDst |
-			DeviceImageTypeToVk(info.type)
-		);
+		create_info.usage = DeviceImageTypeToVk(info.type);
 
 		create_info.sharingMode = vk::SharingMode::eExclusive;
 
@@ -363,7 +366,67 @@ namespace Na::VulkanImpl {
 		Internal::EndSingleTimeCommands(cmd_buffer);
 	}
 
-	DeviceImage::DeviceImage(DeviceImage&& other)
+	void DeviceImage::copy_from_img(View<const Graphics::DeviceImage> _src_img)
+	{
+		auto src_img = static_ref_cast<const DeviceImage>(_src_img);
+
+		this->copy_from_img_ex(
+			src_img,
+			glm::ivec2(0, 0),
+			glm::ivec2(0, 0),
+			glm::uvec2(
+				std::min(src_img->m_Width, m_Width),
+				std::min(src_img->m_Height, m_Height)
+			)
+		);
+	}
+
+	void DeviceImage::copy_from_img_ex(
+		View<const Graphics::DeviceImage> _src_img,
+		glm::ivec2 src_offset,
+		glm::ivec2 dst_offset,
+		glm::uvec2 size
+	)
+	{
+		auto src_img = static_ref_cast<const DeviceImage>(_src_img);
+
+		vk::ImageCopy copy_region;
+
+		copy_region.srcSubresource.aspectMask = src_img->m_Aspect;
+		copy_region.srcSubresource.baseArrayLayer = 0;
+		copy_region.srcSubresource.layerCount = src_img->m_LayerCount;
+		copy_region.srcSubresource.mipLevel = 0;
+
+		copy_region.dstSubresource.aspectMask = m_Aspect;
+		copy_region.dstSubresource.baseArrayLayer = 0;
+		copy_region.dstSubresource.layerCount = m_LayerCount;
+		copy_region.dstSubresource.mipLevel = 0;
+
+		copy_region.srcOffset.x = src_offset.x;
+		copy_region.srcOffset.y = src_offset.y;
+
+		copy_region.dstOffset.x = dst_offset.x;
+		copy_region.dstOffset.y = dst_offset.y;
+
+		copy_region.extent.width = size.x;
+		copy_region.extent.height = size.y;
+		copy_region.extent.depth = 1;
+
+		vk::CommandBuffer cmd_buffer = Internal::BeginSingleTimeCommands();
+
+		cmd_buffer.copyImage(
+			src_img->m_Image,
+			src_img->m_CurrentLayout,
+			m_Image,
+			m_CurrentLayout,
+			{ copy_region }
+		);
+
+		Internal::EndSingleTimeCommands(cmd_buffer);
+	}
+
+
+	DeviceImage::DeviceImage(DeviceImage&& other) noexcept
 	: Graphics::DeviceImage(std::forward<DeviceImage>(other)),
 
 	  m_Image(std::exchange(other.m_Image, nullptr)),
@@ -378,7 +441,7 @@ namespace Na::VulkanImpl {
 
 	}
 
-	DeviceImage& DeviceImage::operator=(DeviceImage&& other)
+	DeviceImage& DeviceImage::operator=(DeviceImage&& other) noexcept
 	{
 		if (this == &other)
 			return *this;

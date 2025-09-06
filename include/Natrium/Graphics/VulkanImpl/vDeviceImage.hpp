@@ -43,8 +43,9 @@ namespace Na::VulkanImpl {
 		DeviceImage(const DeviceImageCreateInfo& info);
 		DeviceImage(const DeviceImageCreateInfo2& info);
 
-		DeviceImage(DeviceImage&& other);
-		DeviceImage& operator=(DeviceImage&& other);
+
+		DeviceImage(DeviceImage&& other) noexcept;
+		DeviceImage& operator=(DeviceImage&& other) noexcept;
 
 		void barrier(const DeviceImageBarrierInfo& info) override;
 
@@ -69,6 +70,14 @@ namespace Na::VulkanImpl {
 			u32 buffer_count,
 			u32 starting_layer = 0
 		);
+
+		void copy_from_img(View<const Graphics::DeviceImage> src_img) override;
+		void copy_from_img_ex(
+			View<const Graphics::DeviceImage> src_img,
+			glm::ivec2 src_offset,
+			glm::ivec2 dst_offset,
+			glm::uvec2 size
+		) override;
 
 		[[nodiscard]] inline vk::Image& img(void) { return m_Image; }
 		[[nodiscard]] inline const vk::Image& img(void) const { return m_Image; }
