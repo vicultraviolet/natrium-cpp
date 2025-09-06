@@ -1,7 +1,7 @@
 #if !defined(NA_GRAPHICS_DEVICE_IMAGE_HPP)
 #define NA_GRAPHICS_DEVICE_IMAGE_HPP
 
-#include "Natrium/Core.hpp"
+#include "Natrium/Graphics/Barrier.hpp"
 
 namespace Na::Graphics {
 	enum class ImageFormat : u8 {
@@ -23,13 +23,6 @@ namespace Na::Graphics {
 		All = Sampled | Storage | ColorAttachment | DepthAttachment
 	};
 
-	enum class DeviceImageStage : u8 {
-		None = 0,
-		Mutable,
-		Texture,
-		StorageImage
-	};
-
 	struct DeviceImageCreateInfo {
 		u32 width, height;
 		u32 layer_count = 1;
@@ -44,7 +37,7 @@ namespace Na::Graphics {
 		[[nodiscard]] static UniqueRef<DeviceImage> Make(const DeviceImageCreateInfo& info);
 		virtual ~DeviceImage(void) = default;
 
-		virtual void set_stage(DeviceImageStage stage) = 0;
+		virtual void barrier(const DeviceImageBarrierInfo& info) = 0;
 
 		// will treat data as a single image and copy it into all layers
 		virtual void set_all_data(const void* data, u32 starting_layer = 0, u32 layer_count = 1) = 0;
@@ -78,8 +71,6 @@ namespace Na::Graphics {
 
 		ImageFormat m_Format = ImageFormat::None;
 		DeviceImageTypeFlags m_Type = DeviceImageTypeFlags::None;
-
-		DeviceImageStage m_CurrentStage = DeviceImageStage::None;
 	};
 
 	inline DeviceImageTypeFlags operator|(DeviceImageTypeFlags lhs, DeviceImageTypeFlags rhs) { return (DeviceImageTypeFlags)((u8)lhs | (u8)rhs); }

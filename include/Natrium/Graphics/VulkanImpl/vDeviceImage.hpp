@@ -3,6 +3,7 @@
 
 #include "Natrium/Core.hpp"
 #include "Natrium/Graphics/DeviceImage.hpp"
+#include "Natrium/Graphics/VulkanImpl/vBarrier.hpp"
 
 namespace Na::VulkanImpl {
 	using DeviceImageCreateInfo = Graphics::DeviceImageCreateInfo;
@@ -20,11 +21,9 @@ namespace Na::VulkanImpl {
 
 	using ImageFormat = Graphics::ImageFormat;
 	using DeviceImageTypeFlags = Graphics::DeviceImageTypeFlags;
-	using DeviceImageStage = Graphics::DeviceImageStage;
 
 	[[nodiscard]] vk::Format ImageFormatToVk(ImageFormat format);
 	[[nodiscard]] vk::ImageUsageFlags DeviceImageTypeToVk(DeviceImageTypeFlags type);
-	[[nodiscard]] vk::ImageLayout DeviceImageStageToVk(DeviceImageStage stage);
 
 	[[nodiscard]] vk::ImageView CreateImageView(vk::Image img, vk::ImageAspectFlags aspect_mask, vk::Format format, u32 layer_count = 1);
 
@@ -47,7 +46,7 @@ namespace Na::VulkanImpl {
 		DeviceImage(DeviceImage&& other);
 		DeviceImage& operator=(DeviceImage&& other);
 
-		void set_stage(DeviceImageStage stage) override;
+		void barrier(const DeviceImageBarrierInfo& info) override;
 
 		// will treat data as a single image and copy it into all layers
 		void set_all_data(const void* data, u32 starting_layer = 0, u32 layer_count = 1) override;
@@ -79,16 +78,20 @@ namespace Na::VulkanImpl {
 
 		[[nodiscard]] inline vk::ImageView& img_view(void) { return m_ImageView; }
 		[[nodiscard]] inline const vk::ImageView& img_view(void) const { return m_ImageView; }
+
+		[[nodiscard]] inline vk::ImageAspectFlags aspect(void) const { return m_Aspect; }
+
+		[[nodiscard]] inline vk::ImageLayout current_layout(void) const { return m_CurrentLayout; }
+		[[nodiscard]] inline void set_layout(vk::ImageLayout layout) { m_CurrentLayout = layout; }
 	private:
 		vk::Image m_Image = nullptr;
 		vk::DeviceMemory m_Memory = nullptr;
 
 		vk::ImageView m_ImageView = nullptr;
 
-		vk::ImageAspectFlags m_AspectMask;
+		vk::ImageAspectFlags m_Aspect;
 
 		vk::ImageLayout m_CurrentLayout = vk::ImageLayout::eUndefined;
-		vk::AccessFlags m_CurrentAccessMask = {};
 	};
 } // namespace Na::VulkanImpl
 

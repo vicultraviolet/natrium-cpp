@@ -36,6 +36,8 @@ namespace Na::HL {
 
 		[[nodiscard]] inline operator Graphics::UniformSetTextureInfo(void) const { return { m_Image, m_Sampler }; }
 	private:
+		void _set_data(const void* data, bool is_array);
+	private:
 		UniqueRef<Graphics::DeviceImage> m_Image;
 		UniqueRef<Graphics::Sampler> m_Sampler;
 	};

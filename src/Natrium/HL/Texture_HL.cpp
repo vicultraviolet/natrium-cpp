@@ -49,11 +49,7 @@ namespace Na::HL {
 	{
 		auto img = _img.lock();
 
-		m_Image->set_stage(Graphics::DeviceImageStage::Mutable);
-
-		m_Image->set_all_data(img->data());
-
-		m_Image->set_stage(Graphics::DeviceImageStage::Texture);
+		this->_set_data(img->data(), false);
 	}
 
 	void Texture::set_data(const WeakRef<const HostImage> imgs[])
@@ -65,10 +61,48 @@ namespace Na::HL {
 			datas[i] = imgs[i].lock()->data();
 		}
 
-		m_Image->set_stage(Graphics::DeviceImageStage::Mutable);
+		this->_set_data(datas.ptr(), true);
+	}
 
-		m_Image->set_each_data_2((const void*[])datas.ptr());
+	void Texture::_set_data(const void* data, bool is_array)
+	{
+		Graphics::DeviceImageBarrierInfo barrier_info
+		{
+			.new_img_state = Graphics::DeviceImageState::TransferDst,
 
-		m_Image->set_stage(Graphics::DeviceImageStage::Texture);
+			.before = {
+				Graphics::BarrierStageBits::Earliest,
+				Graphics::BarrierOperationBits::None
+			},
+
+			.after = {
+				Graphics::BarrierStageBits::Transfer,
+				Graphics::BarrierOperationBits::TransferWrite
+			}
+		};
+		m_Image->barrier(barrier_info);
+
+		if (is_array)
+		{
+			m_Image->set_each_data_2((const void* [])data);
+		} else
+		{
+			m_Image->set_all_data(data);
+		}
+
+		barrier_info = {
+			.new_img_state = Graphics::DeviceImageState::Texture,
+
+			.before = {
+				Graphics::BarrierStageBits::Transfer,
+				Graphics::BarrierOperationBits::TransferWrite
+			},
+
+			.after = {
+				Graphics::BarrierStageBits::FragmentShader,
+				Graphics::BarrierOperationBits::ShaderRead
+			}
+		};
+		m_Image->barrier(barrier_info);
 	}
 } // namespace Na::HL

@@ -16,6 +16,20 @@ namespace Na::HL {
 		};
 		m_Image = Graphics::DeviceImage::Make(img_info);
 
-		m_Image->set_stage(Graphics::DeviceImageStage::StorageImage);
+		Graphics::DeviceImageBarrierInfo barrier_info
+		{
+			.new_img_state = Graphics::DeviceImageState::StorageImage,
+
+			.before = {
+				Graphics::BarrierStageBits::Earliest,
+				Graphics::BarrierOperationBits::None
+			},
+
+			.after = {
+				Graphics::BarrierStageBits::ComputeShader,
+				Graphics::BarrierOperationBits::ShaderRead | Graphics::BarrierOperationBits::ShaderWrite
+			}
+		};
+		m_Image->barrier(barrier_info);
 	}
 } // namespace Na::HL

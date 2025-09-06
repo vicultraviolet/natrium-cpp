@@ -300,6 +300,18 @@ namespace Na::VulkanImpl {
 		cmd_buffer.dispatch(workgroup_count.x, workgroup_count.y, workgroup_count.z);
 	}
 
+	void Renderer::img_barrier(
+		View<Graphics::DeviceImage> _img,
+		const DeviceImageBarrierInfo& info
+	)
+	{
+		vk::CommandBuffer cmd_buffer = m_CommandBuffers[m_FrameIndex];
+
+		auto img = static_ref_cast<DeviceImage>(_img);
+
+		ImageBarrier(*img, info, cmd_buffer);
+	}
+
 	void Renderer::_create_cmd_objects(void)
 	{
 		const auto& logical_device = Device::Get()->logical_device();

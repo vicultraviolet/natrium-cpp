@@ -58,7 +58,7 @@ namespace Na::VulkanImpl {
 
 	DeviceImage::DeviceImage(const DeviceImageCreateInfo& info)
 	: Graphics::DeviceImage(info),
-	  m_AspectMask(vk::ImageAspectFlagBits::eColor)
+	  m_Aspect(vk::ImageAspectFlagBits::eColor)
 	{
 		const auto& logical_device = Device::Get()->logical_device();
 
@@ -100,7 +100,7 @@ namespace Na::VulkanImpl {
 
 		m_ImageView = CreateImageView(
 			m_Image,
-			m_AspectMask,
+			m_Aspect,
 			create_info.format,
 			info.layer_count
 		);
@@ -166,83 +166,9 @@ namespace Na::VulkanImpl {
 		}
 	}
 
-	void DeviceImage::set_stage(DeviceImageStage stage)
+	void DeviceImage::barrier(const DeviceImageBarrierInfo& info)
 	{
-		vk::ImageMemoryBarrier barrier;
-
-		barrier.oldLayout = m_CurrentLayout;
-		//barrier.newLayout = layout;
-
-		barrier.srcQueueFamilyIndex = vk::QueueFamilyIgnored;
-		barrier.dstQueueFamilyIndex = vk::QueueFamilyIgnored;
-
-		barrier.image = m_Image;
-		barrier.subresourceRange = vk::ImageSubresourceRange{
-			m_AspectMask,
-			0, // starting mip level
-			1, // mip level count
-			0, // starting array layer
-			m_LayerCount
-		};
-
-		vk::PipelineStageFlags execute_stage;
-		vk::PipelineStageFlags wait_stage;
-
-		switch (stage)
-		{
-			case DeviceImageStage::Mutable:
-			{
-				barrier.newLayout = vk::ImageLayout::eTransferDstOptimal;
-
-				barrier.srcAccessMask = m_CurrentAccessMask;
-				barrier.dstAccessMask = vk::AccessFlagBits::eTransferWrite;
-
-				execute_stage = vk::PipelineStageFlagBits::eTopOfPipe;
-				wait_stage = vk::PipelineStageFlagBits::eTransfer;
-
-				break;
-			}
-			case DeviceImageStage::Texture:
-			{
-				barrier.newLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
-
-				barrier.srcAccessMask = m_CurrentAccessMask;
-				barrier.dstAccessMask = vk::AccessFlagBits::eShaderRead;
-
-				execute_stage = vk::PipelineStageFlagBits::eTransfer;
-				wait_stage = vk::PipelineStageFlagBits::eFragmentShader;
-
-				break;
-			}
-			case DeviceImageStage::StorageImage:
-			{
-				barrier.newLayout = vk::ImageLayout::eGeneral;
-
-				barrier.srcAccessMask = m_CurrentAccessMask;
-				barrier.dstAccessMask = vk::AccessFlagBits::eShaderWrite;
-
-				execute_stage = vk::PipelineStageFlagBits::eTopOfPipe;
-				wait_stage = vk::PipelineStageFlagBits::eComputeShader;
-
-				break;
-			}
-		}
-
-		m_CurrentLayout = barrier.newLayout;
-		m_CurrentAccessMask = barrier.srcAccessMask;
-
-		vk::CommandBuffer cmd_buffer = Internal::BeginSingleTimeCommands();
-
-		cmd_buffer.pipelineBarrier(
-			execute_stage,
-			wait_stage,
-			{}, // dependency flags
-			0, nullptr, // memory barriers
-			0, nullptr, // buffer memory barriers
-			1, &barrier // image memory barriers
-		);
-
-		Internal::EndSingleTimeCommands(cmd_buffer);
+		ImageBarrier(*this, info);
 	}
 
 	void DeviceImage::set_all_data(const void* data, u32 starting_layer, u32 layer_count)
@@ -294,7 +220,7 @@ namespace Na::VulkanImpl {
 	}
 
 	DeviceImage::DeviceImage(const DeviceImageCreateInfo2& info)
-	: m_AspectMask(info.aspect_mask)
+	: m_Aspect(info.aspect_mask)
 	{
 		const auto& logical_device = Device::Get()->logical_device();
 
@@ -349,7 +275,7 @@ namespace Na::VulkanImpl {
 		region.bufferRowLength = 0;
 		region.bufferImageHeight = 0;
 
-		region.imageSubresource.aspectMask = m_AspectMask;
+		region.imageSubresource.aspectMask = m_Aspect;
 		region.imageSubresource.mipLevel = 0;
 		region.imageSubresource.baseArrayLayer = starting_layer;
 		region.imageSubresource.layerCount = layer_count;
@@ -412,7 +338,7 @@ namespace Na::VulkanImpl {
 		region.bufferRowLength = 0;
 		region.bufferImageHeight = 0;
 
-		region.imageSubresource.aspectMask = m_AspectMask;
+		region.imageSubresource.aspectMask = m_Aspect;
 
 		region.imageSubresource.mipLevel = 0;
 		region.imageSubresource.layerCount = 1;
@@ -445,7 +371,9 @@ namespace Na::VulkanImpl {
 	  
 	  m_ImageView(std::exchange(other.m_ImageView, nullptr)),
 	  
-	  m_AspectMask(other.m_AspectMask)
+	  m_Aspect(other.m_Aspect),
+
+	  m_CurrentLayout(std::exchange(other.m_CurrentLayout, vk::ImageLayout::eUndefined))
 	{
 
 	}
@@ -464,7 +392,9 @@ namespace Na::VulkanImpl {
 
 		m_ImageView = std::exchange(other.m_ImageView, nullptr);
 
-		m_AspectMask = other.m_AspectMask;
+		m_Aspect = other.m_Aspect;
+
+		m_CurrentLayout = std::exchange(other.m_CurrentLayout, vk::ImageLayout::eUndefined);
 
 		return *this;
 	}

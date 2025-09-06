@@ -81,6 +81,11 @@ namespace Na::VulkanImpl {
 			glm::uvec3 workgroup_count
 		) override;
 
+		void img_barrier(
+			View<Graphics::DeviceImage> img,
+			const DeviceImageBarrierInfo& info
+		) override;
+
 		[[nodiscard]] inline vk::CommandPool& graphics_cmd_pool(void) { return m_GraphicsCommandPool; }
 		[[nodiscard]] inline const vk::CommandPool& graphics_cmd_pool(void) const { return m_GraphicsCommandPool; }
 
@@ -95,7 +100,6 @@ namespace Na::VulkanImpl {
 		[[nodiscard]] inline Ref<const RendererSettingsAsset> settings(void) const override { return m_RendererSettings;  }
 
 		[[nodiscard]] inline WeakRef<const Graphics::RenderTarget> current_render_target(void) const override { return m_RenderTarget; }
-
 
 		[[nodiscard]] inline operator bool(void) const { return m_GraphicsCommandPool; }
 	private:

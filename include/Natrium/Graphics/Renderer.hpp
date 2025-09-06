@@ -88,6 +88,11 @@ namespace Na::Graphics {
 			glm::uvec3 workgroup_count
 		) = 0;
 
+		virtual void img_barrier(
+			View<DeviceImage> img,
+			const DeviceImageBarrierInfo& info
+		) = 0;
+
 		[[nodiscard]] virtual u32 current_frame_index(void) const = 0;
 
 		[[nodiscard]] virtual Ref<const RendererSettingsAsset> settings(void) const = 0;
