@@ -17,7 +17,7 @@ namespace Na::HL {
 
 			.format = Graphics::ImageFormat::Rgba8,
 
-			.type = Graphics::DeviceImageTypeFlags::Sampled
+			.type = Graphics::DeviceImageTypeFlags::Sampled | Graphics::DeviceImageTypeFlags::TransferDst
 		};
 
 		m_Image = Graphics::DeviceImage::Make(image_info);
