@@ -208,7 +208,7 @@ namespace Na::VulkanImpl {
 
 	void UniformSet::_set_dynamic_offsets_for_buffer(u32 dynamic_descriptor_index, u32 aligned_size)
 	{
-		u32 count = m_DynamicOffsets.size() / m_DynamicOffsetCount;
+		u32 count = (u32)(m_DynamicOffsets.size() / m_DynamicOffsetCount);
 		for (u32 i = 0; i < count; i++)
 		{
 			u64 offset_index = (u64)i * (u64)m_DynamicOffsetCount + (u64)dynamic_descriptor_index;
