@@ -21,6 +21,12 @@ namespace Na::VulkanImpl {
 		if ((type & BufferTypeFlags::VertexBuffer) != BufferTypeFlags::None)
 			usage |= vk::BufferUsageFlagBits::eVertexBuffer;
 
+		if ((type & BufferTypeFlags::TransferDst) != BufferTypeFlags::None)
+			usage |= vk::BufferUsageFlagBits::eTransferDst;
+
+		if ((type & BufferTypeFlags::TransferSrc) != BufferTypeFlags::None)
+			usage |= vk::BufferUsageFlagBits::eTransferSrc;
+
 		return usage;
 	}
 

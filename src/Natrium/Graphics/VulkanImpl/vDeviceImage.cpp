@@ -425,6 +425,43 @@ namespace Na::VulkanImpl {
 		Internal::EndSingleTimeCommands(cmd_buffer);
 	}
 
+	UniqueRef<Graphics::Buffer> DeviceImage::copy_to_buffer(void) const
+	{
+		BufferCreateInfo buffer_info;
+
+		buffer_info.size = this->total_size();
+		buffer_info.cpu_accessible = true;
+		buffer_info.type = BufferTypeFlags::TransferDst;
+
+		auto buffer = MakeUnique<Buffer>(buffer_info);
+
+		vk::CommandBuffer cmd_buffer = Internal::BeginSingleTimeCommands();
+
+		vk::BufferImageCopy region;
+
+		region.bufferOffset = 0;
+		region.bufferRowLength = 0;
+		region.bufferImageHeight = 0;
+
+		region.imageSubresource.aspectMask = m_Aspect;
+		region.imageSubresource.mipLevel = 0;
+		region.imageSubresource.baseArrayLayer = 0;
+		region.imageSubresource.layerCount = m_LayerCount;
+
+		region.imageOffset = { { 0, 0, 0 } };
+		region.imageExtent = vk::Extent3D(m_Width, m_Height, 1);
+
+		cmd_buffer.copyImageToBuffer(
+			m_Image,
+			m_CurrentLayout,
+			buffer->native(),
+			{ region }
+		);
+
+		Internal::EndSingleTimeCommands(cmd_buffer);
+
+		return std::move(buffer);
+	}
 
 	DeviceImage::DeviceImage(DeviceImage&& other) noexcept
 	: Graphics::DeviceImage(std::forward<DeviceImage>(other)),

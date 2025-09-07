@@ -2,6 +2,7 @@
 #define NA_GRAPHICS_DEVICE_IMAGE_HPP
 
 #include "Natrium/Graphics/Barrier.hpp"
+#include "Natrium/Graphics/Buffer.hpp"
 
 namespace Na::Graphics {
 	enum class ImageFormat : u8 {
@@ -56,6 +57,8 @@ namespace Na::Graphics {
 			glm::ivec2 dst_offset,
 			glm::uvec2 size
 		) = 0;
+
+		[[nodiscard]] virtual UniqueRef<Buffer> copy_to_buffer(void) const = 0;
 
 		[[nodiscard]] inline u32 width(void) const { return m_Width; }
 		[[nodiscard]] inline u32 height(void) const { return m_Height; }

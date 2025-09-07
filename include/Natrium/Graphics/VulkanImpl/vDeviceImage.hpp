@@ -43,7 +43,6 @@ namespace Na::VulkanImpl {
 		DeviceImage(const DeviceImageCreateInfo& info);
 		DeviceImage(const DeviceImageCreateInfo2& info);
 
-
 		DeviceImage(DeviceImage&& other) noexcept;
 		DeviceImage& operator=(DeviceImage&& other) noexcept;
 
@@ -78,6 +77,8 @@ namespace Na::VulkanImpl {
 			glm::ivec2 dst_offset,
 			glm::uvec2 size
 		) override;
+
+		[[nodiscard]] UniqueRef<Graphics::Buffer> copy_to_buffer(void) const override;
 
 		[[nodiscard]] inline vk::Image& img(void) { return m_Image; }
 		[[nodiscard]] inline const vk::Image& img(void) const { return m_Image; }
