@@ -9,11 +9,9 @@
 namespace Na::VulkanImpl {
 	using ShaderStage = Na::Graphics::ShaderStage;
 	using VertexAttributeType = Graphics::VertexAttributeType;
-	using UniformType = Graphics::UniformType;
 
 	vk::ShaderStageFlagBits ShaderStageToVk(ShaderStage stage);
 	vk::Format VertexAttributeTypeToVk(VertexAttributeType type);
-	vk::DescriptorType UniformTypeToVk(UniformType type);
 
 	Expected<ArrayList<u32>, ShaderErrorCode> CompileToSpirV(
 		const std::string_view& glsl,

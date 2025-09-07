@@ -5,6 +5,9 @@
 
 namespace Na::VulkanImpl {
 	using UniformBinding = Graphics::UniformBinding;
+	using UniformType = Graphics::UniformType;
+
+	vk::DescriptorType UniformTypeToVk(UniformType type);
 
 	class UniformSetLayout : public Graphics::UniformSetLayout {
 	public:

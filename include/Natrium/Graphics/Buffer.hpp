@@ -9,12 +9,15 @@ namespace Na::Graphics {
 	enum class BufferTypeFlags : u8 {
 		None = 0,
 
-		VertexBuffer = NA_BIT(0),
-		IndexBuffer = NA_BIT(1),
+		VertexBuffer  = NA_BIT(0),
+		IndexBuffer   = NA_BIT(1),
 		StorageBuffer = NA_BIT(2),
 		UniformBuffer = NA_BIT(3),
 
-		All = VertexBuffer | IndexBuffer | StorageBuffer | UniformBuffer
+		TransferSrc   = NA_BIT(4),
+		TransferDst   = NA_BIT(5),
+
+		All = u8max
 	};
 
 	struct BufferCreateInfo {

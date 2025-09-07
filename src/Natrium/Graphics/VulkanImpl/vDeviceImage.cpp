@@ -33,6 +33,12 @@ namespace Na::VulkanImpl {
 		if ((type & DeviceImageTypeFlags::DepthAttachment) != DeviceImageTypeFlags::None)
 			usage |= vk::ImageUsageFlagBits::eDepthStencilAttachment;
 
+		if ((type & DeviceImageTypeFlags::TransferDst) != DeviceImageTypeFlags::None)
+			usage |= vk::ImageUsageFlagBits::eTransferDst;
+
+		if ((type & DeviceImageTypeFlags::TransferSrc) != DeviceImageTypeFlags::None)
+			usage |= vk::ImageUsageFlagBits::eTransferSrc;
+
 		return usage;
 	}
 
@@ -58,7 +64,7 @@ namespace Na::VulkanImpl {
 
 	DeviceImage::DeviceImage(const DeviceImageCreateInfo& info)
 	: Graphics::DeviceImage(info),
-	  m_AspectMask(vk::ImageAspectFlagBits::eColor)
+	  m_Aspect(vk::ImageAspectFlagBits::eColor)
 	{
 		const auto& logical_device = Device::Get()->logical_device();
 
@@ -75,10 +81,7 @@ namespace Na::VulkanImpl {
 		create_info.tiling = vk::ImageTiling::eOptimal;
 		create_info.initialLayout = vk::ImageLayout::eUndefined;
 
-		create_info.usage = (
-			vk::ImageUsageFlagBits::eTransferDst |
-			DeviceImageTypeToVk(info.type)
-		);
+		create_info.usage = DeviceImageTypeToVk(info.type);
 
 		create_info.sharingMode = vk::SharingMode::eExclusive;
 
@@ -100,7 +103,7 @@ namespace Na::VulkanImpl {
 
 		m_ImageView = CreateImageView(
 			m_Image,
-			m_AspectMask,
+			m_Aspect,
 			create_info.format,
 			info.layer_count
 		);
@@ -166,6 +169,11 @@ namespace Na::VulkanImpl {
 		}
 	}
 
+	void DeviceImage::barrier(const DeviceImageBarrierInfo& info)
+	{
+		ImageBarrier(*this, info);
+	}
+
 	void DeviceImage::set_all_data(const void* data, u32 starting_layer, u32 layer_count)
 	{
 		BufferCreateInfo2 buffer_info{
@@ -178,17 +186,7 @@ namespace Na::VulkanImpl {
 
 		staging_buffer.set_data(data);
 
-		this->transition_layout(
-			vk::ImageLayout::eUndefined,
-			vk::ImageLayout::eTransferDstOptimal
-		);
-
 		this->copy_from_buffer(staging_buffer.native(), starting_layer, layer_count);
-
-		this->transition_layout(
-			vk::ImageLayout::eTransferDstOptimal,
-			vk::ImageLayout::eShaderReadOnlyOptimal
-		);
 	}
 
 	void DeviceImage::set_each_data(const void* data)
@@ -203,17 +201,7 @@ namespace Na::VulkanImpl {
 
 		staging_buffer.set_data(data);
 
-		this->transition_layout(
-			vk::ImageLayout::eUndefined,
-			vk::ImageLayout::eTransferDstOptimal
-		);
-
 		this->copy_each_from_buffer(staging_buffer.native());
-
-		this->transition_layout(
-			vk::ImageLayout::eTransferDstOptimal,
-			vk::ImageLayout::eShaderReadOnlyOptimal
-		);
 	}
 
 	void DeviceImage::set_each_data_2(const void* datas[])
@@ -231,21 +219,11 @@ namespace Na::VulkanImpl {
 			staging_buffer.set_data(datas[i]);
 		}
 
-		this->transition_layout(
-			vk::ImageLayout::eUndefined,
-			vk::ImageLayout::eTransferDstOptimal
-		);
-
 		this->copy_each_from_buffer(staging_buffer.native());
-
-		this->transition_layout(
-			vk::ImageLayout::eTransferDstOptimal,
-			vk::ImageLayout::eShaderReadOnlyOptimal
-		);
 	}
 
 	DeviceImage::DeviceImage(const DeviceImageCreateInfo2& info)
-	: m_AspectMask(info.aspect_mask)
+	: m_Aspect(info.aspect_mask)
 	{
 		const auto& logical_device = Device::Get()->logical_device();
 
@@ -293,69 +271,6 @@ namespace Na::VulkanImpl {
 		);
 	}
 
-	void DeviceImage::transition_layout(
-		vk::ImageLayout old_layout,
-		vk::ImageLayout new_layout
-	)
-	{
-		const auto& logical_device = Device::Get()->logical_device();
-
-		vk::ImageMemoryBarrier barrier;
-
-		barrier.oldLayout = old_layout;
-		barrier.newLayout = new_layout;
-
-		barrier.srcQueueFamilyIndex = vk::QueueFamilyIgnored;
-		barrier.dstQueueFamilyIndex = vk::QueueFamilyIgnored;
-
-		barrier.image = m_Image;
-		barrier.subresourceRange = vk::ImageSubresourceRange{
-			m_AspectMask,
-			0, // starting mip level
-			1, // mip level count
-			0, // starting array layer
-			m_LayerCount
-		};
-
-		vk::PipelineStageFlags execute_stage;
-		vk::PipelineStageFlags wait_stage;
-
-		if (old_layout == vk::ImageLayout::eUndefined
-		&& new_layout == vk::ImageLayout::eTransferDstOptimal)
-		{
-			barrier.srcAccessMask = {};
-			barrier.dstAccessMask = vk::AccessFlagBits::eTransferWrite;
-
-			execute_stage = vk::PipelineStageFlagBits::eTopOfPipe;
-			wait_stage = vk::PipelineStageFlagBits::eTransfer;
-		} else
-		if (old_layout == vk::ImageLayout::eTransferDstOptimal
-		&& new_layout == vk::ImageLayout::eShaderReadOnlyOptimal)
-		{
-			barrier.srcAccessMask = vk::AccessFlagBits::eTransferWrite;
-			barrier.dstAccessMask = vk::AccessFlagBits::eShaderRead;
-
-			execute_stage = vk::PipelineStageFlagBits::eTransfer;
-			wait_stage = vk::PipelineStageFlagBits::eFragmentShader;
-		} else
-		{
-			throw std::runtime_error("Unsupported image layout transition!");
-		}
-
-		vk::CommandBuffer cmd_buffer = Internal::BeginSingleTimeCommands();
-
-		cmd_buffer.pipelineBarrier(
-			execute_stage,
-			wait_stage,
-			{}, // dependency flags
-			0, nullptr, // memory barriers
-			0, nullptr, // buffer memory barriers
-			1, &barrier // image memory barriers
-		);
-
-		Internal::EndSingleTimeCommands(cmd_buffer);
-	}
-
 	void DeviceImage::copy_from_buffer(vk::Buffer buffer, u32 starting_layer, u32 layer_count)
 	{
 		vk::BufferImageCopy region;
@@ -363,7 +278,7 @@ namespace Na::VulkanImpl {
 		region.bufferRowLength = 0;
 		region.bufferImageHeight = 0;
 
-		region.imageSubresource.aspectMask = m_AspectMask;
+		region.imageSubresource.aspectMask = m_Aspect;
 		region.imageSubresource.mipLevel = 0;
 		region.imageSubresource.baseArrayLayer = starting_layer;
 		region.imageSubresource.layerCount = layer_count;
@@ -426,7 +341,7 @@ namespace Na::VulkanImpl {
 		region.bufferRowLength = 0;
 		region.bufferImageHeight = 0;
 
-		region.imageSubresource.aspectMask = m_AspectMask;
+		region.imageSubresource.aspectMask = m_Aspect;
 
 		region.imageSubresource.mipLevel = 0;
 		region.imageSubresource.layerCount = 1;
@@ -451,7 +366,104 @@ namespace Na::VulkanImpl {
 		Internal::EndSingleTimeCommands(cmd_buffer);
 	}
 
-	DeviceImage::DeviceImage(DeviceImage&& other)
+	void DeviceImage::copy_from_img(View<const Graphics::DeviceImage> _src_img)
+	{
+		auto src_img = static_ref_cast<const DeviceImage>(_src_img);
+
+		this->copy_from_img_ex(
+			src_img,
+			glm::ivec2(0, 0),
+			glm::ivec2(0, 0),
+			glm::uvec2(
+				std::min(src_img->m_Width, m_Width),
+				std::min(src_img->m_Height, m_Height)
+			)
+		);
+	}
+
+	void DeviceImage::copy_from_img_ex(
+		View<const Graphics::DeviceImage> _src_img,
+		glm::ivec2 src_offset,
+		glm::ivec2 dst_offset,
+		glm::uvec2 size
+	)
+	{
+		auto src_img = static_ref_cast<const DeviceImage>(_src_img);
+
+		vk::ImageCopy copy_region;
+
+		copy_region.srcSubresource.aspectMask = src_img->m_Aspect;
+		copy_region.srcSubresource.baseArrayLayer = 0;
+		copy_region.srcSubresource.layerCount = src_img->m_LayerCount;
+		copy_region.srcSubresource.mipLevel = 0;
+
+		copy_region.dstSubresource.aspectMask = m_Aspect;
+		copy_region.dstSubresource.baseArrayLayer = 0;
+		copy_region.dstSubresource.layerCount = m_LayerCount;
+		copy_region.dstSubresource.mipLevel = 0;
+
+		copy_region.srcOffset.x = src_offset.x;
+		copy_region.srcOffset.y = src_offset.y;
+
+		copy_region.dstOffset.x = dst_offset.x;
+		copy_region.dstOffset.y = dst_offset.y;
+
+		copy_region.extent.width = size.x;
+		copy_region.extent.height = size.y;
+		copy_region.extent.depth = 1;
+
+		vk::CommandBuffer cmd_buffer = Internal::BeginSingleTimeCommands();
+
+		cmd_buffer.copyImage(
+			src_img->m_Image,
+			src_img->m_CurrentLayout,
+			m_Image,
+			m_CurrentLayout,
+			{ copy_region }
+		);
+
+		Internal::EndSingleTimeCommands(cmd_buffer);
+	}
+
+	UniqueRef<Graphics::Buffer> DeviceImage::copy_to_buffer(void) const
+	{
+		BufferCreateInfo buffer_info;
+
+		buffer_info.size = this->total_size();
+		buffer_info.cpu_accessible = true;
+		buffer_info.type = BufferTypeFlags::TransferDst;
+
+		auto buffer = MakeUnique<Buffer>(buffer_info);
+
+		vk::CommandBuffer cmd_buffer = Internal::BeginSingleTimeCommands();
+
+		vk::BufferImageCopy region;
+
+		region.bufferOffset = 0;
+		region.bufferRowLength = 0;
+		region.bufferImageHeight = 0;
+
+		region.imageSubresource.aspectMask = m_Aspect;
+		region.imageSubresource.mipLevel = 0;
+		region.imageSubresource.baseArrayLayer = 0;
+		region.imageSubresource.layerCount = m_LayerCount;
+
+		region.imageOffset = { { 0, 0, 0 } };
+		region.imageExtent = vk::Extent3D(m_Width, m_Height, 1);
+
+		cmd_buffer.copyImageToBuffer(
+			m_Image,
+			m_CurrentLayout,
+			buffer->native(),
+			{ region }
+		);
+
+		Internal::EndSingleTimeCommands(cmd_buffer);
+
+		return std::move(buffer);
+	}
+
+	DeviceImage::DeviceImage(DeviceImage&& other) noexcept
 	: Graphics::DeviceImage(std::forward<DeviceImage>(other)),
 
 	  m_Image(std::exchange(other.m_Image, nullptr)),
@@ -459,12 +471,14 @@ namespace Na::VulkanImpl {
 	  
 	  m_ImageView(std::exchange(other.m_ImageView, nullptr)),
 	  
-	  m_AspectMask(other.m_AspectMask)
+	  m_Aspect(other.m_Aspect),
+
+	  m_CurrentLayout(std::exchange(other.m_CurrentLayout, vk::ImageLayout::eUndefined))
 	{
 
 	}
 
-	DeviceImage& DeviceImage::operator=(DeviceImage&& other)
+	DeviceImage& DeviceImage::operator=(DeviceImage&& other) noexcept
 	{
 		if (this == &other)
 			return *this;
@@ -478,7 +492,9 @@ namespace Na::VulkanImpl {
 
 		m_ImageView = std::exchange(other.m_ImageView, nullptr);
 
-		m_AspectMask = other.m_AspectMask;
+		m_Aspect = other.m_Aspect;
+
+		m_CurrentLayout = std::exchange(other.m_CurrentLayout, vk::ImageLayout::eUndefined);
 
 		return *this;
 	}

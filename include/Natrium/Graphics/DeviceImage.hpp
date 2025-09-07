@@ -1,7 +1,8 @@
 #if !defined(NA_GRAPHICS_DEVICE_IMAGE_HPP)
 #define NA_GRAPHICS_DEVICE_IMAGE_HPP
 
-#include "Natrium/Core.hpp"
+#include "Natrium/Graphics/Barrier.hpp"
+#include "Natrium/Graphics/Buffer.hpp"
 
 namespace Na::Graphics {
 	enum class ImageFormat : u8 {
@@ -19,8 +20,10 @@ namespace Na::Graphics {
 		Storage         = NA_BIT(1),
 		ColorAttachment = NA_BIT(2),
 		DepthAttachment = NA_BIT(3),
+		TransferDst     = NA_BIT(4),
+		TransferSrc     = NA_BIT(5),
 
-		All = Sampled | Storage | ColorAttachment | DepthAttachment
+		All = u8max
 	};
 
 	struct DeviceImageCreateInfo {
@@ -37,6 +40,8 @@ namespace Na::Graphics {
 		[[nodiscard]] static UniqueRef<DeviceImage> Make(const DeviceImageCreateInfo& info);
 		virtual ~DeviceImage(void) = default;
 
+		virtual void barrier(const DeviceImageBarrierInfo& info) = 0;
+
 		// will treat data as a single image and copy it into all layers
 		virtual void set_all_data(const void* data, u32 starting_layer = 0, u32 layer_count = 1) = 0;
 
@@ -44,6 +49,16 @@ namespace Na::Graphics {
 		virtual void set_each_data(const void* data) = 0;
 
 		virtual void set_each_data_2(const void* datas[]) = 0;
+
+		virtual void copy_from_img(View<const DeviceImage> src_img) = 0;
+		virtual void copy_from_img_ex(
+			View<const DeviceImage> src_img,
+			glm::ivec2 src_offset,
+			glm::ivec2 dst_offset,
+			glm::uvec2 size
+		) = 0;
+
+		[[nodiscard]] virtual UniqueRef<Buffer> copy_to_buffer(void) const = 0;
 
 		[[nodiscard]] inline u32 width(void) const { return m_Width; }
 		[[nodiscard]] inline u32 height(void) const { return m_Height; }

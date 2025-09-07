@@ -8,7 +8,7 @@ namespace Na::Graphics {
 		None = 0,
 		UniformBuffer, UniformMultibuffer,
 		StorageBuffer, StorageMultibuffer,
-		// StorageImage,
+		StorageImage,
 		Texture
 	};
 
