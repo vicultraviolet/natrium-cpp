@@ -20,6 +20,8 @@ IncludeDirectories["openal"] = "dependencies/openal-soft/include/"
 LibraryDirectories["openal"] = "dependencies/openal-soft/lib/"
 Libraries["openal"] = "openal"
 
+IncludeDirectories["AudioFile"] = "dependencies/AudioFile/include/"
+
 project "Natrium"
     location "./"
     targetname "%{prj.name}-bin"
@@ -48,6 +50,7 @@ project "Natrium"
         "%{IncludeDirectories.glfw}",
         "%{IncludeDirectories.imgui}",
         "%{IncludeDirectories.stduuid}",
+        "%{IncludeDirectories.AudioFile}",
         "dependencies/",
         "include/",
         "src/Natrium/"
