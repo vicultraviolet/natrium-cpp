@@ -63,6 +63,10 @@
 #include <imgui/imgui.h>
 #endif // NA_DISABLE_IMGUI
 
+#define AL_LIBTYPE_STATIC
+#include <AL/al.h>
+#include <AL/alc.h>
+
 #include "Natrium/Core/Logger.hpp"
 
 #include "./Template/References.hpp"

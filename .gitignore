@@ -15,3 +15,5 @@ build/
 
 Makefile
 *.make
+
+dependencies/openal-soft/lib/

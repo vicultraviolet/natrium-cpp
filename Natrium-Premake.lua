@@ -10,10 +10,15 @@ include "dependencies/fmt-Premake.lua"
 include "dependencies/stb-Premake.lua"
 include "dependencies/tinyobjloader-Premake.lua"
 include "dependencies/GLFW-Premake.lua"
+include "dependencies/imgui-Premake.lua"
+
 IncludeDirectories["glm"] = "dependencies/glm/"
 IncludeDirectories["nlohmann_json"] = "dependencies/nlohmann_json/include/"
 IncludeDirectories["stduuid"] = "dependencies/stduuid/include/"
-include "dependencies/imgui-Premake.lua"
+
+IncludeDirectories["openal"] = "dependencies/openal-soft/include/"
+LibraryDirectories["openal"] = "dependencies/openal-soft/lib/"
+Libraries["openal"] = "openal"
 
 project "Natrium"
     location "./"
@@ -59,16 +64,30 @@ project "Natrium"
     filter "system:linux"
         links {
             "vulkan",
-            "shaderc"
+            "shaderc",
+            "openal"
         }
 
         defines { "NA_PLATFORM_LINUX" }
 
     filter "system:windows"
-        includedirs "%{IncludeDirectories.vk}" 
-		libdirs "%{LibraryDirectories.vk}" 
+        includedirs {
+            "%{IncludeDirectories.vk}",
+            "%{IncludeDirectories.openal}" 
+        }
 
-        links "vulkan-1"
+        libdirs {
+            "%{LibraryDirectories.vk}",
+            "%{LibraryDirectories.openal}" 
+        }
+
+        links {
+            "vulkan-1",
+            "winmm",
+            "avrt",
+            "user32",
+            "ole32"
+        }
 
         defines {
             "NA_PLATFORM_WINDOWS",
@@ -96,7 +115,13 @@ project "Natrium"
         defines { "NA_CONFIG_DIST" }
 
     filter { "system:windows", "configurations:dbg" }
-        links "shaderc_combinedd"
+        links {
+            "openal-d",
+            "shaderc_combinedd"
+        }
     filter { "system:windows", "configurations:rel or dist" }
-        links "shaderc_combined"
+        links {
+            "openal",
+            "shaderc_combined"
+        }
 		
