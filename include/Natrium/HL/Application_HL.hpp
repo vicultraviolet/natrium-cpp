@@ -7,6 +7,7 @@
 #include "Natrium/Assets/AssetManager.hpp"
 #include "Natrium/Graphics/Renderer.hpp"
 #include "Natrium/Layers/ImGuiLayer.hpp"
+#include "Natrium/Audio/Audio_Context.hpp"
 
 namespace Na::HL {
 	struct ApplicationSettings {

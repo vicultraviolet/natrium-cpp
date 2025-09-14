@@ -33,6 +33,8 @@
 
 #include "./Layers/ImGuiLayer.hpp"
 
+#include "./Audio/Audio_Context.hpp"
+
 #include "./HL/UniformManager_HL.hpp"
 #include "./HL/Pipeline_HL.hpp"
 #include "./HL/DeviceMesh_HL.hpp"
