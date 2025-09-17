@@ -33,7 +33,11 @@
 
 #include "./Layers/ImGuiLayer.hpp"
 
+#include "./Audio/Audio_Listener.hpp"
 #include "./Audio/Audio_Context.hpp"
+#include "./Audio/Wav.hpp"
+#include "./Audio/Audio_Buffer.hpp"
+#include "./Audio/Audio_Source.hpp"
 
 #include "./HL/UniformManager_HL.hpp"
 #include "./HL/Pipeline_HL.hpp"
