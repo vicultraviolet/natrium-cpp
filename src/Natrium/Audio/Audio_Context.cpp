@@ -8,8 +8,6 @@ namespace Na::Audio {
 
 		m_Context = alcCreateContext(m_Device, nullptr);
 		alcMakeContextCurrent(m_Context);
-
-		alGetError();
 	}
 
 	void Context::destroy(void)
@@ -25,6 +23,16 @@ namespace Na::Audio {
 			alcCloseDevice(m_Device);
 			m_Device = nullptr;
 		}
+	}
+
+	void Context::bind(void)
+	{
+		Context::s_Instance = this;
+	}
+
+	View<Context> Context::GetBound(void)
+	{
+		return Context::s_Instance;
 	}
 
 	Context::Context(Context&& other) noexcept
