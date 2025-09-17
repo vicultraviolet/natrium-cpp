@@ -20,7 +20,9 @@ IncludeDirectories["openal"] = "dependencies/openal-soft/include/"
 LibraryDirectories["openal"] = "dependencies/openal-soft/lib/"
 Libraries["openal"] = "openal"
 
-IncludeDirectories["AudioFile"] = "dependencies/AudioFile/include/"
+IncludeDirectories["libsndfile"] = "dependencies/libsndfile/include/"
+LibraryDirectories["libsndfile"] = "dependencies/libsndfile/lib/"
+Libraries["libsndfile"] = "sndfile"
 
 project "Natrium"
     location "./"
@@ -50,7 +52,6 @@ project "Natrium"
         "%{IncludeDirectories.glfw}",
         "%{IncludeDirectories.imgui}",
         "%{IncludeDirectories.stduuid}",
-        "%{IncludeDirectories.AudioFile}",
         "dependencies/",
         "include/",
         "src/Natrium/"
@@ -61,14 +62,14 @@ project "Natrium"
         "%{Libraries.fmt}",
         "%{Libraries.tiny_obj_loader}",
         "%{Libraries.glfw}",
-        "%{Libraries.imgui}",
+        "%{Libraries.imgui}"
     }
 
     filter "system:linux"
         links {
             "vulkan",
             "shaderc",
-            "openal"
+            "%{Libraries.openal}"
         }
 
         defines { "NA_PLATFORM_LINUX" }
@@ -76,11 +77,13 @@ project "Natrium"
     filter "system:windows"
         includedirs {
             "%{IncludeDirectories.vk}",
+            "%{IncludeDirectories.libsndfile}",
             "%{IncludeDirectories.openal}" 
         }
 
         libdirs {
             "%{LibraryDirectories.vk}",
+            "%{LibraryDirectories.libsndfile}", 
             "%{LibraryDirectories.openal}" 
         }
 
@@ -100,7 +103,7 @@ project "Natrium"
         buildoptions { "/utf-8" }
 
     filter "toolset:clang"
-      buildoptions { "-Wno-switch" }
+        buildoptions { "-Wno-switch" }
 
     filter "configurations:dbg"
         symbols "On"
@@ -119,12 +122,14 @@ project "Natrium"
 
     filter { "system:windows", "configurations:dbg" }
         links {
-            "openal-d",
+            "%{Libraries.openal}-d",
+            "%{Libraries.libsndfile}-d",
             "shaderc_combinedd"
         }
     filter { "system:windows", "configurations:rel or dist" }
         links {
-            "openal",
+            "%{Libraries.openal}",
+            "%{Libraries.libsndfile}",
             "shaderc_combined"
         }
 		
