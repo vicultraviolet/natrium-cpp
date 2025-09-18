@@ -10,9 +10,6 @@ namespace Na::Audio {
 
 	class Listener {
 	public:
-		Listener(void) = default;
-		~Listener(void) = default;
-
 		[[nodiscard]] float gain(void) const;
 		void set_gain(float gain);
 

@@ -13,6 +13,9 @@ namespace Na::Audio {
 
 		explicit Buffer(WeakRef<Wav> wav);
 
+		Buffer(const Buffer& other) = default;
+		Buffer& operator=(const Buffer& other) = default;
+
 		Buffer(Buffer&& other) noexcept;
 		Buffer& operator=(Buffer&& other) noexcept;
 
@@ -24,6 +27,7 @@ namespace Na::Audio {
 		[[nodiscard]] inline ALuint native(void) const { return m_Buffer; }
 
 		[[nodiscard]] inline operator bool(void) const { return m_Buffer != u32max; }
+		[[nodiscard]] inline bool operator==(Buffer buffer) { return m_Buffer == buffer.m_Buffer; }
 	private:
 		ALuint m_Buffer = u32max;
 	};
