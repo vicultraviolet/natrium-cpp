@@ -10,10 +10,19 @@ include "dependencies/fmt-Premake.lua"
 include "dependencies/stb-Premake.lua"
 include "dependencies/tinyobjloader-Premake.lua"
 include "dependencies/GLFW-Premake.lua"
+include "dependencies/imgui-Premake.lua"
+
 IncludeDirectories["glm"] = "dependencies/glm/"
 IncludeDirectories["nlohmann_json"] = "dependencies/nlohmann_json/include/"
 IncludeDirectories["stduuid"] = "dependencies/stduuid/include/"
-include "dependencies/imgui-Premake.lua"
+
+IncludeDirectories["openal"] = "dependencies/openal-soft/include/"
+LibraryDirectories["openal"] = "dependencies/openal-soft/lib/"
+Libraries["openal"] = "openal"
+
+IncludeDirectories["libsndfile"] = "dependencies/libsndfile/include/"
+LibraryDirectories["libsndfile"] = "dependencies/libsndfile/lib/"
+Libraries["libsndfile"] = "sndfile"
 
 project "Natrium"
     location "./"
@@ -53,22 +62,38 @@ project "Natrium"
         "%{Libraries.fmt}",
         "%{Libraries.tiny_obj_loader}",
         "%{Libraries.glfw}",
-        "%{Libraries.imgui}",
+        "%{Libraries.imgui}"
     }
 
     filter "system:linux"
         links {
             "vulkan",
-            "shaderc"
+            "shaderc",
+            "%{Libraries.openal}"
         }
 
         defines { "NA_PLATFORM_LINUX" }
 
     filter "system:windows"
-        includedirs "%{IncludeDirectories.vk}" 
-		libdirs "%{LibraryDirectories.vk}" 
+        includedirs {
+            "%{IncludeDirectories.vk}",
+            "%{IncludeDirectories.libsndfile}",
+            "%{IncludeDirectories.openal}" 
+        }
 
-        links "vulkan-1"
+        libdirs {
+            "%{LibraryDirectories.vk}",
+            "%{LibraryDirectories.libsndfile}", 
+            "%{LibraryDirectories.openal}" 
+        }
+
+        links {
+            "vulkan-1",
+            "winmm",
+            "avrt",
+            "user32",
+            "ole32"
+        }
 
         defines {
             "NA_PLATFORM_WINDOWS",
@@ -78,7 +103,7 @@ project "Natrium"
         buildoptions { "/utf-8" }
 
     filter "toolset:clang"
-      buildoptions { "-Wno-switch" }
+        buildoptions { "-Wno-switch" }
 
     filter "configurations:dbg"
         symbols "On"
@@ -96,7 +121,15 @@ project "Natrium"
         defines { "NA_CONFIG_DIST" }
 
     filter { "system:windows", "configurations:dbg" }
-        links "shaderc_combinedd"
+        links {
+            "%{Libraries.openal}-d",
+            "%{Libraries.libsndfile}-d",
+            "shaderc_combinedd"
+        }
     filter { "system:windows", "configurations:rel or dist" }
-        links "shaderc_combined"
+        links {
+            "%{Libraries.openal}",
+            "%{Libraries.libsndfile}",
+            "shaderc_combined"
+        }
 		

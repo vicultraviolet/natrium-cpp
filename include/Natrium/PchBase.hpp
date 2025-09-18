@@ -52,6 +52,7 @@
 #include <glm/glm.hpp>
 
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/packing.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
 #include <glm/gtx/string_cast.hpp>
@@ -62,6 +63,12 @@
 #if !defined(NA_DISABLE_IMGUI)
 #include <imgui/imgui.h>
 #endif // NA_DISABLE_IMGUI
+
+#include <sndfile/sndfile.hh>
+
+#define AL_LIBTYPE_STATIC
+#include <AL/al.h>
+#include <AL/alc.h>
 
 #include "Natrium/Core/Logger.hpp"
 
