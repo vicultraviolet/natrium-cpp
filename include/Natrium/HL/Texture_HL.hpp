@@ -14,7 +14,7 @@ namespace Na::HL {
 		Texture(void) = default;
 
 		Texture(
-			WeakRef<RendererSettingsAsset> renderer_settings,
+			WeakRef<const RendererSettingsAsset> renderer_settings,
 			u32 width,
 			u32 height,
 			u32 layer_count = 1

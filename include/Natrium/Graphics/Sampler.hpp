@@ -27,7 +27,7 @@ namespace Na::Graphics {
 		SamplerAddressMode adress_mode_u = SamplerAddressMode::Repeat;
 		SamplerAddressMode adress_mode_v = SamplerAddressMode::Repeat;
 
-		WeakRef<RendererSettingsAsset> renderer_settings;
+		WeakRef<const RendererSettingsAsset> renderer_settings;
 	};
 	
 	class Sampler {

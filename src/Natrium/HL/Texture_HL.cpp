@@ -3,7 +3,7 @@
 
 namespace Na::HL {
 	Texture::Texture(
-		WeakRef<RendererSettingsAsset> renderer_settings,
+		WeakRef<const RendererSettingsAsset> renderer_settings,
 		u32 width,
 		u32 height,
 		u32 layer_count
