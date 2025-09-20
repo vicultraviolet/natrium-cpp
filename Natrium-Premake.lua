@@ -6,11 +6,15 @@ VulkanSdk = os.getenv("VULKAN_SDK")
 IncludeDirectories["vk"] = "%{VulkanSdk}/Include/"
 LibraryDirectories["vk"] = "%{VulkanSdk}/Lib/"
 
-include "dependencies/fmt-Premake.lua"
-include "dependencies/stb-Premake.lua"
-include "dependencies/tinyobjloader-Premake.lua"
-include "dependencies/GLFW-Premake.lua"
-include "dependencies/imgui-Premake.lua"
+group "Dependencies"
+
+    include "dependencies/fmt-Premake.lua"
+    include "dependencies/stb-Premake.lua"
+    include "dependencies/tinyobjloader-Premake.lua"
+    include "dependencies/GLFW-Premake.lua"
+    include "dependencies/imgui-Premake.lua"
+
+group ""
 
 IncludeDirectories["glm"] = "dependencies/glm/"
 IncludeDirectories["nlohmann_json"] = "dependencies/nlohmann_json/include/"
