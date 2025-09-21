@@ -4,6 +4,11 @@
 #include "Natrium/Core/Context.hpp"
 
 namespace Na {
+	UUID_t UUID::Null(void)
+	{
+		return UUID_t();
+	}
+
 	UUID_t UUID::Generate(void)
 	{
 		return Context::Get().uuid_generator()();
