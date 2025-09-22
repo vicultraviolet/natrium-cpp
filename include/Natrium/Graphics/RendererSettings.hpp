@@ -24,6 +24,8 @@ namespace Na {
 		void deserialize(const nlohmann::json& j) override;
 
 		[[nodiscard]] inline operator bool(void) const override { return max_frames_in_flight; }
+	protected:
+		FileErrorCode _handle_missing(const std::filesystem::path& path) override;
 	};
 } // namespace Na
 

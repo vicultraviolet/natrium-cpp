@@ -7,7 +7,7 @@ namespace Na {
 	using UUID_t = uuids::uuid;
 
 	namespace UUID {
-		[[nodiscard]] UUID_t Null(void);
+		[[nodiscard]] const UUID_t& Null(void);
 
 		[[nodiscard]] UUID_t Generate(void);
 		[[nodiscard]] UUID_t Generate(const std::string& name);

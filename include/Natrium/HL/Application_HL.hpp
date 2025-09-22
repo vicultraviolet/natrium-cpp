@@ -14,9 +14,7 @@ namespace Na::HL {
 		u32 window_width = 1280;
 		u32 window_height = 720;
 		std::string_view window_title = "Natrium Application";
-		std::filesystem::path engine_assets_directory = "assets/engine";
-		std::filesystem::path shader_output_directory = "bin/shaders";
-		std::string_view renderer_settings_path = "renderer_settings.json";
+		Ref<RendererSettings> renderer_settings;
 	};
 	using AppSettings = ApplicationSettings;
 
@@ -59,9 +57,6 @@ namespace Na::HL {
 		[[nodiscard]] static inline Application& Get(void) { return *Application::s_Application; }
 		[[nodiscard]] static inline bool Exists(void) { return Application::s_Application; }
 
-		[[nodiscard]] inline AssetManager& asset_manager(void) { return m_AssetManager; }
-		[[nodiscard]] inline const AssetManager& asset_manager(void) const { return m_AssetManager; }
-
 		[[nodiscard]] inline LayerManager& layer_manager(void) { return m_LayerManager; }
 		[[nodiscard]] inline const LayerManager& layer_manager(void) const { return m_LayerManager; }
 
@@ -78,7 +73,6 @@ namespace Na::HL {
 
 		[[nodiscard]] inline u64 average_fps(void) const { return m_AverageFPS; }
 	private:
-		AssetManager m_AssetManager;
 		LayerManager m_LayerManager;
 
 		Ref<Graphics::Renderer> m_Renderer;

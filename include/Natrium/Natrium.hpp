@@ -14,12 +14,6 @@
 #include "./Layers/Layer.hpp"
 #include "./Layers/LayerManager.hpp"
 
-#include "./Assets/Asset.hpp"
-#include "./Assets/AssetManager.hpp"
-#include "./Assets/HostImage.hpp"
-#include "./Assets/HostMesh.hpp"
-#include "./Assets/TextAsset.hpp"
-
 #include "./Graphics/Device.hpp"
 #include "./Graphics/RendererSettings.hpp"
 #include "./Graphics/Renderer.hpp"
@@ -38,6 +32,13 @@
 #include "./Audio/Wav.hpp"
 #include "./Audio/Audio_Buffer.hpp"
 #include "./Audio/Audio_Source.hpp"
+
+#include "./Assets/Asset.hpp"
+#include "./Assets/AssetRegistry.hpp"
+#include "./Assets/AssetManager.hpp"
+#include "./Assets/HostImage.hpp"
+#include "./Assets/HostMesh.hpp"
+#include "./Assets/TextAsset.hpp"
 
 #include "./ECS/Entity.hpp"
 #include "./ECS/Component.hpp"

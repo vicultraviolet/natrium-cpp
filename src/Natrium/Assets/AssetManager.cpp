@@ -6,13 +6,13 @@
 #include "Natrium/Assets/TextAsset.hpp"
 
 namespace Na {
-	AssetManager::AssetManager(
-		const std::filesystem::path& engine_assets_directory,
-		const std::filesystem::path& shader_output_directory
-	)
-	: m_EngineAssetsDirectory(engine_assets_directory),
-	  m_ShaderOutputDirectory(shader_output_directory)
+	AssetManager::AssetManager(const AssetManagerCreateInfo& info)
+	: m_EngineAssetsDirectory(info.engine_assets_dir),
+	  m_ShaderOutputDirectory(info.shader_output_dir),
+	  m_AssetRegistryPath(info.asset_registry_path)
 	{
+		m_Registry.load(info.asset_registry_path);
+
 		if (!std::filesystem::exists(m_EngineAssetsDirectory))
 			std::filesystem::create_directories(m_EngineAssetsDirectory);
 
@@ -22,20 +22,35 @@ namespace Na {
 
 	void AssetManager::destroy(void)
 	{
+		this->unbind();
+
 		m_ShaderOutputDirectory.clear();
 		m_EngineAssetsDirectory.clear();
 		m_Assets.clear();
+		m_Registry.clear();
 	}
 
-	void AssetManager::free_asset(const UUID_t& uuid)
+	void AssetManager::bind(void)
 	{
-		auto it = m_Assets.find(uuid);
-		if (it != m_Assets.end())
-			m_Assets.erase(it);
+		AssetManager::s_Bound = this;
 	}
 
-	Ref<Asset> AssetManager::get_asset(const UUID_t& uuid) const
+	void AssetManager::unbind(void)
 	{
+		if (AssetManager::s_Bound == this)
+			AssetManager::s_Bound = nullptr;
+	}
+
+	void AssetManager::destroy_asset(const UUID_t& uuid)
+	{
+		m_Assets.erase(uuid);
+	}
+
+	Ref<Asset> AssetManager::get(const UUID_t& uuid) const
+	{
+		if (uuid.is_nil())
+			return nullptr;
+
 		auto it = m_Assets.find(uuid);
 		if (it != m_Assets.end())
 			return it->second;
@@ -43,119 +58,8 @@ namespace Na {
 		return nullptr;
 	}
 
-	auto AssetManager::load_shader(
-		const std::filesystem::path& path_to_glsl,
-		Graphics::ShaderStage stage,
-		const std::string_view& entry_point
-	) const -> Expected<UniqueRef<Graphics::Shader>, ShaderLoadingError>
+	Ref<Asset> AssetManager::get_by_name(const std::string& name) const
 	{
-		TextAsset glsl;
-
-		FileErrorCode file_err_code = glsl.load(path_to_glsl);
-		if (file_err_code != FileErrorCode::None)
-		{
-			return Unexpected(ShaderLoadingError(file_err_code));
-		}
-
-		const std::filesystem::path& input_path = path_to_glsl;
-		std::filesystem::path output_path = m_ShaderOutputDirectory / input_path.filename().replace_extension(".bin");
-
-		g_Logger.print(Trace, "Creating shader: [");
-		g_Logger.printf(Trace, "\tinput path: {}", input_path.string());
-		g_Logger.printf(Trace, "\toutput path: {}", output_path.string());
-		g_Logger.print(Trace, "]");
-
-		bool should_compile = (
-			!std::filesystem::exists(output_path) ||
-			std::filesystem::last_write_time(input_path) > std::filesystem::last_write_time(output_path)
-		);
-
-		UniqueRef<Graphics::Shader> shader;
-
-		switch (Graphics::Device::Get()->backend())
-		{
-			case Graphics::DeviceBackend::Vulkan:
-			{
-				if (!should_compile)
-				{
-					if (auto expected = VulkanImpl::LoadSpirV(output_path))
-					{
-						shader = MakeUnique<VulkanImpl::Shader>(
-							expected.value(),
-							stage,
-							entry_point
-						);
-					} else
-					{
-						return Unexpected(ShaderLoadingError(expected.error()));
-					}
-				} else
-				{
-					if (auto expected = VulkanImpl::CompileToSpirV(
-						glsl.str(),
-						input_path.filename().string(),
-						entry_point
-					))
-					{
-						const ArrayList<u32>& spv = expected.value();
-
-						std::ofstream output_file(output_path, std::ios::binary);
-						if (!output_file)
-						{
-							return Unexpected(ShaderLoadingError(FileErrorCode::Unknown));
-						}
-
-						output_file.write((const char*)spv.ptr(), spv.size() * sizeof(u32));
-						output_file.close();
-
-						shader = MakeUnique<VulkanImpl::Shader>(spv, stage, entry_point);
-					} else
-					{
-						return Unexpected(ShaderLoadingError(expected.error()));
-					}
-				}
-			}
-		}
-
-		return shader;
-	}
-
-	auto AssetManager::load_renderer_settings(const std::string& path) -> Expected<Ref<RendererSettings>, FileErrorCode>
-	{
-		UUID_t uuid = UUID::Generate(path);
-		if (auto it = m_Assets.find(uuid); it != m_Assets.end())
-		{
-			return dynamic_ref_cast<RendererSettings>(it->second);
-		}
-
-		auto asset = MakeRef<RendererSettings>(uuid);
-
-		FileErrorCode err_code = asset->load(path);
-
-		if (err_code != FileErrorCode::None)
-		{
-			g_Logger.printf(Info, "{} doesn't exist, creating using default values!", path);
-
-			std::filesystem::path default_settings_path = m_EngineAssetsDirectory / "default_renderer_settings.json";
-
-			TextAsset default_settings;
-			default_settings.load(default_settings_path);
-
-			std::ofstream settings_file(path, std::ios::binary);
-			NA_VERIFY(settings_file, "Failed to open file {}", path);
-
-			settings_file.write(default_settings.str().c_str(), default_settings.str().size());
-			settings_file.close();
-
-			err_code = asset->load(path);
-			if (err_code != FileErrorCode::None)
-			{
-				return Unexpected(err_code);
-			}
-		}
-
-		m_Assets[uuid] = asset;
-
-		return asset;
+		return this->get(this->get_uuid_by_name(name));
 	}
 } // namespace Na

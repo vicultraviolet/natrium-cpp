@@ -2,6 +2,7 @@
 #include "Natrium/Assets/HostImage.hpp"
 
 #include <stb/stb_image.h>
+#include <stb/stb_image_write.h>
 
 namespace Na {
 	FileErrorCode HostImage::load(const std::filesystem::path& path)
@@ -31,6 +32,19 @@ namespace Na {
 			//stbi_failure_reason();
 			return FileErrorCode::Unknown;
 		}
+
+		return FileErrorCode::None;
+	}
+
+	FileErrorCode HostImage::save(const std::filesystem::path& path)
+	{
+		stbi_write_png(
+			path.string().c_str(),
+			m_Width, m_Height,
+			4, // channels
+			m_Data,
+			m_Width * 4
+		);
 
 		return FileErrorCode::None;
 	}

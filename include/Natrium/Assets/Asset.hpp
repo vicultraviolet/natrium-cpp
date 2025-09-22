@@ -7,7 +7,7 @@
 namespace Na {
 	class Asset {
 	public:
-		Asset(void) : m_UUID(UUID::Generate()) {}
+		Asset(void) = default;
 		Asset(const UUID_t& uuid) : m_UUID(uuid) {}
 
 		virtual ~Asset(void) = default;
