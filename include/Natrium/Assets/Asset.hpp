@@ -27,6 +27,17 @@ namespace Na {
 			return FileErrorCode::None;
 		}
 
+		virtual inline FileErrorCode save(const std::filesystem::path& path)
+		{
+			if (std::filesystem::exists(path) &&
+				!std::filesystem::is_regular_file(path))
+			{
+				return FileErrorCode::InvalidFormat;
+			}
+
+			return FileErrorCode::None;
+		}
+
 		[[nodiscard]] const UUID_t& uuid(void) const { return m_UUID; }
 		[[nodiscard]] virtual operator bool(void) const = 0;
 	protected:
