@@ -39,6 +39,8 @@
 #include <unordered_set>
 #include <bitset>
 
+#include <typeindex>
+
 #include <fmt/format.h>
 #include <fmt/chrono.h>
 
