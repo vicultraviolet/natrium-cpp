@@ -29,6 +29,11 @@ namespace Na::ECS {
 
 	class RegistrySerializer {
 	public:
+		void bind(void);
+		void unbind(void);
+
+		[[nodiscard]] inline static View<RegistrySerializer> Get(void) { return RegistrySerializer::s_Bound; }
+
 		template<ComponentConcept T>
 		void register_component(void)
 		{
@@ -66,6 +71,8 @@ namespace Na::ECS {
 
 		std::unordered_map<std::type_index, std::string_view> m_TypeIndexToName;
 		std::unordered_map<std::string_view, const std::type_info*> m_NameToTypeInfo;
+
+		static inline View<RegistrySerializer> s_Bound = nullptr;
 	};
 } // namespace Na::ECS
 

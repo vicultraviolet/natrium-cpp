@@ -2,6 +2,19 @@
 #include "Natrium/ECS/ECS_RegistrySerializer.hpp"
 
 namespace Na::ECS {
+	void RegistrySerializer::bind(void)
+	{
+		RegistrySerializer::s_Bound = this;
+	}
+
+	void RegistrySerializer::unbind(void)
+	{
+		if (RegistrySerializer::s_Bound == this)
+		{
+			RegistrySerializer::s_Bound = nullptr;
+		}
+	}
+
 	nlohmann::json RegistrySerializer::serialize_entity(
 		const Registry& r,
 		const Entity& e
