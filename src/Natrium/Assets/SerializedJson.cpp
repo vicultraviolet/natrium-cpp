@@ -14,7 +14,7 @@ namespace Na {
 	{
 		if (!std::filesystem::exists(path))
 		{
-			return FileErrorCode::NotFound;
+			return this->_handle_missing(path);
 		}
 
 		std::ifstream file(path);
@@ -45,7 +45,7 @@ namespace Na {
 		std::ofstream file(path, std::ios::trunc);
 		if (!file)
 		{
-			g_Logger.printf(Error, "Failed to save scene: {}", path.C_STR());
+			g_Logger.printf(Error, "Failed to save json: {}", path.C_STR());
 			return FileErrorCode::Unknown;
 		}
 

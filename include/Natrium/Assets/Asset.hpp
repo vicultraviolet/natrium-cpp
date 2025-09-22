@@ -16,7 +16,7 @@ namespace Na {
 		{
 			if (!std::filesystem::exists(path))
 			{
-				return FileErrorCode::NotFound;
+				return this->_handle_missing(path);
 			}
 
 			if (!std::filesystem::is_regular_file(path))
@@ -40,6 +40,13 @@ namespace Na {
 
 		[[nodiscard]] const UUID_t& uuid(void) const { return m_UUID; }
 		[[nodiscard]] virtual operator bool(void) const = 0;
+
+	protected:
+		virtual inline FileErrorCode _handle_missing(const std::filesystem::path& path)
+		{
+			return FileErrorCode::NotFound;
+		}
+
 	protected:
 		UUID_t m_UUID;
 	};
