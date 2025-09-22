@@ -7,7 +7,7 @@
 namespace Na {
 	class Asset {
 	public:
-		Asset(void) = default;
+		Asset(void) : m_UUID(UUID::Generate()) {}
 		Asset(const UUID_t& uuid) : m_UUID(uuid) {}
 
 		virtual ~Asset(void) = default;
@@ -29,7 +29,7 @@ namespace Na {
 
 		[[nodiscard]] const UUID_t& uuid(void) const { return m_UUID; }
 		[[nodiscard]] virtual operator bool(void) const = 0;
-	private:
+	protected:
 		UUID_t m_UUID;
 	};
 } // namespace Na
