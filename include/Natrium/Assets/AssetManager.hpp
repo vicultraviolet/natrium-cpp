@@ -4,7 +4,7 @@
 #include "Natrium/Assets/Asset.hpp"
 #include "Natrium/Graphics/Shader.hpp"
 
-#include "Natrium/Assets/RendererSettingsAsset.hpp"
+#include "Natrium/Graphics/RendererSettings.hpp"
 
 #include "Natrium/Core/ErrorCodes.hpp"
 
@@ -61,7 +61,7 @@ namespace Na {
 			return asset;
 		}
 
-		[[nodiscard]] auto load_renderer_settings(const std::string& path) -> Expected<Ref<RendererSettingsAsset>, FileErrorCode>;
+		[[nodiscard]] auto load_renderer_settings(const std::string& path) -> Expected<Ref<RendererSettings>, FileErrorCode>;
 
 		template<typename T>
 		[[nodiscard]] inline Expected<Ref<T>, FileErrorCode> load_asset_p(const std::filesystem::path& path) { return this->load_asset<T>(path.string()); }

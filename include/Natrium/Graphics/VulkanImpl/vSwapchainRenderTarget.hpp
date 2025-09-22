@@ -31,7 +31,7 @@ namespace Na::VulkanImpl {
 	public:
 		SwapchainRenderTarget(
 			WeakRef<const Window> window,
-			Ref<const RendererSettingsAsset> renderer_settings
+			Ref<const RendererSettings> renderer_settings
 		);
 		~SwapchainRenderTarget(void) { this->destroy(); }
 
@@ -58,7 +58,7 @@ namespace Na::VulkanImpl {
 
 		[[nodiscard]] inline WeakRef<const Window> window(void) const { return m_Window; }
 
-		[[nodiscard]] inline Ref<const RendererSettingsAsset> renderer_settings(void) const { return m_RendererSettings; }
+		[[nodiscard]] inline Ref<const RendererSettings> renderer_settings(void) const { return m_RendererSettings; }
 
 		[[nodiscard]] RenderTargetSubmitInfo submit_info(void) const;
 
@@ -134,7 +134,7 @@ namespace Na::VulkanImpl {
 		ArrayList<vk::Fence> m_ImageInFlightFences;
 		u32 m_ImageIndex = 0;
 
-		Ref<const RendererSettingsAsset> m_RendererSettings;
+		Ref<const RendererSettings> m_RendererSettings;
 	};
 } // namespace Na::VulkanImpl
 

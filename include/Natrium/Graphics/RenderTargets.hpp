@@ -2,7 +2,7 @@
 #define NA_GRAPHICS_RENDER_TARGETS_HPP
 
 #include "Natrium/Core/Window.hpp"
-#include "Natrium/Assets/RendererSettingsAsset.hpp"
+#include "Natrium/Graphics/RendererSettings.hpp"
 
 namespace Na::Graphics {
 	enum class RenderTargetType : u8 {
@@ -63,7 +63,7 @@ namespace Na::Graphics {
 		[[nodiscard]] virtual const Viewport& viewport(void) const = 0;
 		[[nodiscard]] virtual const Scissor& scissor(void) const = 0;
 
-		[[nodiscard]] virtual Ref<const RendererSettingsAsset> renderer_settings(void) const = 0;
+		[[nodiscard]] virtual Ref<const RendererSettings> renderer_settings(void) const = 0;
 
 		[[nodiscard]] virtual RenderTargetType type(void) const = 0;
 	};
@@ -72,7 +72,7 @@ namespace Na::Graphics {
 	public:
 		[[nodiscard]] static Ref<SwapchainRenderTarget> Make(
 			WeakRef<const Window> window,
-			Ref<const RendererSettingsAsset> renderer_settings
+			Ref<const RendererSettings> renderer_settings
 		);
 		virtual ~SwapchainRenderTarget(void) = default;
 

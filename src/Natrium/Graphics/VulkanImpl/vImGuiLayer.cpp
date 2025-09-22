@@ -42,7 +42,7 @@ namespace Na::VulkanImpl {
         m_DescriptorPool = Device::Get()->logical_device().createDescriptorPool(create_info);
 
         auto msaa = Device::Get()->vk_limits().vk_msaa_sample_count_if(
-            render_target->renderer_settings()->multisampling_enabled()
+            render_target->renderer_settings()->multisampling_enabled
         );
 
         ImGui_ImplVulkan_InitInfo init_info{};

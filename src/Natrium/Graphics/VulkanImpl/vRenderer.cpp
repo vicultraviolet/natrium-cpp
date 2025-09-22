@@ -15,9 +15,9 @@
 #include <imgui/backends/imgui_impl_vulkan.h>
 
 namespace Na::VulkanImpl {
-	Renderer::Renderer(Ref<const RendererSettingsAsset> settings)
+	Renderer::Renderer(Ref<const RendererSettings> settings)
 	: m_RendererSettings(settings),
-	  m_CommandBuffers(settings->max_frames_in_flight(), settings->max_frames_in_flight())
+	  m_CommandBuffers(settings->max_frames_in_flight, settings->max_frames_in_flight)
 	{
 		this->_create_cmd_objects();
 		this->_create_descriptor_pool();

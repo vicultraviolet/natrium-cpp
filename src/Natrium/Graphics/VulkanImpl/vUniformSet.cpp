@@ -36,7 +36,7 @@ namespace Na::VulkanImpl {
 		m_Set = Internal::CreateDescriptorSet(layout->layout(), renderer->descriptor_pool());
 
 		m_DynamicOffsetCount = layout->dynamic_count();
-		m_DynamicOffsets.reallocate((u64)m_DynamicOffsetCount * renderer->settings()->max_frames_in_flight());
+		m_DynamicOffsets.reallocate((u64)m_DynamicOffsetCount * renderer->settings()->max_frames_in_flight);
 		m_DynamicOffsets.resize(m_DynamicOffsets.capacity());
 	}
 

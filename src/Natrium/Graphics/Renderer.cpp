@@ -4,7 +4,7 @@
 #include "Natrium/Graphics/VulkanImpl/vRenderer.hpp"
 
 namespace Na::Graphics {
-	UniqueRef<Renderer> Renderer::Make(Ref<const RendererSettingsAsset> settings)
+	UniqueRef<Renderer> Renderer::Make(Ref<const RendererSettings> settings)
 	{
 		switch (Device::Get()->backend())
 		{

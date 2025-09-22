@@ -7,7 +7,7 @@
 namespace Na::Graphics {
 	Ref<SwapchainRenderTarget> SwapchainRenderTarget::Make(
 		WeakRef<const Window> window,
-		Ref<const RendererSettingsAsset> renderer_settings
+		Ref<const RendererSettings> renderer_settings
 	)
 	{
 		switch (Device::Get()->backend())

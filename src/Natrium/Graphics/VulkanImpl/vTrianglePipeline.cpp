@@ -70,7 +70,7 @@ namespace Na::VulkanImpl {
 		auto viewport_info = viewportInfo();
 		auto input_assembly_info = inputAssemblyInfo();
 		auto rasterization_info = rasterizationInfo();
-		auto multisample_info = multisampleInfo(render_target->renderer_settings()->multisampling_enabled());
+		auto multisample_info = multisampleInfo(render_target->renderer_settings()->multisampling_enabled);
 		auto color_blend_attachment = colorBlendAttachment(false);
 		auto color_blend_info = colorBlendInfo(color_blend_attachment);
 		auto depth_stencil_info = depthStencilInfo();

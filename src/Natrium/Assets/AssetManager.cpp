@@ -4,7 +4,6 @@
 #include "Natrium/Graphics/Device.hpp"
 #include "Natrium/Graphics/VulkanImpl/vShader.hpp"
 #include "Natrium/Assets/TextAsset.hpp"
-#include "Natrium/Assets/RendererSettingsAsset.hpp"
 
 namespace Na {
 	AssetManager::AssetManager(
@@ -121,15 +120,15 @@ namespace Na {
 		return shader;
 	}
 
-	auto AssetManager::load_renderer_settings(const std::string& path) -> Expected<Ref<RendererSettingsAsset>, FileErrorCode>
+	auto AssetManager::load_renderer_settings(const std::string& path) -> Expected<Ref<RendererSettings>, FileErrorCode>
 	{
 		UUID_t uuid = UUID::Generate(path);
 		if (auto it = m_Assets.find(uuid); it != m_Assets.end())
 		{
-			return dynamic_ref_cast<RendererSettingsAsset>(it->second);
+			return dynamic_ref_cast<RendererSettings>(it->second);
 		}
 
-		auto asset = MakeRef<RendererSettingsAsset>(uuid);
+		auto asset = MakeRef<RendererSettings>(uuid);
 
 		FileErrorCode err_code = asset->load(path);
 

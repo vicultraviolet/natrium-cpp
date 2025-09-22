@@ -1,21 +1,18 @@
 #if !defined(NA_ECS_SCENE_HPP)
 #define NA_ECS_SCENE_HPP
 
-#include "Natrium/Assets/Asset.hpp"
+#include "Natrium/Assets/SerializedJson.hpp"
 #include "Natrium/ECS/ECS_Registry.hpp"
 #include "Natrium/ECS/ECS_RegistrySerializer.hpp"
 
 namespace Na::ECS {
-	class Scene : public Asset {
+	class Scene : public SerializedJsonAsset {
 	public:
 		Scene(void) = default;
-		Scene(const UUID_t& uuid) : Asset(uuid) {}
+		Scene(const UUID_t& uuid) : SerializedJsonAsset(uuid) {}
 
-		FileErrorCode load(const std::filesystem::path& path) override;
-		FileErrorCode save(const std::filesystem::path& path) override;
-
-		[[nodiscard]] nlohmann::json serialize(void) const;
-		void deserialize(const nlohmann::json& j);
+		[[nodiscard]] nlohmann::json serialize(void) const override;
+		void deserialize(const nlohmann::json& j) override;
 
 		[[nodiscard]] inline Registry& registry(void) { return m_Registry; }
 		[[nodiscard]] inline const Registry& registry(void) const { return m_Registry; }
