@@ -39,6 +39,14 @@
 #include "./Audio/Audio_Buffer.hpp"
 #include "./Audio/Audio_Source.hpp"
 
+#include "./ECS/Entity.hpp"
+#include "./ECS/Component.hpp"
+#include "./ECS/ComponentContainer.hpp"
+#include "./ECS/ECS_Registry.hpp"
+#include "./ECS/ECS_RegistrySerializer.hpp"
+#include "./ECS/Scene.hpp"
+#include "./ECS/EntityHandle.hpp"
+
 #include "./HL/UniformManager_HL.hpp"
 #include "./HL/Pipeline_HL.hpp"
 #include "./HL/DeviceMesh_HL.hpp"
