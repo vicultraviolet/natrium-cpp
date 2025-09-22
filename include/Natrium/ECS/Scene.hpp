@@ -26,4 +26,24 @@ namespace Na::ECS {
 	};
 } // namespace Na::ECS
 
+namespace fmt {
+	template<>
+	struct formatter<Na::ECS::Scene> {
+		constexpr auto parse(fmt::format_parse_context& context)
+		{
+			return context.begin();
+		}
+
+		template<typename FormatContext>
+		auto format(const Na::ECS::Scene& scene, FormatContext& context) const
+		{
+			return fmt::format_to(
+				context.out(),
+				"{}",
+				scene.serialize().dump(4)
+			);
+		}
+	};
+} // namespace fmt
+
 #endif // NA_ECS_SCENE_HPP
