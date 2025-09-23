@@ -1,18 +1,18 @@
-#if !defined(NA_ENTITY_HANDLE_HPP)
-#define NA_ENTITY_HANDLE_HPP
+#if !defined(NA_HL_ENTITY_HANDLE_HPP)
+#define NA_HL_ENTITY_HANDLE_HPP
 
 #include "Natrium/ECS/Entity.hpp"
-#include "Natrium/ECS/Scene.hpp"
+#include "Natrium/HL/Scene_HL.hpp"
 
-namespace Na::ECS {
+namespace Na::HL {
 	class EntityHandle {
 	public:
-		Entity e;
+		ECS::Entity e;
 		WeakRef<Scene> scene;
 
 		EntityHandle(WeakRef<Scene> scene) : scene(scene) {}
 
-		template<ComponentConcept T, typename... t_Args>
+		template<ECS::ComponentConcept T, typename... t_Args>
 		View<T> emplace_component(t_Args&&... __args)
 		{
 			if (auto s = scene.lock())
@@ -21,14 +21,14 @@ namespace Na::ECS {
 			return nullptr;
 		}
 
-		template<ComponentConcept T>
+		template<ECS::ComponentConcept T>
 		void remove_component(void)
 		{
 			if (auto s = scene.lock())
 				s->registry().remove_component<T>(e);
 		}
 
-		template<ComponentConcept T>
+		template<ECS::ComponentConcept T>
 		[[nodiscard]] View<T> get_component(void)
 		{
 			if (auto s = scene.lock())
@@ -39,6 +39,6 @@ namespace Na::ECS {
 
 		[[nodiscard]] inline operator bool(void) const { return e && scene; }
 	};
-} // namespace Na::ECS
+} // namespace Na::HL
 
-#endif // NA_ENTITY_HANDLE_HPP
+#endif // NA_HL_ENTITY_HANDLE_HPP

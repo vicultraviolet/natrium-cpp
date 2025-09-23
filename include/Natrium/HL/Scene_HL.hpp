@@ -1,11 +1,12 @@
-#if !defined(NA_ECS_SCENE_HPP)
-#define NA_ECS_SCENE_HPP
+#if !defined(NA_HL_SCENE_HPP)
+#define NA_HL_SCENE_HPP
 
 #include "Natrium/Assets/SerializedJson.hpp"
+
 #include "Natrium/ECS/ECS_Registry.hpp"
 #include "Natrium/ECS/ECS_RegistrySerializer.hpp"
 
-namespace Na::ECS {
+namespace Na::HL {
 	class Scene : public SerializedJsonAsset {
 	public:
 		Scene(void) = default;
@@ -14,25 +15,25 @@ namespace Na::ECS {
 		[[nodiscard]] nlohmann::json serialize(void) const override;
 		void deserialize(const nlohmann::json& j) override;
 
-		[[nodiscard]] inline Registry& registry(void) { return m_Registry; }
-		[[nodiscard]] inline const Registry& registry(void) const { return m_Registry; }
+		[[nodiscard]] inline ECS::Registry& registry(void) { return m_Registry; }
+		[[nodiscard]] inline const ECS::Registry& registry(void) const { return m_Registry; }
 
 		[[nodiscard]] inline operator bool(void) const override { return !m_UUID.is_nil(); }
 	private:
-		Registry m_Registry;
+		ECS::Registry m_Registry;
 	};
 } // namespace Na::ECS
 
 namespace fmt {
 	template<>
-	struct formatter<Na::ECS::Scene> {
+	struct formatter<Na::HL::Scene> {
 		constexpr auto parse(fmt::format_parse_context& context)
 		{
 			return context.begin();
 		}
 
 		template<typename FormatContext>
-		auto format(const Na::ECS::Scene& scene, FormatContext& context) const
+		auto format(const Na::HL::Scene& scene, FormatContext& context) const
 		{
 			return fmt::format_to(
 				context.out(),
@@ -43,4 +44,4 @@ namespace fmt {
 	};
 } // namespace fmt
 
-#endif // NA_ECS_SCENE_HPP
+#endif // NA_HL_SCENE_HPP
