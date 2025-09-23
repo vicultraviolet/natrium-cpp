@@ -59,6 +59,43 @@ namespace Na::ECS {
 			this->storage<T>().remove_component(e);
 		}
 
+		template<ComponentConcept... t_Components>
+		[[nodiscard]] ArrayList<Entity> get_entities_with(void) const
+		{
+			static_assert(sizeof...(t_Components) > 0, "Failed to get entities!: You must specify at least one component type!");
+
+			std::unordered_set<Entity> candidates, intersection;
+
+			bool first = true;
+
+			((void)[&](void)
+			{
+				const auto& container = this->storage<t_Components>();
+
+				if (first)
+				{
+					first = false;
+
+					for (const auto& [e, _] : container)
+						candidates.insert(e);
+
+					return;
+				} 
+
+				if (candidates.empty())
+					return;
+
+				for (const auto& [e, _] : container)
+				{
+					if (candidates.contains(e))
+						intersection.insert(e);
+				}
+				candidates = std::move(intersection);
+			}(), ...);
+
+			return ArrayList<Entity>(candidates.begin(), candidates.end());
+		}
+
 		inline void clear(void) { m_Storages.clear(); m_Entities.destroy(); }
 
 		[[nodiscard]] inline const ArrayList<Entity>& entities(void) const { return m_Entities; }
