@@ -4,8 +4,6 @@
 #include "Natrium/ECS/Component.hpp"
 #include "Natrium/Core/Event.hpp"
 
-#include "Natrium/ECS/ECS_Registry.hpp"
-
 namespace Na::ECS {
 	template<ComponentConcept... t_Components>
 	class System {

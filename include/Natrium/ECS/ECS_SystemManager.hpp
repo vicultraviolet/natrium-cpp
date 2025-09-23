@@ -2,6 +2,7 @@
 #define NA_ECS_SYSTEM_MANAGER_HPP
 
 #include "Natrium/ECS/ECS_System.hpp"
+#include "Natrium/ECS/ECS_Registry.hpp"
 
 namespace Na::ECS {
 	class SystemManager {
