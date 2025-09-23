@@ -7,27 +7,27 @@ namespace Na::ECS {
 	class Registry {
 	public:
 		template<ComponentConcept T>
-		ComponentContainer<T>& storage(void)
+		ComponentContainer<T>& get_container(void)
 		{
 			std::type_index type(typeid(T));
 
-			if (m_Storages.find(type) == m_Storages.end())
+			if (m_Containers.find(type) == m_Containers.end())
 			{
-				m_Storages.try_emplace(
+				m_Containers.try_emplace(
 					type,
 					MakeUnique<ComponentContainer<T>>()
 				);
 			} 
 
-			View<IComponentContainer> storage = m_Storages.at(type);
-			return *static_ref_cast<ComponentContainer<T>>(storage);
+			View<IComponentContainer> container = m_Containers.at(type);
+			return *static_ref_cast<ComponentContainer<T>>(container);
 		}
 
 		template<ComponentConcept T>
-		const ComponentContainer<T>& storage(void) const
+		const ComponentContainer<T>& get_container(void) const
 		{
-			View<IComponentContainer> storage = m_Storages.at(typeid(T));
-			return *static_ref_cast<ComponentContainer<T>>(storage);
+			View<IComponentContainer> container = m_Containers.at(typeid(T));
+			return *static_ref_cast<ComponentContainer<T>>(container);
 		}
 		
 		template<ComponentConcept T, typename... t_Args>
@@ -35,7 +35,7 @@ namespace Na::ECS {
 		{
 			this->_add_entity_if_unique(e);
 
-			return this->storage<T>().emplace(
+			return this->get_container<T>().emplace(
 				e,
 				std::forward<t_Args>(__args)...
 			);
@@ -44,19 +44,19 @@ namespace Na::ECS {
 		template<ComponentConcept T>
 		View<T> get_component(const Entity& e)
 		{
-			return this->storage<T>().get(e);
+			return this->get_container<T>().get(e);
 		}
 
 		template<ComponentConcept T>
 		View<const T> get_component(const Entity& e) const
 		{
-			return this->storage<T>().get(e);
+			return this->get_container<T>().get(e);
 		}
 
 		template<ComponentConcept T>
 		void remove_component(const Entity& e)
 		{
-			this->storage<T>().remove_component(e);
+			this->get_container<T>().remove_component(e);
 		}
 
 		template<ComponentConcept... t_Components>
@@ -70,7 +70,7 @@ namespace Na::ECS {
 
 			((void)[&](void)
 			{
-				const auto& container = this->storage<t_Components>();
+				const auto& container = this->get_container<t_Components>();
 
 				if (first)
 				{
@@ -96,7 +96,7 @@ namespace Na::ECS {
 			return ArrayList<Entity>(candidates.begin(), candidates.end());
 		}
 
-		inline void clear(void) { m_Storages.clear(); m_Entities.destroy(); }
+		inline void clear(void) { m_Containers.clear(); m_Entities.destroy(); }
 
 		[[nodiscard]] inline const ArrayList<Entity>& entities(void) const { return m_Entities; }
 		[[nodiscard]] inline u64 entity_count(void) const { return m_Entities.size(); }
@@ -104,7 +104,7 @@ namespace Na::ECS {
 		void _add_entity_if_unique(const Entity& e);
 
 	private:
-		std::unordered_map<std::type_index, UniqueRef<IComponentContainer>> m_Storages;
+		std::unordered_map<std::type_index, UniqueRef<IComponentContainer>> m_Containers;
 		ArrayList<Entity> m_Entities{ 4 };
 	};
 } // namespace Na::ECS 
