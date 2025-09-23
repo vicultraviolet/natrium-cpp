@@ -40,9 +40,7 @@ namespace Na::Graphics {
 	}
 
 	DeviceImage::DeviceImage(const DeviceImageCreateInfo& info)
-	: m_Width(info.width),
-      m_Height(info.height),
-	  m_LayerCount(info.layer_count),
+	: m_Dimensions(info.dimensions),
 	  m_Format(info.format),
 	  m_Type(info.type)
 	{
@@ -50,10 +48,7 @@ namespace Na::Graphics {
 	}
 
 	DeviceImage::DeviceImage(DeviceImage&& other) noexcept
-	: m_Width(std::exchange(other.m_Width, 0)),
-	  m_Height(std::exchange(other.m_Height, 0)),
-
-	  m_LayerCount(std::exchange(other.m_LayerCount, 0)),
+	: m_Dimensions(std::move(other.m_Dimensions)),
 
 	  m_Format(other.m_Format),
 	  m_Type(other.m_Type)
@@ -66,10 +61,7 @@ namespace Na::Graphics {
 		if (this == &other)
 			return *this;
 
-		m_Width = std::exchange(other.m_Width, 0);
-		m_Height = std::exchange(other.m_Height, 0);
-
-		m_LayerCount = std::exchange(other.m_LayerCount, 0);
+		m_Dimensions = std::move(other.m_Dimensions);
 
 		m_Format = other.m_Format;
 		m_Type = other.m_Type;

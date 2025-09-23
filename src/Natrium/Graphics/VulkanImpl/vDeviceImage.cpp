@@ -72,9 +72,9 @@ namespace Na::VulkanImpl {
 
 		create_info.imageType = vk::ImageType::e2D;
 
-		create_info.extent = vk::Extent3D(info.width, info.height, 1);
+		create_info.extent = vk::Extent3D(info.dimensions.w, info.dimensions.h, 1);
 		create_info.mipLevels = 1;
-		create_info.arrayLayers = info.layer_count;
+		create_info.arrayLayers = info.dimensions.layers;
 
 		create_info.format = ImageFormatToVk(info.format);
 
@@ -105,7 +105,7 @@ namespace Na::VulkanImpl {
 			m_Image,
 			m_Aspect,
 			create_info.format,
-			info.layer_count
+			info.dimensions.layers
 		);
 	}
 
@@ -214,7 +214,7 @@ namespace Na::VulkanImpl {
 		};
 		Buffer staging_buffer(buffer_info);
 
-		for (u32 i = 0; i < m_LayerCount; i++)
+		for (u32 i = 0; i < m_Dimensions.layers; i++)
 		{
 			staging_buffer.set_data(datas[i]);
 		}
@@ -284,7 +284,7 @@ namespace Na::VulkanImpl {
 		region.imageSubresource.layerCount = layer_count;
 
 		region.imageOffset = { { 0, 0, 0 } };
-		region.imageExtent = vk::Extent3D(m_Width, m_Height, 1);
+		region.imageExtent = vk::Extent3D(m_Dimensions.w, m_Dimensions.h, 1);
 
 		vk::CommandBuffer cmd_buffer = Internal::BeginSingleTimeCommands();
 
@@ -300,7 +300,7 @@ namespace Na::VulkanImpl {
 
 	void DeviceImage::copy_each_from_buffer(vk::Buffer buffer)
 	{
-		Na::ArrayList<vk::BufferImageCopy> regions(m_LayerCount, m_LayerCount);
+		Na::ArrayList<vk::BufferImageCopy> regions(m_Dimensions.layers, m_Dimensions.layers);
 
 		for (u32 i = 0; i < regions.size(); i++)
 		{
@@ -315,7 +315,7 @@ namespace Na::VulkanImpl {
 			);
 
 			regions[i].imageOffset = vk::Offset3D();
-			regions[i].imageExtent = vk::Extent3D(m_Width, m_Height, 1);
+			regions[i].imageExtent = vk::Extent3D(m_Dimensions.w, m_Dimensions.h, 1);
 		}
 
 		vk::CommandBuffer cmd_buffer = Internal::BeginSingleTimeCommands();
@@ -347,7 +347,7 @@ namespace Na::VulkanImpl {
 		region.imageSubresource.layerCount = 1;
 
 		region.imageOffset = { { 0, 0, 0 } };
-		region.imageExtent = vk::Extent3D(m_Width, m_Height, 1);
+		region.imageExtent = vk::Extent3D(m_Dimensions.w, m_Dimensions.h, 1);
 
 		vk::CommandBuffer cmd_buffer = Internal::BeginSingleTimeCommands();
 
@@ -375,8 +375,8 @@ namespace Na::VulkanImpl {
 			glm::ivec2(0, 0),
 			glm::ivec2(0, 0),
 			glm::uvec2(
-				std::min(src_img->m_Width, m_Width),
-				std::min(src_img->m_Height, m_Height)
+				std::min(src_img->m_Dimensions.w, m_Dimensions.w),
+				std::min(src_img->m_Dimensions.h, m_Dimensions.h)
 			)
 		);
 	}
@@ -394,12 +394,12 @@ namespace Na::VulkanImpl {
 
 		copy_region.srcSubresource.aspectMask = src_img->m_Aspect;
 		copy_region.srcSubresource.baseArrayLayer = 0;
-		copy_region.srcSubresource.layerCount = src_img->m_LayerCount;
+		copy_region.srcSubresource.layerCount = src_img->m_Dimensions.layers;
 		copy_region.srcSubresource.mipLevel = 0;
 
 		copy_region.dstSubresource.aspectMask = m_Aspect;
 		copy_region.dstSubresource.baseArrayLayer = 0;
-		copy_region.dstSubresource.layerCount = m_LayerCount;
+		copy_region.dstSubresource.layerCount = m_Dimensions.layers;
 		copy_region.dstSubresource.mipLevel = 0;
 
 		copy_region.srcOffset.x = src_offset.x;
@@ -446,10 +446,10 @@ namespace Na::VulkanImpl {
 		region.imageSubresource.aspectMask = m_Aspect;
 		region.imageSubresource.mipLevel = 0;
 		region.imageSubresource.baseArrayLayer = 0;
-		region.imageSubresource.layerCount = m_LayerCount;
+		region.imageSubresource.layerCount = m_Dimensions.layers;
 
 		region.imageOffset = { { 0, 0, 0 } };
-		region.imageExtent = vk::Extent3D(m_Width, m_Height, 1);
+		region.imageExtent = vk::Extent3D(m_Dimensions.w, m_Dimensions.h, 1);
 
 		cmd_buffer.copyImageToBuffer(
 			m_Image,
