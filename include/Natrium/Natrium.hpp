@@ -45,14 +45,19 @@
 #include "./ECS/ComponentContainer.hpp"
 #include "./ECS/ECS_Registry.hpp"
 #include "./ECS/ECS_RegistrySerializer.hpp"
-#include "./ECS/Scene.hpp"
-#include "./ECS/EntityHandle.hpp"
+#include "./ECS/ECS_System.hpp"
+#include "./ECS/ECS_SystemManager.hpp"
+
+#include "./ECS/Components/Transform2D.hpp"
+#include "./ECS/Components/Transform3D.hpp"
 
 #include "./HL/UniformManager_HL.hpp"
 #include "./HL/Pipeline_HL.hpp"
 #include "./HL/DeviceMesh_HL.hpp"
 #include "./HL/Texture_HL.hpp"
 #include "./HL/Application_HL.hpp"
+#include "./HL/Scene_HL.hpp"
+#include "./HL/EntityHandle_HL.hpp"
 
 // entry point
 #include "./Main.hpp"

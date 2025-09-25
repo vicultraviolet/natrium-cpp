@@ -57,6 +57,7 @@
 #include <glm/gtc/packing.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include <glm/gtx/matrix_transform_2d.hpp>
 #include <glm/gtx/string_cast.hpp>
 #include <glm/gtx/hash.hpp>
 
