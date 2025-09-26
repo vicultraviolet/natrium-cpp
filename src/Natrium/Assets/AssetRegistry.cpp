@@ -8,7 +8,7 @@ namespace Na {
 		if (it != m_Registry.end())
 			return it->second;
 
-		return UUID::Null();
+		return UUID::k_Null;
 	}
 
 
