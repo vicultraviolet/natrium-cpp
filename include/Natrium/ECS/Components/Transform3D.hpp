@@ -41,6 +41,8 @@ namespace Na::ECS {
 			const glm::vec3& world_up = glm::vec3(0.0f, 1.0f, 0.0f)
 		);
 
+		inline void mark_dirty(bool dirty = true) { m_Dirty = dirty; }
+
 		nlohmann::json serialize(void) const override;
 		void deserialize(const nlohmann::json& j) override;
 

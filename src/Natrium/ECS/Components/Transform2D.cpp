@@ -29,8 +29,8 @@ namespace Na::ECS {
 		m_Matrix = glm::mat3(1.0f);
 
 		m_Matrix = glm::translate(m_Matrix, m_Position);
-		m_Matrix = glm::rotate(m_Matrix, m_Rotation);
 		m_Matrix = glm::scale(m_Matrix, m_Scale);
+		m_Matrix = glm::rotate(m_Matrix, m_Rotation);
 	}
 
 	void Transform2D::translate(const glm::vec2& translation)
