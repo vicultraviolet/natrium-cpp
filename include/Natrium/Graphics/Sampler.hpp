@@ -2,7 +2,7 @@
 #define NA_GRAPHICS_SAMPLER_HPP
 
 #include "Natrium/Graphics/DeviceImage.hpp"
-#include "Natrium/Assets/RendererSettingsAsset.hpp"
+#include "Natrium/Graphics/RendererSettings.hpp"
 
 namespace Na::Graphics {
 	enum class SamplerFilter : u8 {
@@ -27,7 +27,7 @@ namespace Na::Graphics {
 		SamplerAddressMode adress_mode_u = SamplerAddressMode::Repeat;
 		SamplerAddressMode adress_mode_v = SamplerAddressMode::Repeat;
 
-		WeakRef<const RendererSettingsAsset> renderer_settings;
+		WeakRef<const RendererSettings> renderer_settings;
 	};
 	
 	class Sampler {

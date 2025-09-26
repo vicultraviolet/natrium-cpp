@@ -9,16 +9,15 @@ namespace Na::HL {
 		NA_VERIFY(!Application::s_Application, "Failed to create Application: Cannot create more than one Application instance!");
 		Application::s_Application = this;
 
-		m_AssetManager = AssetManager(settings.engine_assets_directory, settings.shader_output_directory);
+		m_Renderer = Graphics::Renderer::Make(settings.renderer_settings);
 
-		auto renderer_settings = m_AssetManager.load_renderer_settings(settings.renderer_settings_path.data()).value();
-		renderer_settings->set_max_anisotropy(Graphics::Device::Get()->limits()->max_anisotropy());
+		m_Window = MakeRef<Window>(
+			settings.window_width,
+			settings.window_height,
+			settings.window_title
+		);
 
-		m_Renderer = Graphics::Renderer::Make(renderer_settings);
-
-		m_Window = MakeRef<Window>(settings.window_width, settings.window_height, settings.window_title);
-
-		m_RenderTarget = Graphics::SwapchainRenderTarget::Make(m_Window, renderer_settings);
+		m_RenderTarget = Graphics::SwapchainRenderTarget::Make(m_Window, settings.renderer_settings);
 		m_Renderer->bind_render_target(m_RenderTarget);
 	}
 

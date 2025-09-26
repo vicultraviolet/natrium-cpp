@@ -3,7 +3,6 @@
 
 #include "Natrium/Graphics/Device.hpp"
 #include "Natrium/Graphics/VertexAttributes.hpp"
-#include "Natrium/Assets/RendererSettingsAsset.hpp"
 
 namespace Na::Graphics {
 	enum class BufferTypeFlags : u8 {

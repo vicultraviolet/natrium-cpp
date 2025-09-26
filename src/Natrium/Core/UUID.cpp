@@ -29,6 +29,12 @@ namespace Na {
 		}
 	}
 
+	[[nodiscard]] std::string UUID::ToString(const UUID_t& uuid)
+	{
+		return uuids::to_string(uuid);
+	}
+
+
 	UUID_t UUID::FromBytes(const Byte* bytes)
 	{
 		return UUID_t(bytes, bytes + 16);

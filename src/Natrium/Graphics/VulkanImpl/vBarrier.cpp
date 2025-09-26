@@ -108,7 +108,7 @@ namespace Na::VulkanImpl {
 			0, // starting mip level
 			1, // mip level count
 			0, // starting array layer
-			img.layer_count()
+			img.dimensions().layers
 		);
 
 		vk::PipelineStageFlags src_stage = BarrierStageToVk(info.before.stage);

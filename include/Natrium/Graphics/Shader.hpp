@@ -1,7 +1,7 @@
 #if !defined(NA_SHADER_HPP)
 #define NA_SHADER_HPP
 
-#include "Natrium/Core.hpp"
+#include "Natrium/Core/ErrorCodes.hpp"
 
 namespace Na::Graphics {
 	enum class ShaderStage : u8 {
@@ -12,10 +12,27 @@ namespace Na::Graphics {
 		TessellationControl, TessellationEvaluation
 	};
 
+	struct ShaderLoadingError {
+		FileErrorCode file_err_code = FileErrorCode::None;
+		ShaderErrorCode shader_err_code = ShaderErrorCode::None;
+
+		ShaderLoadingError(FileErrorCode file_err_code) : file_err_code(file_err_code) {}
+		ShaderLoadingError(ShaderErrorCode shader_err_code) : shader_err_code(shader_err_code) {}
+		ShaderLoadingError(FileErrorCode file_err_code, ShaderErrorCode shader_err_code)
+		: file_err_code(file_err_code), shader_err_code(shader_err_code)
+		{}
+	};
+
 	class Shader {
 	public:
+		[[nodiscard]] static Expected<UniqueRef<Shader>, ShaderLoadingError> Make(
+			const std::filesystem::path& path_to_glsl,
+			ShaderStage stage,
+			const std::string_view& entry_point = "main"
+		);
+
 		virtual ~Shader(void) { this->destroy(); }
-		virtual void destroy(void) { }
+		virtual void destroy(void) {}
 
 		Shader(const Shader& other) = delete;
 		Shader& operator=(const Shader& other) = delete;

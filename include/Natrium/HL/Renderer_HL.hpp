@@ -8,7 +8,7 @@ namespace Na::HL {
 
 	class Renderer {
 	public:
-		Renderer(Ref<const RendererSettingsAsset> settings);
+		Renderer(Ref<const RendererSettings> settings);
 		~Renderer(void) = default;
 		
 		void begin_frame(Ref<Display> display);
@@ -26,7 +26,7 @@ namespace Na::HL {
 		[[nodiscard]] inline bool should_render(void) const { return m_ShouldRender; }
 		[[nodiscard]] inline bool render_pass_started(void) const { return m_RenderPassStarted; }
 
-		[[nodiscard]] inline u32 max_frames_in_flight(void) const { return m_Renderer->settings()->max_frames_in_flight(); }
+		[[nodiscard]] inline u32 max_frames_in_flight(void) const { return m_Renderer->settings()->max_frames_in_flight; }
 		[[nodiscard]] inline u32 current_frame_index(void) const { return m_Renderer->current_frame_index(); }
 	private:
 		Ref<Graphics::Renderer> m_Renderer;

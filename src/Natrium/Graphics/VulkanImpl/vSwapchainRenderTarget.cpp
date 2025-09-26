@@ -38,11 +38,11 @@ namespace Na::VulkanImpl {
 
 	SwapchainRenderTarget::SwapchainRenderTarget(
 		WeakRef<const Window> window,
-		Ref<const RendererSettingsAsset> renderer_settings
+		Ref<const RendererSettings> renderer_settings
 	)
 	: m_Window(window),
 	  m_RendererSettings(renderer_settings),
-	  m_Frames(init::init, renderer_settings->max_frames_in_flight())
+	  m_Frames(init::init, renderer_settings->max_frames_in_flight)
 	{
 		this->_create_window_surface();
 		this->_create_swapchain();
@@ -372,7 +372,7 @@ namespace Na::VulkanImpl {
 
 	void SwapchainRenderTarget::_create_color_buffer(void)
 	{
-		bool msaa_enabled = m_RendererSettings->multisampling_enabled();
+		bool msaa_enabled = m_RendererSettings->multisampling_enabled;
 
 		if (!msaa_enabled)
 			return;
@@ -402,7 +402,7 @@ namespace Na::VulkanImpl {
 			vk::FormatFeatureFlagBits::eDepthStencilAttachment
 		);
 
-		bool msaa_enabled = m_RendererSettings->multisampling_enabled();
+		bool msaa_enabled = m_RendererSettings->multisampling_enabled;
 		vk::SampleCountFlagBits sample_count = Device::Get()->vk_limits().vk_msaa_sample_count_if(msaa_enabled);
 
 		DeviceImageCreateInfo2 create_info
@@ -422,7 +422,7 @@ namespace Na::VulkanImpl {
 
 	void SwapchainRenderTarget::_create_render_pass(void)
 	{
-		bool msaa_enabled = m_RendererSettings->multisampling_enabled();
+		bool msaa_enabled = m_RendererSettings->multisampling_enabled;
 		vk::SampleCountFlagBits sample_count = Device::Get()->vk_limits().vk_msaa_sample_count_if(msaa_enabled);
 
 		std::array<vk::AttachmentDescription, 3> attachments{};
@@ -522,7 +522,7 @@ namespace Na::VulkanImpl {
 
 	void SwapchainRenderTarget::_create_framebuffers(void)
 	{
-		bool msaa_enabled = m_RendererSettings->multisampling_enabled();
+		bool msaa_enabled = m_RendererSettings->multisampling_enabled;
 
 		m_Framebuffers.reallocate(m_ImageViews.size(), m_ImageViews.size());
 		for (u64 i = 0; i < m_ImageViews.size(); i++)

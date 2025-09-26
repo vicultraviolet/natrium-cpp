@@ -2,7 +2,7 @@
 #include "Natrium/HL/Renderer_HL.hpp"
 
 namespace Na::HL {
-	Renderer::Renderer(Ref<const RendererSettingsAsset> settings)
+	Renderer::Renderer(Ref<const RendererSettings> settings)
 	: m_Renderer(Graphics::Renderer::Make(settings))
 	{
 

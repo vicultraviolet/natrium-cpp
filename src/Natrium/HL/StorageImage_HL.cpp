@@ -4,12 +4,14 @@
 namespace Na::HL {
 	StorageImage::StorageImage(u32 width, u32 height)
 	{
+		Graphics::DeviceImageDimensions dimensions;
+		
+		dimensions.w = width;
+		dimensions.h = height;
+
 		Graphics::DeviceImageCreateInfo img_info
 		{
-			.width = width,
-			.height = height,
-
-			.layer_count = 1,
+			.dimensions = std::move(dimensions),
 
 			.format = Graphics::ImageFormat::Rgba8,
 			.type = Graphics::DeviceImageTypeFlags::Storage

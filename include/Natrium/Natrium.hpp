@@ -14,14 +14,8 @@
 #include "./Layers/Layer.hpp"
 #include "./Layers/LayerManager.hpp"
 
-#include "./Assets/Asset.hpp"
-#include "./Assets/AssetManager.hpp"
-#include "./Assets/HostImage.hpp"
-#include "./Assets/RendererSettingsAsset.hpp"
-#include "./Assets/HostMesh.hpp"
-#include "./Assets/TextAsset.hpp"
-
 #include "./Graphics/Device.hpp"
+#include "./Graphics/RendererSettings.hpp"
 #include "./Graphics/Renderer.hpp"
 #include "./Graphics/Pipelines.hpp"
 #include "./Graphics/Buffer.hpp"
@@ -39,11 +33,31 @@
 #include "./Audio/Audio_Buffer.hpp"
 #include "./Audio/Audio_Source.hpp"
 
+#include "./Assets/Asset.hpp"
+#include "./Assets/AssetRegistry.hpp"
+#include "./Assets/AssetManager.hpp"
+#include "./Assets/HostImage.hpp"
+#include "./Assets/HostMesh.hpp"
+#include "./Assets/TextAsset.hpp"
+
+#include "./ECS/Entity.hpp"
+#include "./ECS/Component.hpp"
+#include "./ECS/ComponentContainer.hpp"
+#include "./ECS/ECS_Registry.hpp"
+#include "./ECS/ECS_RegistrySerializer.hpp"
+#include "./ECS/ECS_System.hpp"
+#include "./ECS/ECS_SystemManager.hpp"
+
+#include "./ECS/Components/Transform2D.hpp"
+#include "./ECS/Components/Transform3D.hpp"
+
 #include "./HL/UniformManager_HL.hpp"
 #include "./HL/Pipeline_HL.hpp"
 #include "./HL/DeviceMesh_HL.hpp"
 #include "./HL/Texture_HL.hpp"
 #include "./HL/Application_HL.hpp"
+#include "./HL/Scene_HL.hpp"
+#include "./HL/EntityHandle_HL.hpp"
 
 // entry point
 #include "./Main.hpp"

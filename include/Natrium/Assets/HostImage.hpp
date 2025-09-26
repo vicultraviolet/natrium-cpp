@@ -11,6 +11,7 @@ namespace Na {
 		HostImage(const UUID_t& uuid) : Asset(uuid) {}
 
 		FileErrorCode load(const std::filesystem::path& path) override;
+		FileErrorCode save(const std::filesystem::path& path) override;
 
 		~HostImage(void) { this->destroy(); }
 		inline void destroy(void) { free(m_Data); m_Data = nullptr; }

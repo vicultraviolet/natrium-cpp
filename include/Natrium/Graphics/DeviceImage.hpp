@@ -26,12 +26,26 @@ namespace Na::Graphics {
 		All = u8max
 	};
 
+	struct DeviceImageDimensions {
+		union {
+			struct {
+				u32 w, h;
+			};
+			struct {
+				u32 width, height;
+			};
+		};
+
+		u32 layers = 1;
+
+		DeviceImageDimensions(void) : w(0), h(0), layers(1) {}
+		DeviceImageDimensions(u32 w, u32 h, u32 l = 1) : w(w), h(h), layers(l) {}
+	};
+
 	struct DeviceImageCreateInfo {
-		u32 width, height;
-		u32 layer_count = 1;
+		DeviceImageDimensions dimensions;
 
 		ImageFormat format = ImageFormat::Rgba8;
-
 		DeviceImageTypeFlags type = DeviceImageTypeFlags::None;
 	};
 
@@ -60,13 +74,12 @@ namespace Na::Graphics {
 
 		[[nodiscard]] virtual UniqueRef<Buffer> copy_to_buffer(void) const = 0;
 
-		[[nodiscard]] inline u32 width(void) const { return m_Width; }
-		[[nodiscard]] inline u32 height(void) const { return m_Height; }
+		[[nodiscard]] inline const auto& dimensions(void) const { return m_Dimensions; }
 
-		[[nodiscard]] inline u32 layer_size(void) const { return ImageFormat_GetImageSize(m_Format, m_Width, m_Height); }
-		[[nodiscard]] inline u32 total_size(void) const { return this->layer_size() * m_LayerCount; }
+		[[nodiscard]] inline u32 layer_size(void) const { return ImageFormat_GetImageSize(m_Format, m_Dimensions.w, m_Dimensions.h); }
+		[[nodiscard]] inline u32 total_size(void) const { return this->layer_size() * m_Dimensions.layers; }
 
-		[[nodiscard]] inline u32 layer_count(void) const { return m_LayerCount; }
+		[[nodiscard]] inline u32 stride(void) const { return m_Dimensions.w * (u32)ImageFormat_GetPixelSize(m_Format); }
 
 		[[nodiscard]] inline ImageFormat format(void) const { return m_Format; }
 		[[nodiscard]] inline DeviceImageTypeFlags type(void) const { return m_Type; }
@@ -79,8 +92,7 @@ namespace Na::Graphics {
 		DeviceImage& operator=(DeviceImage&& other) noexcept;
 
 	protected:
-		u32 m_Width = 0, m_Height = 0;
-		u32 m_LayerCount = 0;
+		DeviceImageDimensions m_Dimensions;
 
 		ImageFormat m_Format = ImageFormat::None;
 		DeviceImageTypeFlags m_Type = DeviceImageTypeFlags::None;

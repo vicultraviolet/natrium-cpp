@@ -14,7 +14,7 @@ namespace Na::VulkanImpl {
 
 	class Renderer : public Graphics::Renderer {
 	public:
-		Renderer(Ref<const RendererSettingsAsset> renderer_settings);
+		Renderer(Ref<const RendererSettings> renderer_settings);
 
 		~Renderer(void) { this->destroy(); }
 		void destroy(void) override;
@@ -97,7 +97,7 @@ namespace Na::VulkanImpl {
 		[[nodiscard]] inline vk::DescriptorPool& descriptor_pool(void) { return m_DescriptorPool; }
 		[[nodiscard]] inline const vk::DescriptorPool& descriptor_pool(void) const { return m_DescriptorPool; }
 		
-		[[nodiscard]] inline Ref<const RendererSettingsAsset> settings(void) const override { return m_RendererSettings;  }
+		[[nodiscard]] inline Ref<const RendererSettings> settings(void) const override { return m_RendererSettings;  }
 
 		[[nodiscard]] inline WeakRef<const Graphics::RenderTarget> current_render_target(void) const override { return m_RenderTarget; }
 
@@ -118,7 +118,7 @@ namespace Na::VulkanImpl {
 		std::array<vk::DescriptorSet, 4> m_DescriptorSets{};
 		std::array<u32, 32> m_DynamicOffsets{};
 
-		Ref<const RendererSettingsAsset> m_RendererSettings;
+		Ref<const RendererSettings> m_RendererSettings;
 	};
 } // namespace Na
 

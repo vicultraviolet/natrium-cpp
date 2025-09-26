@@ -4,85 +4,80 @@
 #include "Natrium/Assets/Asset.hpp"
 #include "Natrium/Graphics/Shader.hpp"
 
-#include "Natrium/Assets/RendererSettingsAsset.hpp"
+#include "Natrium/Graphics/RendererSettings.hpp"
 
 #include "Natrium/Core/ErrorCodes.hpp"
 
-namespace Na {
-	struct ShaderLoadingError {
-		FileErrorCode file_err_code = FileErrorCode::None;
-		ShaderErrorCode shader_err_code = ShaderErrorCode::None;
+#include "Natrium/Assets/AssetRegistry.hpp"
 
-		ShaderLoadingError(FileErrorCode file_err_code) : file_err_code(file_err_code) {}
-		ShaderLoadingError(ShaderErrorCode shader_err_code) : shader_err_code(shader_err_code) {}
-		ShaderLoadingError(FileErrorCode file_err_code, ShaderErrorCode shader_err_code)
-		: file_err_code(file_err_code), shader_err_code(shader_err_code)
-		{}
+namespace Na {
+	struct AssetManagerCreateInfo {
+		std::filesystem::path engine_assets_dir   = "assets/engine/";
+		std::filesystem::path shader_output_dir   = "bin/shaders/";
+		std::filesystem::path asset_registry_path = "assets/asset_registry.json";
 	};
 
 	class AssetManager {
 	public:
 		AssetManager(void) = default;
-		AssetManager(
-			const std::filesystem::path& engine_assets_directory,
-			const std::filesystem::path& shader_output_directory
-		);
+		AssetManager(const AssetManagerCreateInfo& info);
 
 		~AssetManager(void) { this->destroy(); }
 		void destroy(void);
 
-		[[nodiscard]] auto load_shader(
-			const std::filesystem::path& path_to_glsl,
-			Graphics::ShaderStage stage,
-			const std::string_view& entry_point = "main"
-		) const -> Expected<UniqueRef<Graphics::Shader>, ShaderLoadingError>;
+		void bind(void);
+		void unbind(void);
 
-		template<typename T>
-		[[nodiscard]] auto load_asset(const std::string& path) -> Expected<Ref<T>, FileErrorCode>
+		[[nodiscard]] static inline View<AssetManager> Get(void) { return AssetManager::s_Bound; }
+
+		template<typename T, typename... t_Args>
+		[[nodiscard]] Ref<T> create_asset(const std::string& name, t_Args&&... __args)
 		{
-			static_assert(std::is_base_of<Asset, T>::value, "Failed to load asset: T must inherit from FileAsset!");
-
-			UUID_t uuid = UUID::Generate(path);
-			if (auto it = m_Assets.find(uuid); it != m_Assets.end())
+			if (auto asset = this->get_by_name(name))
 			{
-				return dynamic_ref_cast<T>(it->second);
+				return dynamic_ref_cast<T>(asset);
 			}
 
-			Ref<T> asset = MakeRef<T>(uuid);
+			Ref<T> asset = m_Registry.create_asset<T>(name, std::forward<t_Args>(__args)...);
 
-			FileErrorCode err_code = asset->load(path);
-			if (err_code != FileErrorCode::None)
-			{
-				return Unexpected(err_code);
-			}
-
-			m_Assets[uuid] = asset;
+			m_Assets.try_emplace(asset->uuid(), asset);
 
 			return asset;
 		}
 
-		[[nodiscard]] auto load_renderer_settings(const std::string& path) -> Expected<Ref<RendererSettingsAsset>, FileErrorCode>;
+		void destroy_asset(const UUID_t& uuid);
+
+		[[nodiscard]] Ref<Asset> get(const UUID_t& uuid) const;
+		[[nodiscard]] Ref<Asset> get_by_name(const std::string& name) const;
 
 		template<typename T>
-		[[nodiscard]] inline Expected<Ref<T>, FileErrorCode> load_asset_p(const std::filesystem::path& path) { return this->load_asset<T>(path.string()); }
-
-		void free_asset(const UUID_t& uuid);
-
-		[[nodiscard]] Ref<Asset> get_asset(const UUID_t& uuid) const;
-
-		template<typename T>
-		[[nodiscard]] Ref<T> get_asset(const UUID_t& uuid) const
+		[[nodiscard]] Ref<T> get(const UUID_t& uuid) const
 		{
-			static_assert(std::is_base_of<Asset, T>::value, "Failed to get asset: T must inherit from Asset!");
-			return dynamic_ref_cast<T>(this->get_asset(uuid));
+			return dynamic_ref_cast<T>(this->get(uuid));
 		}
+
+		template<typename T>
+		[[nodiscard]] Ref<T> get_by_name(const std::string& name) const
+		{
+			return dynamic_ref_cast<T>(this->get_by_name(name));
+		}
+		
+		[[nodiscard]] inline const UUID_t& get_uuid_by_name(const std::string& name) const { return m_Registry.get(name); }
+
+		inline void save_registry(void) { m_Registry.save(m_AssetRegistryPath); }
 
 		[[nodiscard]] inline const auto& engine_assets_dir(void) const { return m_EngineAssetsDirectory; }
 		[[nodiscard]] inline const auto& shader_output_dir(void) const { return m_ShaderOutputDirectory; }
+		[[nodiscard]] inline const auto& asset_registry_path(void) const { return m_AssetRegistryPath; }
 	private:
+		AssetRegistry m_Registry;
 		std::unordered_map<UUID_t, Ref<Asset>> m_Assets;
-		std::filesystem::path m_EngineAssetsDirectory = "engine/assets/";
-		std::filesystem::path m_ShaderOutputDirectory = "bin/shaders/";
+
+		std::filesystem::path m_EngineAssetsDirectory;
+		std::filesystem::path m_ShaderOutputDirectory;
+		std::filesystem::path m_AssetRegistryPath;
+
+		static inline View<AssetManager> s_Bound = nullptr;
 	};
 } // namespace Na
 

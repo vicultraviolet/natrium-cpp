@@ -40,8 +40,8 @@ namespace Na::VulkanImpl {
 		create_info.addressModeV = SamplerAddressModeToVk(info.adress_mode_v);
 		create_info.addressModeW = vk::SamplerAddressMode::eRepeat;
 
-		create_info.anisotropyEnable = renderer_settings->anisotropy_enabled();
-		create_info.maxAnisotropy = renderer_settings->max_anisotropy();
+		create_info.anisotropyEnable = renderer_settings->anisotropy_enabled;
+		create_info.maxAnisotropy = renderer_settings->max_anisotropy;
 
 		create_info.borderColor = vk::BorderColor::eFloatOpaqueBlack;
 

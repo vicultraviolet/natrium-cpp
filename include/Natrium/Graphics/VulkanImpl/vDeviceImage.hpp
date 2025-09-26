@@ -6,6 +6,7 @@
 #include "Natrium/Graphics/VulkanImpl/vBarrier.hpp"
 
 namespace Na::VulkanImpl {
+	using DeviceImageDimensions = Graphics::DeviceImageDimensions;
 	using DeviceImageCreateInfo = Graphics::DeviceImageCreateInfo;
 	struct DeviceImageCreateInfo2 {
 		vk::Extent3D extent;

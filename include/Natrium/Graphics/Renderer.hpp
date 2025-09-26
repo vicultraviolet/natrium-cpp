@@ -6,7 +6,7 @@
 #include "Natrium/Graphics/Device.hpp"
 #include "Natrium/Graphics/Buffer.hpp"
 #include "Natrium/Graphics/UniformSet.hpp"
-#include "Natrium/Assets/RendererSettingsAsset.hpp"
+#include "Natrium/Graphics/RendererSettings.hpp"
 #include "Natrium/Graphics/Shader.hpp"
 #include "Natrium/Graphics/RenderTargets.hpp"
 
@@ -15,7 +15,7 @@ namespace Na::Graphics {
 
 	class Renderer {
 	public:
-		[[nodiscard]] static UniqueRef<Renderer> Make(Ref<const RendererSettingsAsset> settings);
+		[[nodiscard]] static UniqueRef<Renderer> Make(Ref<const RendererSettings> settings);
 
 		virtual ~Renderer(void) { this->destroy(); }
 		virtual void destroy(void) {}
@@ -95,7 +95,7 @@ namespace Na::Graphics {
 
 		[[nodiscard]] virtual u32 current_frame_index(void) const = 0;
 
-		[[nodiscard]] virtual Ref<const RendererSettingsAsset> settings(void) const = 0;
+		[[nodiscard]] virtual Ref<const RendererSettings> settings(void) const = 0;
 
 		[[nodiscard]] virtual WeakRef<const RenderTarget> current_render_target(void) const = 0;
 

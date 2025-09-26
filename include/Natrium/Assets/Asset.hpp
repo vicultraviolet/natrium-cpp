@@ -16,7 +16,7 @@ namespace Na {
 		{
 			if (!std::filesystem::exists(path))
 			{
-				return FileErrorCode::NotFound;
+				return this->_handle_missing(path);
 			}
 
 			if (!std::filesystem::is_regular_file(path))
@@ -27,9 +27,27 @@ namespace Na {
 			return FileErrorCode::None;
 		}
 
+		virtual inline FileErrorCode save(const std::filesystem::path& path)
+		{
+			if (std::filesystem::exists(path) &&
+				!std::filesystem::is_regular_file(path))
+			{
+				return FileErrorCode::InvalidFormat;
+			}
+
+			return FileErrorCode::None;
+		}
+
 		[[nodiscard]] const UUID_t& uuid(void) const { return m_UUID; }
 		[[nodiscard]] virtual operator bool(void) const = 0;
-	private:
+
+	protected:
+		virtual inline FileErrorCode _handle_missing(const std::filesystem::path& path)
+		{
+			return FileErrorCode::NotFound;
+		}
+
+	protected:
 		UUID_t m_UUID;
 	};
 } // namespace Na
