@@ -241,6 +241,11 @@ namespace Na::VulkanImpl {
 			device_extensions.emplace_back(VK_KHR_MAINTENANCE_1_EXTENSION_NAME);
 		}
 
+		if (info.required_extensions.contains(DeviceExtension::UniformIndexing))
+		{
+			device_extensions.emplace_back(VK_KHR_MAINTENANCE_3_EXTENSION_NAME);
+		}
+
 		this->_create_instance();
 		this->_create_dbg_messenger();
 
@@ -333,6 +338,9 @@ namespace Na::VulkanImpl {
 		ArrayList<const char*> instance_extensions(glfw_extension_count + 1llu);
 		for (u32 i = 0; i < glfw_extension_count; i++)
 			instance_extensions.emplace(glfw_extensions[i]);
+
+		if (this->extensions().contains(DeviceExtension::UniformIndexing))
+			instance_extensions.emplace(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
 
 		vk::DebugUtilsMessengerCreateInfoEXT debug_create_info = dbgMessengerInfo();
 		if (k_ValidationLayersEnabled)
