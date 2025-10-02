@@ -4,6 +4,9 @@
 namespace Na::Audio {
 	Context::Context(const ContextInitInfo& info)
 	{
+		if (!Context::GetBound())
+			this->bind();
+
 		m_Device = alcOpenDevice(nullptr);
 
 		m_Context = alcCreateContext(m_Device, nullptr);

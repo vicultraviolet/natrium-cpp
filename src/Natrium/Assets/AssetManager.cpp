@@ -11,6 +11,9 @@ namespace Na {
 	  m_ShaderOutputDirectory(info.shader_output_dir),
 	  m_AssetRegistryPath(info.asset_registry_path)
 	{
+		if (!AssetManager::Get())
+			this->bind();
+
 		m_Registry.load(info.asset_registry_path);
 
 		if (!std::filesystem::exists(m_EngineAssetsDirectory))
