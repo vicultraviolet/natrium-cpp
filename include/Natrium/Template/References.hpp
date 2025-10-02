@@ -69,14 +69,9 @@ namespace Na {
 		template<typename U, std::enable_if_t<std::is_base_of_v<U, T>, int> = 0>
 		[[nodiscard]] inline operator UniqueRef<U>(void)&& { return UniqueRef<U>(this->release()); }
 
-		[[nodiscard]] inline T* ptr(void) { return m_Ptr; }
-		[[nodiscard]] inline const T* ptr(void) const { return m_Ptr; }
-
-		[[nodiscard]] inline T& operator*(void) { return *m_Ptr; }
-		[[nodiscard]] inline const T& operator*(void) const { return *m_Ptr; }
-
-		[[nodiscard]] inline T* operator->(void) { return m_Ptr; }
-		[[nodiscard]] inline const T* operator->(void) const { return m_Ptr; }
+		[[nodiscard]] inline T* ptr(void) const { return m_Ptr; }
+		[[nodiscard]] inline T& operator*(void) const { return *m_Ptr; }
+		[[nodiscard]] inline T* operator->(void) const { return m_Ptr; }
 
 		[[nodiscard]] inline auto operator<=>(const UniqueRef& other) const { return m_Ptr <=> other.m_Ptr; }
 		[[nodiscard]] inline auto operator==(const UniqueRef& other) const { return m_Ptr == other.m_Ptr; }
@@ -245,14 +240,9 @@ namespace Na {
 		[[nodiscard]] inline u64 strong_count(void) const { return m_ControlBlock->strong_count.load(); }
 		[[nodiscard]] inline u64 weak_count(void) const { return m_ControlBlock->weak_count.load(); }
 
-		[[nodiscard]] inline T* ptr(void) { return m_ControlBlock->ptr; }
-		[[nodiscard]] inline const T* ptr(void) const { return m_ControlBlock->ptr; }
-
-		[[nodiscard]] inline T& operator*(void) { return *m_ControlBlock->ptr; }
-		[[nodiscard]] inline const T& operator*(void) const { return *m_ControlBlock->ptr; }
-
-		[[nodiscard]] inline T* operator->(void) { return m_ControlBlock->ptr; }
-		[[nodiscard]] inline const T* operator->(void) const { return m_ControlBlock->ptr; }
+		[[nodiscard]] inline T* ptr(void) const { return m_ControlBlock->ptr; }
+		[[nodiscard]] inline T& operator*(void) const { return *m_ControlBlock->ptr; }
+		[[nodiscard]] inline T* operator->(void) const { return m_ControlBlock->ptr; }
 
 		[[nodiscard]] inline auto operator<=>(const Ref& other) const { return m_ControlBlock->ptr <=> other.m_ControlBlock->ptr; }
 		[[nodiscard]] inline auto operator==(const Ref& other) const { return m_ControlBlock->ptr == other.m_ControlBlock->ptr; }
@@ -567,14 +557,9 @@ namespace Na {
 		template<typename U, std::enable_if_t<std::is_base_of_v<U, T>, int> = 0>
 		[[nodiscard]] inline operator ViewRef<U>(void) { return ViewRef<U>(m_Ptr); }
 
-		[[nodiscard]] inline T* ptr(void) { return m_Ptr; }
-		[[nodiscard]] inline const T* ptr(void) const { return m_Ptr; }
-
-		[[nodiscard]] inline T& operator*(void) { return *m_Ptr; }
-		[[nodiscard]] inline const T& operator*(void) const { return *m_Ptr; }
-
-		[[nodiscard]] inline T* operator->(void) { return m_Ptr; }
-		[[nodiscard]] inline const T* operator->(void) const { return m_Ptr; }
+		[[nodiscard]] inline T* ptr(void) const { return m_Ptr; }
+		[[nodiscard]] inline T& operator*(void) const { return *m_Ptr; }
+		[[nodiscard]] inline T* operator->(void) const { return m_Ptr; }
 
 		[[nodiscard]] inline auto operator<=>(const ViewRef& other) const { return m_Ptr <=> other.m_Ptr; }
 		[[nodiscard]] inline auto operator==(const ViewRef& other) const { return m_Ptr == other.m_Ptr; }
