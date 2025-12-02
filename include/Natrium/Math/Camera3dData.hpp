@@ -45,7 +45,7 @@ namespace Na {
 		inline const CameraMatrices& matrices(void) const { return m_Matrices; }
 
 		inline void set_pos(const glm::vec3& pos) { m_Position = pos; m_ViewMatrixDirty = true; }
-		inline void set_eye(const glm::vec3& eye) { m_Position = eye; m_ViewMatrixDirty = true; }
+		inline void set_eye(const glm::vec3& eye) { m_Eye = eye; m_ViewMatrixDirty = true; }
 
 		inline void set_fov(float fov) { m_Fov = fov; m_ProjectionMatrixDirty = true; }
 		inline void set_aspect_ratio(float aspect_ratio) { m_AspectRatio = aspect_ratio; m_ProjectionMatrixDirty = true; }
