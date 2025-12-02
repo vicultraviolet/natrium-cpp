@@ -8,6 +8,7 @@ namespace Na::HL {
 		const UUID_t& uuid,
 		TextureDimensions dimensions,
 		WeakRef<const RendererSettings> renderer_settings,
+		Graphics::SamplerFilter filter,
 		bool saveable
 	)
 	: Asset(uuid)
@@ -26,8 +27,8 @@ namespace Na::HL {
 
 		Graphics::SamplerCreateInfo sampler_info
 		{
-			.oversampling_filter = Graphics::SamplerFilter::Linear,
-			.undersampling_filter = Graphics::SamplerFilter::Linear,
+			.oversampling_filter = filter,
+			.undersampling_filter = filter,
 
 			.adress_mode_u = Graphics::SamplerAddressMode::Repeat,
 			.adress_mode_v = Graphics::SamplerAddressMode::Repeat,
@@ -168,7 +169,7 @@ namespace Na::HL {
 
 		if (is_array)
 		{
-			m_Image->set_each_data_2((const void* [])data);
+			m_Image->set_each_data_2((const void**)data);
 		} else
 		{
 			m_Image->set_all_data(data);

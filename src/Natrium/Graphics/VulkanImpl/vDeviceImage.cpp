@@ -216,7 +216,11 @@ namespace Na::VulkanImpl {
 
 		for (u32 i = 0; i < m_Dimensions.layers; i++)
 		{
-			staging_buffer.set_data(datas[i]);
+			staging_buffer.set_data_x(
+				datas[i],
+				(u64)this->layer_size() * (u64)i,
+				(u64)this->layer_size()
+			);
 		}
 
 		this->copy_each_from_buffer(staging_buffer.native());

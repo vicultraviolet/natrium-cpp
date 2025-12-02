@@ -21,6 +21,7 @@ namespace Na::HL {
 			const UUID_t& uuid,
 			TextureDimensions dimensions,
 			WeakRef<const RendererSettings> renderer_settings,
+			Graphics::SamplerFilter filter = Graphics::SamplerFilter::Linear,
 			bool saveable = false
 		);
 
